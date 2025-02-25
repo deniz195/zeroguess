@@ -1,6 +1,6 @@
-# MLFit: Machine Learning for Curve Fitting Parameter Estimation
+# ZeroGuess: Machine Learning for Curve Fitting Parameter Estimation
 
-MLFit is a Python library that simplifies the estimation of starting parameters for curve fitting by leveraging machine learning. It supports SciPy and lmfit, two widely used curve fitting libraries in the scientific Python ecosystem.
+ZeroGuess is a Python library that simplifies the estimation of starting parameters for curve fitting by leveraging machine learning. It supports SciPy and lmfit, two widely used curve fitting libraries in the scientific Python ecosystem.
 
 ## Problem Statement
 
@@ -9,12 +9,12 @@ While curve fitting is a well-understood problem, the process of estimating star
 - Require more iterations to converge
 - Fail to converge entirely
 
-MLFit uses machine learning to learn from the fitting function itself, providing optimal starting parameters without manual tuning.
+ZeroGuess uses machine learning to learn from the fitting function itself, providing optimal starting parameters without manual tuning.
 
 ## Installation
 
 ```bash
-pip install mlfit
+pip install zeroguess
 ```
 
 ## Quick Start
@@ -22,7 +22,7 @@ pip install mlfit
 ### Basic Usage
 
 ```python
-import mlfit
+import zeroguess
 import numpy as np
 from scipy import optimize
 
@@ -34,7 +34,7 @@ def gaussian(x, amplitude, center, width):
 x_sampling = np.linspace(-10, 10, 100)
 
 # Create and train parameter estimator
-estimator = mlfit.create_estimator(
+estimator = zeroguess.create_estimator(
     function=gaussian,
     param_ranges={
         'amplitude': (0, 10),
@@ -62,7 +62,7 @@ optimal_params, _ = optimize.curve_fit(
 ### SciPy Integration
 
 ```python
-from mlfit.integration import scipy_integration
+from zeroguess.integration import scipy_integration
 import numpy as np
 
 # Enhanced curve_fit with automatic parameter estimation
@@ -82,7 +82,7 @@ optimal_params, pcov = scipy_integration.curve_fit(
 ### lmfit Integration
 
 ```python
-from mlfit.integration import lmfit_integration
+from zeroguess.integration import lmfit_integration
 import lmfit
 import numpy as np
 
