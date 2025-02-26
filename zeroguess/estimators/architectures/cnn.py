@@ -166,10 +166,9 @@ class CNNArchitecture(BaseArchitecture):
     def validate_input_size(self, network: nn.Module, input_size: int, expected_size: int) -> bool:
         """Validate if the input size is compatible with the CNN network.
         
-        For CNN architecture, we need to ensure that the input size matches what the network was trained with,
-        adhering to the principle that all models only accept inputs of the size they were trained against.
-        The CNN architecture handles reshaping internally via an Unflatten layer, but this doesn't change the
-        requirement that the input data must be the same size as used during training.
+        For CNN architecture, we need to check for the Unflatten layer which reshapes the input.
+        We need to validate against the number of features expected by the network, not the
+        channel dimension that appears after reshaping.
         
         Args:
             network: The neural network model (CNN)
@@ -186,14 +185,16 @@ class CNNArchitecture(BaseArchitecture):
         if hasattr(network, 'conv_layers') and len(network.conv_layers) > 0:
             # For CNN, check if the first layer is an Unflatten layer
             if isinstance(network.conv_layers[0], nn.Unflatten):
-                # Even for CNN with Unflatten, we need to enforce size matching
-                # to maintain consistency between training and inference
-                if input_size != expected_size:
+                # Extract the expected feature dimension from the Unflatten layer
+                # The Unflatten layer's unflattened_size contains (channels, features)
+                _, expected_features = network.conv_layers[0].unflattened_size
+                
+                # Compare input size with expected features
+                if input_size != expected_features:
                     raise ValueError(
                         f"Input data size ({input_size}) does not match the CNN's expected input size "
-                        f"({expected_size}). Even though CNN architecture internally reshapes the data, "
-                        f"the network must be trained with the same number of data points as used for prediction "
-                        f"to ensure consistent results."
+                        f"({expected_features}). The network must be trained with the same number of data points "
+                        f"as used for prediction to ensure consistent results."
                     )
                 return True
         
