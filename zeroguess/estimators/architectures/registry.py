@@ -85,5 +85,5 @@ from zeroguess.estimators.architectures.transformer import TransformerArchitectu
 
 register_architecture(MLPArchitecture)
 # CNNArchitecture and TransformerArchitecture are planned for future work
-# register_architecture(CNNArchitecture)
+register_architecture(CNNArchitecture)
 # register_architecture(TransformerArchitecture) 
