@@ -166,9 +166,10 @@ class CNNArchitecture(BaseArchitecture):
     def validate_input_size(self, network: nn.Module, input_size: int, expected_size: int) -> bool:
         """Validate if the input size is compatible with the CNN network.
         
-        For CNN architecture, we handle input differently because the network reshapes 
-        the input using an Unflatten layer at the beginning. This allows the CNN to accept
-        inputs of different sizes than what the network was originally trained with.
+        For CNN architecture, we need to ensure that the input size matches what the network was trained with,
+        adhering to the principle that all models only accept inputs of the size they were trained against.
+        The CNN architecture handles reshaping internally via an Unflatten layer, but this doesn't change the
+        requirement that the input data must be the same size as used during training.
         
         Args:
             network: The neural network model (CNN)
@@ -185,8 +186,15 @@ class CNNArchitecture(BaseArchitecture):
         if hasattr(network, 'conv_layers') and len(network.conv_layers) > 0:
             # For CNN, check if the first layer is an Unflatten layer
             if isinstance(network.conv_layers[0], nn.Unflatten):
-                # CNN with Unflatten can handle different input sizes through reshaping
-                # So we don't need to enforce exact size matching
+                # Even for CNN with Unflatten, we need to enforce size matching
+                # to maintain consistency between training and inference
+                if input_size != expected_size:
+                    raise ValueError(
+                        f"Input data size ({input_size}) does not match the CNN's expected input size "
+                        f"({expected_size}). Even though CNN architecture internally reshapes the data, "
+                        f"the network must be trained with the same number of data points as used for prediction "
+                        f"to ensure consistent results."
+                    )
                 return True
         
         # If we got here, it means the network structure doesn't match our expectations

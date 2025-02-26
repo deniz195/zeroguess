@@ -172,6 +172,38 @@ class TestArchitectureSelection(unittest.TestCase):
         
         # Check that it keeps the 'best' name but uses MLP internally
         self.assertEqual(estimator.architecture_name, 'best')
+    
+    def test_input_size_validation(self):
+        """Test that architectures enforce input size validation principles."""
+        # Test MLP architecture input size validation
+        mlp_arch = get_architecture('mlp')
+        mlp_network = mlp_arch.create_network(n_input_features=10, n_output_params=2)
+        
+        # Same size should be valid
+        valid_size = 10
+        try:
+            mlp_arch.validate_input_size(mlp_network, valid_size, valid_size)
+        except ValueError:
+            self.fail("validate_input_size raised ValueError for valid input size in MLP")
+        
+        # Different size should raise ValueError for MLP
+        invalid_size = 15
+        with self.assertRaises(ValueError, msg="MLP should reject mismatched input sizes"):
+            mlp_arch.validate_input_size(mlp_network, invalid_size, valid_size)
+        
+        # Test CNN architecture input size validation  
+        cnn_arch = get_architecture('cnn')
+        cnn_network = cnn_arch.create_network(n_input_features=10, n_output_params=2)
+        
+        # Same size should be valid for CNN too
+        try:
+            cnn_arch.validate_input_size(cnn_network, valid_size, valid_size)
+        except ValueError:
+            self.fail("validate_input_size raised ValueError for valid input size in CNN")
+        
+        # Different size should now raise ValueError for CNN as well, after our update
+        with self.assertRaises(ValueError, msg="CNN should reject mismatched input sizes"):
+            cnn_arch.validate_input_size(cnn_network, invalid_size, valid_size)
 
 
 if __name__ == '__main__':
