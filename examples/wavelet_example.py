@@ -308,22 +308,18 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     if x_sampling is None:
         x_sampling = np.linspace(-5, 5, 200)
     
-    # Create enhanced lmfit Model with automatic parameter estimation
-    print("Creating model with automatic parameter estimation...")
+    # Create enhanced lmfit Model with automatic parameter extraction of bounds
+    print("Creating model with automatic parameter extraction of bounds...")
     model = lmfit_integration.Model(
         wavelet,
-        param_ranges={
-            'frequency': (0.1, 5.0),
-            'phase': (0, 2 * np.pi),
-            'position': (-3.0, 3.0),
-            'width': (0.1, 5.0),
-        },
         independent_vars_sampling={
             'x': x_sampling,
         },
+        auto_extract_bounds=True,  # Enable automatic extraction of bounds from params
     )
     
     # Set parameter bounds to help convergence
+    # These bounds will also be used for parameter estimation due to auto_extract_bounds=True
     params = model.make_params()
     for param_name, param in params.items():
         if param_name == 'frequency':

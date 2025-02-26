@@ -243,6 +243,39 @@ model = lmfit_integration.Model(
 result = model.fit(y_data, x=x_data)
 ```
 
+### Enhanced lmfit Integration (Utilizing lmfit's Parameter Bounds)
+
+```python
+# Enhanced lmfit with automatic initial parameter estimation using lmfit's parameter bounds
+from zeroguess.integration import lmfit_integration
+import lmfit
+import numpy as np
+
+# Define independent variable sampling points for training
+x_sampling = np.linspace(-10, 10, 100)
+
+# Create an lmfit model with automatic parameter estimation
+model = lmfit_integration.Model(
+    gaussian,
+    independent_vars_sampling={
+        'x': x_sampling  # Sampling points for training
+    },
+    auto_extract_bounds=True  # Extract bounds from params automatically
+)
+
+# Set parameter bounds (will be automatically used for parameter estimation)
+params = model.make_params()
+params['amplitude'].min = 0
+params['amplitude'].max = 10
+params['center'].min = -5
+params['center'].max = 5
+params['width'].min = 0.1
+params['width'].max = 2
+
+# Standard lmfit workflow continues
+result = model.fit(y_data, params=params, x=x_data)
+```
+
 ## Neural Network Architecture
 
 The default neural network architecture will follow a modular design:
