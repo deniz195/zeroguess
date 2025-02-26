@@ -2,83 +2,21 @@
 
 import numpy as np
 import pytest
-from unittest.mock import patch, MagicMock
+import torch
 
 # Import test utilities
 from ..conftest import set_random_seeds, gaussian_function, sample_data_1d
 from ..test_utils import calculate_parameter_error, is_within_tolerance, calculate_curve_fit_quality
 
-# Mock implementation of ZeroGuess for end-to-end testing
-class MockZeroGuess:
-    """Mock ZeroGuess implementation for end-to-end testing."""
-    
-    @staticmethod
-    def create_estimator(function, param_ranges, independent_vars_sampling):
-        """Create a parameter estimator for the given function."""
-        return MockEstimator(function, param_ranges, independent_vars_sampling)
-
-
-class MockEstimator:
-    """Mock Estimator implementation for end-to-end testing."""
-    
-    def __init__(self, function, param_ranges, independent_vars_sampling):
-        """Initialize the estimator."""
-        self.function = function
-        self.param_ranges = param_ranges
-        self.independent_vars_sampling = independent_vars_sampling
-        self.is_trained = False
-        
-        # For simplicity, we'll just use reasonable values near the middle of each range
-        self.predicted_params = {}
-        for param_name, (min_val, max_val) in param_ranges.items():
-            self.predicted_params[param_name] = (min_val + max_val) / 2
-    
-    def train(self, epochs=10, batch_size=32, learning_rate=0.001):
-        """Train the estimator."""
-        self.is_trained = True
-        return {"loss": 0.1, "val_loss": 0.2}
-    
-    def predict(self, x_data, y_data):
-        """Predict parameters for the given data."""
-        if not self.is_trained:
-            raise RuntimeError("Estimator must be trained before prediction")
-        
-        # In a real implementation, this would use the trained model
-        # For testing, we'll just return the pre-computed values
-        return self.predicted_params.copy()
-
-
-# Mock implementation of SciPy integration
-def mock_curve_fit(func, xdata, ydata, param_ranges=None, independent_vars_sampling=None, **kwargs):
-    """Mock of ZeroGuess-enhanced curve_fit function."""
-    if param_ranges and 'p0' not in kwargs:
-        # Create a mock estimator
-        estimator = MockEstimator(func, param_ranges, independent_vars_sampling)
-        estimator.train()
-        predicted_params = estimator.predict(xdata, ydata)
-        
-        # Convert dict to list for scipy curve_fit
-        p0 = [predicted_params[name] for name in param_ranges.keys()]
-        kwargs['p0'] = p0
-    
-    # For testing, we'll just return a reasonable result
-    # In a real implementation, this would call scipy.optimize.curve_fit
-    if len(param_ranges) == 3:  # Assuming Gaussian with amplitude, center, width
-        popt = np.array([7.5, 2.0, 1.2])  # Similar to sample_data_1d
-        pcov = np.eye(3) * 0.01  # Small covariance for good fit
-    else:
-        # Generic case - use midpoints of param_ranges
-        popt = np.array([(min_val + max_val) / 2 for _, (min_val, max_val) in param_ranges.items()])
-        pcov = np.eye(len(popt)) * 0.01
-    
-    return popt, pcov
+# Import the real ZeroGuess components
+from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 
 
 class TestGaussianWorkflow:
     """End-to-end tests for the full ZeroGuess workflow with a Gaussian function."""
     
     def test_full_workflow(self, set_random_seeds, gaussian_function, sample_data_1d):
-        """Test the full ZeroGuess workflow from estimation to curve fitting."""
+        """Test the full ZeroGuess workflow from estimation to evaluate prediction quality."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
         
@@ -91,16 +29,26 @@ class TestGaussianWorkflow:
         
         # Step 2: Define sampling points
         independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)
+            'x': np.linspace(-10, 10, 50)  # Match the x_data dimension from sample_data_1d
         }
         
-        # Step 3: Create estimator
-        estimator = MockEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
+        # Step 3: Create real estimator with a smaller network for faster tests
+        estimator = NeuralNetworkEstimator(
+            function=gaussian_function, 
+            param_ranges=param_ranges, 
+            independent_vars_sampling=independent_vars_sampling,
+            hidden_layers=[16, 32, 16],  # Smaller network for faster training
+            learning_rate=0.01  # Faster learning rate for tests
         )
         
-        # Step 4: Train the estimator
-        training_metrics = estimator.train()
+        # Step 4: Train the estimator with reduced samples and epochs for testing
+        training_metrics = estimator.train(
+            n_samples=200,  # Reduced sample size for faster tests
+            epochs=20,      # Fewer epochs for faster tests
+            batch_size=32,
+            add_noise=True,
+            noise_level=0.1
+        )
         assert estimator.is_trained
         
         # Step 5: Predict parameters for experimental data
@@ -109,98 +57,83 @@ class TestGaussianWorkflow:
         # Step 6: Verify predicted parameters are reasonable
         assert set(predicted_params.keys()) == set(param_ranges.keys())
         
-        # Calculate errors
+        # Calculate errors compared to true parameters
         errors = calculate_parameter_error(predicted_params, true_params)
         
-        # Check if errors are within tolerance (would be more specific in real tests)
-        # For the mock, we don't expect perfect prediction
+        # Check if errors are within tolerance (using a higher tolerance since this is real ML)
         for param_name, error in errors.items():
-            assert error <= 1.0, f"Error for {param_name} too high: {error:.2f}"
+            assert error <= 2.0, f"Error for {param_name} too high: {error:.2f}"
         
-        # Step 7: Use predicted parameters for curve fitting
-        # Convert dict to list for curve_fit
-        p0 = [predicted_params[name] for name in ['amplitude', 'center', 'width']]
+        # Step 7: Evaluate prediction quality
+        # Use the predicted parameters to generate curve values
+        y_predicted = gaussian_function(x_data, **predicted_params)
         
-        # Modified gaussian function to match scipy's calling convention
-        def scipy_gaussian(x, amplitude, center, width):
-            return gaussian_function(x, amplitude=amplitude, center=center, width=width)
+        # Calculate RMSE between predicted curve and actual data
+        residuals = y_data - y_predicted
+        rmse = np.sqrt(np.mean(residuals**2))
         
-        # Use mock curve_fit for testing
-        popt, pcov = mock_curve_fit(
-            scipy_gaussian, x_data, y_data,
-            param_ranges=param_ranges,
-            independent_vars_sampling=independent_vars_sampling
-        )
+        # RMSE should be reasonably small for a good prediction
+        # Using a higher threshold since we're using real ML with limited training
+        assert rmse < 5.0, f"RMSE too high: {rmse:.2f}"
         
-        # Step 8: Verify fitted parameters
-        fitted_params = {
-            'amplitude': popt[0],
-            'center': popt[1],
-            'width': popt[2]
-        }
+        # Step 8: Verify the predicted parameters can reproduce the original signal
+        # Generate clean data with predicted parameters
+        y_clean_predicted = gaussian_function(x_data, **predicted_params)
         
-        # Calculate errors for fitted parameters
-        fitted_errors = calculate_parameter_error(fitted_params, true_params)
+        # Generate clean data with true parameters
+        y_clean_true = gaussian_function(x_data, **true_params)
         
-        # Fitted parameters should be more accurate than initial estimates
-        for param_name in fitted_params:
-            assert fitted_errors[param_name] <= errors[param_name], \
-                f"Fitted parameter {param_name} not better than initial estimate"
+        # Calculate correlation between predicted and true clean signals
+        correlation = np.corrcoef(y_clean_predicted, y_clean_true)[0, 1]
         
-        # Step 9: Evaluate curve fit quality
-        rmse = calculate_curve_fit_quality(
-            gaussian_function, x_data, y_data, fitted_params
-        )
-        
-        # RMSE should be small for a good fit
-        assert rmse < 0.2, f"RMSE too high: {rmse:.2f}"
+        # Correlation should be high
+        assert correlation > 0.5, f"Correlation too low: {correlation:.2f}"
     
-    def test_workflow_with_scipy_integration(self, set_random_seeds, gaussian_function, sample_data_1d):
-        """Test the ZeroGuess workflow using the SciPy integration API."""
+    def test_estimator_performance_benchmark(self, benchmark, set_random_seeds, gaussian_function, sample_data_1d):
+        """Benchmark test for measuring the performance of the neural network estimator."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
         
-        # Define parameter ranges
+        # Define parameter ranges and sampling points
         param_ranges = {
             'amplitude': (0, 10),
             'center': (-5, 5),
             'width': (0.1, 2)
         }
         
-        # Define sampling points
         independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)
+            'x': np.linspace(-10, 10, 50)
         }
         
-        # Modified gaussian function to match scipy's calling convention
-        def scipy_gaussian(x, amplitude, center, width):
-            return gaussian_function(x, amplitude=amplitude, center=center, width=width)
-        
-        # Use the ZeroGuess-enhanced scipy.curve_fit
-        popt, pcov = mock_curve_fit(
-            scipy_gaussian, x_data, y_data,
-            param_ranges=param_ranges,
-            independent_vars_sampling=independent_vars_sampling
+        # Create estimator with tiny network for benchmark
+        estimator = NeuralNetworkEstimator(
+            function=gaussian_function, 
+            param_ranges=param_ranges, 
+            independent_vars_sampling=independent_vars_sampling,
+            hidden_layers=[8, 16, 8],  # Very small network for benchmarking
+            learning_rate=0.01
         )
         
-        # Verify fitted parameters
-        fitted_params = {
-            'amplitude': popt[0],
-            'center': popt[1],
-            'width': popt[2]
-        }
+        # Define the benchmark function that includes training and prediction
+        def run_workflow():
+            # Train with minimal epochs and samples for benchmarking
+            estimator.train(
+                n_samples=50,  # Very small dataset for benchmarking
+                epochs=5,      # Minimal epochs for benchmarking
+                batch_size=16,
+                add_noise=True,
+                noise_level=0.1
+            )
+            
+            # Predict parameters
+            return estimator.predict(x_data, y_data)
         
-        # Calculate errors for fitted parameters
-        fitted_errors = calculate_parameter_error(fitted_params, true_params)
+        # Run the benchmark
+        result = benchmark(run_workflow)
         
-        # Fitted parameters should be reasonably accurate
-        for param_name, error in fitted_errors.items():
-            assert error < 0.1, f"Error for {param_name} too high: {error:.2f}"
+        # Verify that the results are still reasonable
+        predicted_params = result
         
-        # Evaluate curve fit quality
-        rmse = calculate_curve_fit_quality(
-            gaussian_function, x_data, y_data, fitted_params
-        )
-        
-        # RMSE should be small for a good fit
-        assert rmse < 0.2, f"RMSE too high: {rmse:.2f}" 
+        # Basic sanity check that predicted parameters are within the specified ranges
+        for param_name, (min_val, max_val) in param_ranges.items():
+            assert min_val <= predicted_params[param_name] <= max_val, f"Parameter {param_name} outside expected range" 

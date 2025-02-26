@@ -210,6 +210,7 @@ End-to-end tests will verify the complete workflow:
 - Function specification → data generation → model training → parameter prediction → curve fitting
 - Tests with both synthetic and real-world datasets
 - Tests with varying noise levels and outliers
+- **Tests should be run without scipy or lmfit integration**, as these integrations are tested separately in the integration tests
 
 ### 4. Edge Case Tests
 

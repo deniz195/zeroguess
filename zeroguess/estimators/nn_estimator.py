@@ -135,13 +135,17 @@ class NeuralNetworkEstimator(BaseEstimator):
             normalized_params: Normalized parameter values
             
         Returns:
-            Denormalized parameters
+            Denormalized parameters clipped to their bounds
         """
         denormalized = np.zeros_like(normalized_params)
         
         for i, param_name in enumerate(self.param_names):
             min_val, max_val = self.param_ranges[param_name]
-            denormalized[:, i] = normalized_params[:, i] * (max_val - min_val) + min_val
+            # First, clip the normalized parameters to [0, 1] range to ensure
+            # they are in the valid normalized range
+            clipped_norm = np.clip(normalized_params[:, i], 0.0, 1.0)
+            # Then denormalize to the original range
+            denormalized[:, i] = clipped_norm * (max_val - min_val) + min_val
         
         return denormalized
     
@@ -283,7 +287,8 @@ class NeuralNetworkEstimator(BaseEstimator):
             y_data: Dependent variable values (the curve to fit)
             
         Returns:
-            Dictionary mapping parameter names to estimated values
+            Dictionary mapping parameter names to estimated values,
+            clipped to stay within the specified parameter ranges
         """
         if not self.is_trained:
             raise RuntimeError("Estimator must be trained before prediction")
@@ -317,7 +322,14 @@ class NeuralNetworkEstimator(BaseEstimator):
         params = self._denormalize_parameters(normalized_params)[0]  # Remove batch dimension
         
         # Create dictionary of parameter name to value
-        result = {name: params[i] for i, name in enumerate(self.param_names)}
+        result = {}
+        for i, name in enumerate(self.param_names):
+            # Get parameter value
+            param_value = params[i]
+            # Apply final clipping to ensure bounds are respected
+            min_val, max_val = self.param_ranges[name]
+            clipped_value = np.clip(param_value, min_val, max_val)
+            result[name] = clipped_value
         
         return result
     
