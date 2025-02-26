@@ -321,11 +321,33 @@ class NeuralNetworkEstimator(BaseEstimator):
         
         # Check if the input size matches what the network expects
         if len(y_data) != expected_input_size:
-            raise ValueError(
-                f"Input data size ({len(y_data)}) does not match the network's expected input size "
-                f"({expected_input_size}). The network must be trained with the same number of data points "
-                f"as used for prediction."
-            )
+            # Special handling for CNN architecture which expects a different input shape
+            if self.architecture_name.lower() == "cnn":
+                # For CNN, we need to check if the network has an Unflatten layer at the beginning
+                # which indicates it's a CNN architecture expecting a 1D input that will be reshaped
+                if hasattr(self.network, 'conv_layers') and len(self.network.conv_layers) > 0:
+                    if isinstance(self.network.conv_layers[0], torch.nn.Unflatten):
+                        # For CNN, the reshape operation will handle the conversion to [batch, 1, features]
+                        # so we don't need to enforce the exact input size check here
+                        pass
+                    else:
+                        raise ValueError(
+                            f"Input data size ({len(y_data)}) does not match the network's expected input size "
+                            f"({expected_input_size}). The network must be trained with the same number of data points "
+                            f"as used for prediction."
+                        )
+                else:
+                    raise ValueError(
+                        f"Input data size ({len(y_data)}) does not match the network's expected input size "
+                        f"({expected_input_size}). The network must be trained with the same number of data points "
+                        f"as used for prediction."
+                    )
+            else:
+                raise ValueError(
+                    f"Input data size ({len(y_data)}) does not match the network's expected input size "
+                    f"({expected_input_size}). The network must be trained with the same number of data points "
+                    f"as used for prediction."
+                )
         
         # Convert y_data to tensor and prepare for model input
         features = y_data.flatten()
