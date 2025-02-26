@@ -86,15 +86,17 @@ class BaseEstimator(ABC):
         """
         pass
     
+    @abstractmethod
     def save(self, path: str) -> None:
         """Save the trained model to disk.
         
         Args:
             path: Path to save the model
         """
-        raise NotImplementedError("Save method not implemented")
+        pass
     
     @classmethod
+    @abstractmethod
     def load(cls, path: str) -> 'BaseEstimator':
         """Load a trained model from disk.
         
@@ -104,4 +106,4 @@ class BaseEstimator(ABC):
         Returns:
             Loaded estimator instance
         """
-        raise NotImplementedError("Load method not implemented")
+        pass
