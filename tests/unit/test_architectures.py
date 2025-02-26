@@ -82,6 +82,37 @@ class TestArchitectureSelection(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_architecture('invalid_architecture')
     
+    def test_architecture_parameter_validation(self):
+        """Test that all architectures properly validate parameters and reject unknown ones."""
+        # Get the list of available architectures
+        architectures = list_architectures()
+        
+        # Test each registered architecture
+        for arch_name in architectures:
+            # Try to create an architecture with an invalid parameter
+            with self.assertRaises(ValueError, msg=f"{arch_name} architecture should reject unknown parameters"):
+                get_architecture(arch_name, invalid_parameter_name=123)
+            
+            # Try a different invalid parameter
+            with self.assertRaises(ValueError, msg=f"{arch_name} architecture should reject unknown parameters"):
+                get_architecture(arch_name, unknown_setting="value")
+                
+            # Make sure it works with valid parameters
+            try:
+                # Get default parameters for this architecture
+                defaults = get_architecture_info()[arch_name]['default_params']
+                
+                if defaults:
+                    # Take the first parameter and use its value
+                    param_name = next(iter(defaults.keys()))
+                    param_value = defaults[param_name]
+                    
+                    # Should not raise error with valid parameter
+                    valid_params = {param_name: param_value}
+                    get_architecture(arch_name, **valid_params)
+            except Exception as e:
+                self.fail(f"Creating {arch_name} with valid parameters raised {type(e).__name__}: {e}")
+    
     def test_create_network(self):
         """Test creating networks with different architectures."""
         # Create MLP architecture and network
@@ -131,7 +162,7 @@ class TestArchitectureSelection(unittest.TestCase):
         self.assertEqual(estimator.architecture_params['n_conv_layers'], 2)
         self.assertEqual(estimator.architecture_params['filters'], [16, 32])
         
-        # Test with 'best' architecture
+        # Test with 'best' architecture - should default to MLP internally
         estimator = create_estimator(
             function=self.function,
             param_ranges=self.param_ranges,
@@ -139,7 +170,7 @@ class TestArchitectureSelection(unittest.TestCase):
             architecture='best'
         )
         
-        # Check that it defaults to MLP
+        # Check that it keeps the 'best' name but uses MLP internally
         self.assertEqual(estimator.architecture_name, 'best')
 
 

@@ -42,6 +42,7 @@ def get_architecture(architecture_name: str, **params) -> BaseArchitecture:
     if architecture_name == "default" or architecture_name == "best":
         # Use the default architecture (MLP for now)
         architecture_name = "mlp"
+        # architecture_name = "cnn"
     
     if architecture_name not in _ARCHITECTURE_REGISTRY:
         registered = ", ".join(_ARCHITECTURE_REGISTRY.keys())

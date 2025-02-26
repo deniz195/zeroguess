@@ -1,14 +1,18 @@
-"""Unit tests for the BaseEstimator abstract base class."""
-
-import numpy as np
+"""
+Unit tests for base estimator functionality.
+"""
 import pytest
+import unittest
+import numpy as np
 from abc import ABC
 from unittest.mock import MagicMock
 
 # Import the test fixtures
 from ..conftest import set_random_seeds, gaussian_function
+from zeroguess.estimators.base import BaseEstimator
+from zeroguess import create_estimator
 
-# Try to import the BaseEstimator class
+# Try to import the BaseEstimator class (legacy code, can be removed if BaseEstimator is always available)
 try:
     from zeroguess.estimators.base import BaseEstimator
     HAS_ZEROGUESS = True
@@ -242,4 +246,119 @@ class TestBaseEstimator:
         
         # Trying to instantiate this class should raise TypeError
         with pytest.raises(TypeError):
-            IncompleteEstimator(dummy_function, param_ranges, independent_vars_sampling) 
+            IncompleteEstimator(dummy_function, param_ranges, independent_vars_sampling)
+
+
+class TestBaseEstimator(unittest.TestCase):
+    """Tests for base estimator functionality."""
+    
+    def setUp(self):
+        """Set up common test data."""
+        # Define a simple function for testing
+        def linear_function(x, a, b):
+            return a * x + b
+        
+        self.function = linear_function
+        self.param_ranges = {
+            'a': (0.5, 5.0),
+            'b': (-2.0, 2.0)
+        }
+        self.independent_vars_sampling = {
+            'x': np.linspace(-10, 10, 100)
+        }
+
+    def test_create_estimator_basic(self):
+        """Test creating an estimator with basic parameters."""
+        estimator = create_estimator(
+            function=self.function,
+            param_ranges=self.param_ranges,
+            independent_vars_sampling=self.independent_vars_sampling
+        )
+        self.assertIsNotNone(estimator)
+    
+    def test_estimator_param_validation(self):
+        """Test that estimator properly validates function parameters."""
+        # Test with empty param range
+        with self.assertRaises(ValueError):
+            create_estimator(
+                function=self.function,
+                param_ranges={},  # Empty parameter range
+                independent_vars_sampling=self.independent_vars_sampling
+            )
+        
+        # Test with invalid param range format
+        with self.assertRaises(ValueError):
+            create_estimator(
+                function=self.function,
+                param_ranges={
+                    'a': (5.0, 0.5),  # Min > Max (invalid)
+                    'b': (-2.0, 2.0)
+                },
+                independent_vars_sampling=self.independent_vars_sampling
+            )
+        
+        # Test with empty independent vars sampling
+        with self.assertRaises(ValueError):
+            create_estimator(
+                function=self.function,
+                param_ranges=self.param_ranges,
+                independent_vars_sampling={}  # Empty independent vars
+            )
+    
+    def test_estimator_architecture_param_validation(self):
+        """Test that estimator properly validates architecture parameters."""
+        # Test with invalid architecture parameters for MLP
+        with self.assertRaises(ValueError):
+            create_estimator(
+                function=self.function,
+                param_ranges=self.param_ranges,
+                independent_vars_sampling=self.independent_vars_sampling,
+                architecture="mlp",
+                architecture_params={
+                    "invalid_mlp_param": 123  # Parameter that doesn't exist for MLP
+                }
+            )
+        
+        # Test with invalid architecture parameters for CNN
+        with self.assertRaises(ValueError):
+            create_estimator(
+                function=self.function,
+                param_ranges=self.param_ranges,
+                independent_vars_sampling=self.independent_vars_sampling,
+                architecture="cnn",
+                architecture_params={
+                    "unknown_cnn_param": 456  # Parameter that doesn't exist for CNN
+                }
+            )
+        
+        # Test that valid architecture parameters work correctly
+        try:
+            # Valid MLP parameters
+            create_estimator(
+                function=self.function,
+                param_ranges=self.param_ranges,
+                independent_vars_sampling=self.independent_vars_sampling,
+                architecture="mlp",
+                architecture_params={
+                    "hidden_layers": [32, 64, 32],
+                    "dropout_rate": 0.2
+                }
+            )
+            
+            # Valid CNN parameters
+            create_estimator(
+                function=self.function,
+                param_ranges=self.param_ranges,
+                independent_vars_sampling=self.independent_vars_sampling,
+                architecture="cnn",
+                architecture_params={
+                    "n_conv_layers": 3,
+                    "filters": [16, 32, 64]
+                }
+            )
+        except Exception as e:
+            self.fail(f"Creating estimator with valid architecture parameters raised {type(e).__name__}: {e}")
+
+
+if __name__ == '__main__':
+    unittest.main() 
