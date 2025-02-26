@@ -9,6 +9,7 @@ This directory contains the test suite for the ZeroGuess library. The tests are 
 - `end_to_end/`: End-to-end tests for complete workflows
 - `edge_case/`: Tests for specific edge cases and failure modes
 - `conftest/`: Common test fixtures and configuration
+- `output/visualizations/`: Directory where test-generated visualizations are saved
 
 ## Requirements
 
@@ -78,6 +79,36 @@ The following markers are available:
 - `integration`: Marks tests that test component interactions
 - `end_to_end`: Marks tests that test the complete workflow
 - `edge_case`: Marks tests for edge cases and failure modes
+
+## Visualization Outputs
+
+Tests that involve visualizations (plots, charts, etc.) save their output to the `tests/output/visualizations/` directory. These files are useful for:
+
+1. Visually inspecting the quality of generated plots
+2. Diagnosing issues in test failures
+3. Generating documentation examples
+
+The visualization files follow this naming convention:
+```
+{test_name}_{visualization_type}_{timestamp}.png
+```
+
+For example: `test_gaussian_workflow_fit_comparison_20230515_123045.png`
+
+### Cleaning Up Visualization Files
+
+To prevent the visualization directory from becoming cluttered, a cleanup utility is provided:
+
+```bash
+# Remove visualization files older than 7 days (default)
+python tests/cleanup_visualizations.py
+
+# Remove visualization files older than N days
+python tests/cleanup_visualizations.py --days 30
+
+# Remove all visualization files
+python tests/cleanup_visualizations.py --all
+```
 
 ## Handling Non-Deterministic Behavior
 

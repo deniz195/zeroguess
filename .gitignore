@@ -92,6 +92,8 @@ examples/*.pdf
 .training_cache/
 data/
 outputs/
+# Test visualization outputs
+tests/output/visualizations/
 
 # Documentation
 docs/_build/

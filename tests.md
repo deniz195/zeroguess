@@ -20,6 +20,28 @@ We will use pytest as our testing framework with the following additional packag
 - `pytest-benchmark`: For performance benchmarking
 - `pytest-xdist`: For parallel test execution
 
+## Test Artifacts
+
+### Visualization Outputs
+
+To validate and review the visualization components of ZeroGuess:
+
+1. **Output Directory**: All test-generated visualizations should be saved to the `tests/output/visualizations/` directory.
+   - This directory structure should be automatically created if it doesn't exist.
+   - Files should follow the naming convention: `{test_name}_{visualization_type}_{timestamp}.png`
+   - Example: `test_gaussian_workflow_fit_comparison_20230515_123045.png`
+
+2. **Visualization Types**:
+   - Fit comparisons (data points, true curves, estimated fits)
+   - Parameter comparisons (bar charts of true vs. estimated parameters)
+   - Training history plots (loss curves)
+
+3. **Persistence Policy**:
+   - Visualization files should be excluded from version control via `.gitignore`
+   - CI/CD pipelines should archive these artifacts for inspection when tests fail
+   - Local test runs should maintain visualizations for debugging purposes
+   - A cleanup utility should be provided to remove old visualization files
+
 ## Benchmark Functions
 
 ### Common Curve Fitting Functions
