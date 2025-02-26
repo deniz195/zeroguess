@@ -218,4 +218,54 @@ def sample_data_double_sigmoid():
     noise = np.random.normal(0, 0.15, size=len(x_data))
     y_data = y_clean + noise
     
+    return x_data, y_data, true_params
+
+
+@pytest.fixture
+def multimodal_function():
+    """Return a multimodal function with local minima for testing.
+    
+    This function is defined as:
+    f(x) = a1 * sin(a2 * x) + a3 * cos(a4 * x + a5)
+    
+    It creates a complex landscape with multiple local minima, testing
+    the ability of the system to handle multimodal optimization problems.
+    """
+    def multimodal(x, a1, a2, a3, a4, a5):
+        return a1 * np.sin(a2 * x) + a3 * np.cos(a4 * x + a5)
+    return multimodal
+
+
+@pytest.fixture
+def sample_data_multimodal():
+    """Generate a multimodal dataset with controlled parameters.
+    
+    Returns:
+        tuple: (x_data, y_data, true_params) containing the independent variable,
+               dependent variable, and the true parameters used to generate the data.
+    """
+    # Fixed parameters for reproducibility
+    true_params = {
+        'a1': 2.5,   # Amplitude of sine component
+        'a2': 0.8,   # Frequency of sine component
+        'a3': 3.0,   # Amplitude of cosine component
+        'a4': 1.5,   # Frequency of cosine component
+        'a5': 0.5    # Phase shift of cosine component
+    }
+    
+    # Generate data points with higher sampling density
+    x_data = np.linspace(-10, 10, 120)
+    
+    # Get the multimodal function
+    def multimodal(x, a1, a2, a3, a4, a5):
+        return a1 * np.sin(a2 * x) + a3 * np.cos(a4 * x + a5)
+    
+    # Generate clean data
+    y_clean = multimodal(x_data, **true_params)
+    
+    # Add noise
+    np.random.seed(42)  # Set seed for reproducibility
+    noise = np.random.normal(0, 0.2, size=len(x_data))
+    y_data = y_clean + noise
+    
     return x_data, y_data, true_params 
