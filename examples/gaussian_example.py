@@ -7,7 +7,8 @@ This example shows three different approaches to using ZeroGuess:
 2. SciPy integration - Using the enhanced curve_fit function
 3. lmfit integration - Using the enhanced Model class
 
-The true parameters are randomly generated within reasonable ranges each time the script is run.
+The true parameters are randomly generated once and shared across all methods for better comparison.
+The same noisy dataset is used for all methods to ensure direct comparison.
 
 Usage:
     python comprehensive_example.py [--random] [--method METHOD]
@@ -96,24 +97,26 @@ def generate_random_true_params():
     }
 
 
-def example_basic_usage():
-    """Example of basic usage of ZeroGuess."""
+def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
+    """Example of basic usage of ZeroGuess.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     print("\n=========================================================")
     print("Running example: Basic Usage (Gaussian)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points - use the same for training and prediction
-    x_sampling = np.linspace(-5, 10, 100)
-    
-    # Generate data
-    x_data = x_sampling.copy()  # Use the same x points
-    y_data = generate_noisy_data(x_data, true_params)
+    # Define the sampling points for training if not provided
+    if x_sampling is None:
+        x_sampling = np.linspace(-5, 10, 100)
     
     # Create and train estimator
     print("Creating and training estimator...")
@@ -186,26 +189,29 @@ def example_basic_usage():
     plt.savefig("gaussian_parameter_comparison_basic.png")
     
     print("Saved plots to current directory")
+    return x_sampling  # Return sampling points for reuse
 
 
-def example_scipy_integration():
-    """Example of using ZeroGuess with SciPy integration."""
+def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
+    """Example of using ZeroGuess with SciPy integration.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     print("\n=========================================================")
     print("Running example: SciPy Integration (Gaussian)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points - use the same for training and prediction
-    x_sampling = np.linspace(-10, 10, 100)
-    
-    # Generate data
-    x_data = x_sampling.copy()  # Use the same x points
-    y_data = generate_noisy_data(x_data, true_params)
+    # Define the sampling points for training if not provided
+    if x_sampling is None:
+        x_sampling = np.linspace(-10, 10, 100)
     
     # Use enhanced curve_fit function
     print("Performing curve fitting with automatic parameter estimation...")
@@ -249,8 +255,15 @@ def example_scipy_integration():
     print("Saved plots to current directory")
 
 
-def example_lmfit_integration():
-    """Example of using ZeroGuess with lmfit integration."""
+def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
+    """Example of using ZeroGuess with lmfit integration.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     if not LMFIT_AVAILABLE:
         print("\n=========================================================")
         print("Skipping lmfit integration example: lmfit not installed")
@@ -261,18 +274,13 @@ def example_lmfit_integration():
     print("Running example: lmfit Integration (Gaussian)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points - use the same for training and prediction
-    x_sampling = np.linspace(-5, 10, 100)
-    
-    # Generate data
-    x_data = x_sampling.copy()  # Use the same x points
-    y_data = generate_noisy_data(x_data, true_params)
+    # Define the sampling points for training if not provided
+    if x_sampling is None:
+        x_sampling = np.linspace(-5, 10, 100)
     
     # Create enhanced lmfit Model with automatic parameter estimation
     print("Creating model with automatic parameter estimation...")
@@ -324,8 +332,15 @@ def example_lmfit_integration():
     print("Saved plots to current directory")
 
 
-def example_lmfit_manual():
-    """Example of using standard lmfit without automatic parameter estimation."""
+def example_lmfit_manual(true_params, x_data, y_data, x_sampling=None):
+    """Example of using standard lmfit without automatic parameter estimation.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     if not LMFIT_AVAILABLE:
         print("\n=========================================================")
         print("Skipping standard lmfit example: lmfit not installed")
@@ -336,18 +351,9 @@ def example_lmfit_manual():
     print("Running example: Standard lmfit Model (Gaussian)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
-    
-    # Define the sampling points
-    x_sampling = np.linspace(-5, 10, 100)
-    
-    # Generate data
-    x_data = x_sampling.copy()
-    y_data = generate_noisy_data(x_data, true_params)
     
     # Create standard lmfit Model
     print("Creating standard lmfit Model...")
@@ -416,16 +422,30 @@ if __name__ == "__main__":
     else:
         print("Using truly random parameters for each run")
     
+    # Generate true parameters once to use across all examples
+    true_params = generate_random_true_params()
+    print("\nGenerated true parameters that will be used for all methods:")
+    for param, value in true_params.items():
+        print(f"  {param}: {value:.6f}")
+    
+    # Define common sampling points for both training and fitting
+    x_sampling = np.linspace(-5, 10, 100)
+    
+    # Generate noisy data once to use across all examples
+    x_data = x_sampling.copy()
+    y_data = generate_noisy_data(x_data, true_params)
+    print("\nGenerated noisy data that will be used for all methods")
+    
     # Run selected examples
     if args.method in ['all', 'basic']:
-        example_basic_usage()
+        x_sampling = example_basic_usage(true_params, x_data, y_data, x_sampling)
     
     if args.method in ['all', 'scipy']:
-        example_scipy_integration()
+        example_scipy_integration(true_params, x_data, y_data, x_sampling)
     
     if args.method in ['all', 'lmfit']:
-        example_lmfit_integration()
+        example_lmfit_integration(true_params, x_data, y_data, x_sampling)
         
         # Only run the standard lmfit example if we're specifically running lmfit examples
         if args.method == 'lmfit':
-            example_lmfit_manual() 
+            example_lmfit_manual(true_params, x_data, y_data, x_sampling) 

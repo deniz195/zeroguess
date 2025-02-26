@@ -293,6 +293,12 @@ Since the library will run locally on a user's machine, deployment is simplified
    - Standard Python package installation via pip
    - Optional extras for specific integrations
 
+4. **Example Usage Guidelines**:
+   - Examples should always be executed from the examples directory as the working directory
+   - Example: `cd examples && python gaussian_example.py --method all`
+   - This ensures proper relative imports and file path handling
+   - All example scripts include command-line arguments for configuration
+
 ## Future Extensibility
 
 The modular architecture allows for future enhancements:

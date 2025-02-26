@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
-Example demonstrating ZeroGuess for a Gaussian-enveloped cosine wavelet function.
+Comprehensive example demonstrating ZeroGuess for parameter estimation with a wavelet function.
 
-This example shows the use of ZeroGuess for a more complex function with multiple parameters:
-- frequency: The frequency of the cosine oscillation
-- phase: The phase shift of the cosine
-- position: The center position of the Gaussian envelope
-- width: The width of the Gaussian envelope
+This example shows three different approaches to using ZeroGuess:
+1. Basic usage - Creating and training an estimator directly
+2. SciPy integration - Using the enhanced curve_fit function
+3. lmfit integration - Using the enhanced Model class
 
-The true parameters are randomly generated within reasonable ranges each time the script is run.
+The true parameters are randomly generated once and shared across all methods for better comparison.
+The same noisy dataset is used for all methods to ensure direct comparison.
 
 Usage:
     python wavelet_example.py [--random] [--method METHOD]
@@ -49,26 +49,27 @@ from zeroguess.utils.visualization import (
 
 
 def wavelet(x, frequency, phase, position, width):
-    """
-    Gaussian-enveloped cosine wavelet function.
+    """Wavelet function (a modulated Gaussian).
+    
+    This function implements a wavelet, which is a wave modulated by a Gaussian envelope.
     
     Args:
-        x: Independent variable
-        frequency: Frequency of the cosine oscillation
-        phase: Phase shift of the cosine in radians
-        position: Center position of the Gaussian envelope
-        width: Width of the Gaussian envelope
-    
+        x: The independent variable
+        frequency: The frequency of the wave
+        phase: The phase offset of the wave
+        position: The center position of the Gaussian envelope
+        width: The width of the Gaussian envelope
+        
     Returns:
-        Wavelet function values
+        The wavelet function values at x
     """
     # Calculate the Gaussian envelope
     envelope = np.exp(-(x - position)**2 / (2 * width**2))
     
-    # Calculate the cosine wave
-    wave = np.cos(2 * np.pi * frequency * (x - position) + phase)
+    # Calculate the wave
+    wave = np.sin(2 * np.pi * frequency * x + phase)
     
-    # Combine envelope and wave
+    # Modulate the wave with the envelope
     return envelope * wave
 
 
@@ -92,51 +93,52 @@ def generate_random_true_params():
     """Generate random true parameters within reasonable ranges.
     
     The parameters are randomly chosen within these ranges:
-    - frequency: 0.2 to 1.5 oscillations per unit x
-      (too high will cause aliasing, too low won't show oscillation)
-    - phase: 0 to 2π radians (covers all possible phase shifts)
-    - position: -3.0 to 3.0 (keeps the wavelet within the sampling window)
-    - width: 1.0 to 3.0 (ensures the wavelet is neither too narrow nor too wide)
+    - frequency: 0.5 to 2.0 (reasonable oscillation frequency)
+    - phase: 0.0 to 2*pi (full phase range)
+    - position: -2.0 to 2.0 (centered within the typical sampling window)
+    - width: 1.0 to 3.0 (ensures the envelope is neither too narrow nor too wide)
     
     Returns:
         Dictionary of randomly generated parameter values
     """
     return {
-        'frequency': np.random.uniform(0.2, 1.5),    # oscillations per unit x
-        'phase': np.random.uniform(0, 2*np.pi),      # phase shift in radians
-        'position': np.random.uniform(-3.0, 3.0),    # center position
-        'width': np.random.uniform(1.0, 3.0),        # width of the Gaussian envelope
+        'frequency': np.random.uniform(0.5, 2.0),  # oscillation frequency
+        'phase': np.random.uniform(0, 2 * np.pi),  # phase offset
+        'position': np.random.uniform(-2.0, 2.0),  # center position
+        'width': np.random.uniform(1.0, 3.0),      # envelope width
     }
 
 
-def example_basic_usage():
-    """Example of basic usage of ZeroGuess with a wavelet function."""
+def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
+    """Example of basic usage of ZeroGuess.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     print("\n=========================================================")
     print("Running example: Basic Usage (Wavelet)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points - use the same for training and prediction
-    x_sampling = np.linspace(-10, 10, 200)
-    
-    # Generate data
-    x_data = x_sampling.copy()  # Use the same x points
-    y_data = generate_noisy_data(x_data, true_params)
+    # Define the sampling points for training if not provided
+    if x_sampling is None:
+        x_sampling = np.linspace(-5, 5, 200)
     
     # Create and train estimator
     print("Creating and training estimator...")
     estimator = zeroguess.create_estimator(
         function=wavelet,
         param_ranges={
-            'frequency': (0.1, 2.0),
-            'phase': (0, 2*np.pi),
-            'position': (-5.0, 5.0),
-            'width': (0.5, 5.0),
+            'frequency': (0.1, 5.0),
+            'phase': (0, 2 * np.pi),
+            'position': (-3.0, 3.0),
+            'width': (0.1, 5.0),
         },
         independent_vars_sampling={
             'x': x_sampling,
@@ -144,8 +146,8 @@ def example_basic_usage():
     )
     
     training_results = estimator.train(
-        n_samples=1500,  # More samples for a more complex function
-        epochs=100,      # More epochs for better convergence
+        n_samples=1000,
+        epochs=100,
         batch_size=32,
         add_noise=True,
         noise_level=0.05,
@@ -160,9 +162,15 @@ def example_basic_usage():
     
     # Use estimated parameters for curve fitting
     print("Performing curve fitting with estimated parameters...")
+    from scipy import optimize
+    
+    # Define bounds for curve fitting to help convergence
+    bounds = ([0.1, 0, -5, 0.1], [5, 2*np.pi, 5, 5])
+    
     popt, _ = optimize.curve_fit(
         wavelet, x_data, y_data,
         p0=[estimated_params[param] for param in ['frequency', 'phase', 'position', 'width']],
+        bounds=bounds,
     )
     
     # Convert popt to dictionary
@@ -189,51 +197,59 @@ def example_basic_usage():
         true_params=true_params,
         estimated_params=estimated_params,
         fitted_params=fitted_params,
-        title="Wavelet Fit Comparison",
+        title="Wavelet Fit Comparison (Basic Usage)",
     )
     plt.savefig("wavelet_fit_comparison.png")
     
     plot_parameter_comparison(
         true_params, estimated_params, fitted_params,
-        title="Wavelet Parameter Comparison",
+        title="Wavelet Parameter Comparison (Basic Usage)",
     )
     plt.savefig("wavelet_parameter_comparison.png")
     
     print("Saved plots to current directory")
+    return x_sampling  # Return sampling points for reuse
 
 
-def example_scipy_integration():
-    """Example of using ZeroGuess with SciPy integration for a wavelet function."""
+def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
+    """Example of using ZeroGuess with SciPy integration.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     print("\n=========================================================")
     print("Running example: SciPy Integration (Wavelet)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points - use the same for training and prediction
-    x_sampling = np.linspace(-10, 10, 200)
-    
-    # Generate data
-    x_data = x_sampling.copy()  # Use the same x points
-    y_data = generate_noisy_data(x_data, true_params)
+    # Define the sampling points for training if not provided
+    if x_sampling is None:
+        x_sampling = np.linspace(-5, 5, 200)
     
     # Use enhanced curve_fit function
     print("Performing curve fitting with automatic parameter estimation...")
+    
+    # Define bounds for curve fitting to help convergence
+    bounds = ([0.1, 0, -5, 0.1], [5, 2*np.pi, 5, 5])
+    
     popt, _ = scipy_integration.curve_fit(
         wavelet, x_data, y_data,
         param_ranges={
-            'frequency': (0.1, 2.0),
-            'phase': (0, 2*np.pi),
-            'position': (-5.0, 5.0),
-            'width': (0.5, 5.0),
+            'frequency': (0.1, 5.0),
+            'phase': (0, 2 * np.pi),
+            'position': (-3.0, 3.0),
+            'width': (0.1, 5.0),
         },
         independent_vars_sampling={
             'x': x_sampling,
         },
+        bounds=bounds,
     )
     
     # Convert popt to dictionary
@@ -256,11 +272,24 @@ def example_scipy_integration():
     )
     plt.savefig("wavelet_scipy_integration.png")
     
-    print("Saved plot to current directory")
+    plot_parameter_comparison(
+        true_params, fitted_params,
+        title="Wavelet Parameter Comparison (SciPy Integration)",
+    )
+    plt.savefig("wavelet_parameter_comparison_scipy.png")
+    
+    print("Saved plots to current directory")
 
 
-def example_lmfit_integration():
-    """Example of using ZeroGuess with lmfit integration for a wavelet function."""
+def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
+    """Example of using ZeroGuess with lmfit integration.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     if not LMFIT_AVAILABLE:
         print("\n=========================================================")
         print("Skipping lmfit integration example: lmfit not installed")
@@ -271,37 +300,48 @@ def example_lmfit_integration():
     print("Running example: lmfit Integration (Wavelet)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points - use the same for training and prediction
-    x_sampling = np.linspace(-10, 10, 200)
-    
-    # Generate data
-    x_data = x_sampling.copy()  # Use the same x points
-    y_data = generate_noisy_data(x_data, true_params)
+    # Define the sampling points for training if not provided
+    if x_sampling is None:
+        x_sampling = np.linspace(-5, 5, 200)
     
     # Create enhanced lmfit Model with automatic parameter estimation
     print("Creating model with automatic parameter estimation...")
     model = lmfit_integration.Model(
         wavelet,
         param_ranges={
-            'frequency': (0.1, 2.0),
-            'phase': (0, 2*np.pi),
-            'position': (-5.0, 5.0),
-            'width': (0.5, 5.0),
+            'frequency': (0.1, 5.0),
+            'phase': (0, 2 * np.pi),
+            'position': (-3.0, 3.0),
+            'width': (0.1, 5.0),
         },
         independent_vars_sampling={
             'x': x_sampling,
         },
     )
     
+    # Set parameter bounds to help convergence
+    params = model.make_params()
+    for param_name, param in params.items():
+        if param_name == 'frequency':
+            param.min = 0.1
+            param.max = 5.0
+        elif param_name == 'phase':
+            param.min = 0
+            param.max = 2 * np.pi
+        elif param_name == 'position':
+            param.min = -5
+            param.max = 5
+        elif param_name == 'width':
+            param.min = 0.1  # Ensure width is positive
+            param.max = 5
+    
     # Fit data using automatic parameter estimation
     print("Fitting data with automatic parameter estimation...")
-    result = model.fit(y_data, x=x_data)
+    result = model.fit(y_data, params, x=x_data)
     
     # Extract fitted parameters
     fitted_params = {
@@ -336,8 +376,15 @@ def example_lmfit_integration():
     print("Saved plots to current directory")
 
 
-def example_lmfit_manual():
-    """Example of using standard lmfit without automatic parameter estimation."""
+def example_lmfit_manual(true_params, x_data, y_data, x_sampling=None):
+    """Example of using standard lmfit without automatic parameter estimation.
+    
+    Args:
+        true_params: Dictionary of true parameter values to use
+        x_data: Independent variable values for fitting
+        y_data: Dependent variable values (noisy data) for fitting
+        x_sampling: Optional pre-defined sampling points for training
+    """
     if not LMFIT_AVAILABLE:
         print("\n=========================================================")
         print("Skipping standard lmfit example: lmfit not installed")
@@ -348,18 +395,9 @@ def example_lmfit_manual():
     print("Running example: Standard lmfit Model (Wavelet)")
     print("=========================================================")
     
-    # Generate random true parameters
-    true_params = generate_random_true_params()
-    print("Randomly generated true parameters:")
+    print("Using true parameters:")
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
-    
-    # Define the sampling points
-    x_sampling = np.linspace(-10, 10, 200)
-    
-    # Generate data
-    x_data = x_sampling.copy()
-    y_data = generate_noisy_data(x_data, true_params)
     
     # Create standard lmfit Model
     print("Creating standard lmfit Model...")
@@ -367,11 +405,26 @@ def example_lmfit_manual():
     
     # Set initial parameter guesses (intentionally off)
     params = model.make_params(
-        frequency=0.5,  # Generic initial guess
+        frequency=1.0,  # Generic initial guess
         phase=0.0,      # Generic initial guess
         position=0.0,   # Generic initial guess
         width=1.0,      # Generic initial guess
     )
+    
+    # Set parameter bounds to help convergence
+    for param_name, param in params.items():
+        if param_name == 'frequency':
+            param.min = 0.1
+            param.max = 5.0
+        elif param_name == 'phase':
+            param.min = 0
+            param.max = 2 * np.pi
+        elif param_name == 'position':
+            param.min = -5
+            param.max = 5
+        elif param_name == 'width':
+            param.min = 0.1  # Ensure width is positive
+            param.max = 5
     
     # Fit data with standard lmfit
     print("Fitting data with standard lmfit (generic initial guesses)...")
@@ -407,7 +460,7 @@ def example_lmfit_manual():
 if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(
-        description='Run ZeroGuess example with a Gaussian-enveloped wavelet function'
+        description='Run comprehensive ZeroGuess examples with a wavelet function'
     )
     parser.add_argument(
         '--random', 
@@ -430,16 +483,30 @@ if __name__ == "__main__":
     else:
         print("Using truly random parameters for each run")
     
+    # Generate true parameters once to use across all examples
+    true_params = generate_random_true_params()
+    print("\nGenerated true parameters that will be used for all methods:")
+    for param, value in true_params.items():
+        print(f"  {param}: {value:.6f}")
+    
+    # Define common sampling points for both training and fitting
+    x_sampling = np.linspace(-5, 5, 200)
+    
+    # Generate noisy data once to use across all examples
+    x_data = x_sampling.copy()
+    y_data = generate_noisy_data(x_data, true_params)
+    print("\nGenerated noisy data that will be used for all methods")
+    
     # Run selected examples
     if args.method in ['all', 'basic']:
-        example_basic_usage()
+        x_sampling = example_basic_usage(true_params, x_data, y_data, x_sampling)
     
     if args.method in ['all', 'scipy']:
-        example_scipy_integration()
+        example_scipy_integration(true_params, x_data, y_data, x_sampling)
     
     if args.method in ['all', 'lmfit']:
-        example_lmfit_integration()
+        example_lmfit_integration(true_params, x_data, y_data, x_sampling)
         
         # Only run the standard lmfit example if we're specifically running lmfit examples
         if args.method == 'lmfit':
-            example_lmfit_manual() 
+            example_lmfit_manual(true_params, x_data, y_data, x_sampling) 
