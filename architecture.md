@@ -276,6 +276,27 @@ params['width'].max = 2
 result = model.fit(y_data, params=params, x=x_data)
 ```
 
+## lmfit Integration Enhancement
+
+To better align with lmfit's design patterns, we should enhance our `lmfit_adapter.py` to complement the built-in `guess()` method rather than working around it. The improved approach will:
+
+1. **Focus on the gap in lmfit's functionality**: 
+   - ZeroGuess is most valuable when a model doesn't implement the `guess()` method
+   - Our implementation should provide a robust alternative when native parameter estimation is unavailable
+   - Rather than duplicating parameter bounds, leverage lmfit's parameter constraint system
+
+2. **Simplified integration approach**:
+   - Make ZeroGuess-enhanced models use their own parameter estimation when `guess()` is not implemented
+   - Properly handle the case where parameters are provided vs. when they need to be estimated
+   - Ensure our implementation follows lmfit's parameter handling patterns
+
+3. **Integration with lmfit workflow**:
+   - Honor lmfit's parameter constraints when using ZeroGuess
+   - Preserve user-specified parameter values rather than overriding them
+   - Allow for proper serialization and model saving/loading
+
+This approach focuses on filling the functionality gap in lmfit models that don't provide their own parameter estimation, without attempting to replace or enhance existing `guess()` implementations.
+
 ## Neural Network Architecture
 
 The default neural network architecture will follow a modular design:
