@@ -11,65 +11,30 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from zeroguess.estimators.base import BaseEstimator
 from zeroguess.data.generators import SyntheticDataGenerator
-
-
-class ParameterEstimationNetwork(nn.Module):
-    """Neural network for parameter estimation."""
-    
-    def __init__(
-        self,
-        n_input_features: int,
-        n_output_params: int,
-        hidden_layers: List[int] = [128, 256, 256, 256, 128, 64, 32],
-    ):
-        """Initialize the neural network.
-        
-        Args:
-            n_input_features: Number of input features (typically the number of data points)
-            n_output_params: Number of output parameters to estimate
-            hidden_layers: List of hidden layer sizes
-        """
-        super().__init__()
-
-        print(f"Initializing network with {n_input_features} input features and {n_output_params} output parameters")
-        
-        # Create the network layers
-        layers = []
-        prev_size = n_input_features
-        
-        # Add hidden layers
-        for size in hidden_layers:
-            layers.append(nn.Linear(prev_size, size))
-            layers.append(nn.ReLU())
-            prev_size = size
-        
-        # Add output layer
-        layers.append(nn.Linear(prev_size, n_output_params))
-        
-        # Create the sequential model
-        self.model = nn.Sequential(*layers)
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through the network.
-        
-        Args:
-            x: Input tensor of shape (batch_size, n_input_features)
-            
-        Returns:
-            Output tensor of shape (batch_size, n_output_params)
-        """
-        return self.model(x)
+from zeroguess.estimators.architectures import get_architecture, list_architectures, get_architecture_info
 
 
 class NeuralNetworkEstimator(BaseEstimator):
-    """Neural network-based parameter estimator."""
+    """Neural network-based parameter estimator.
+    
+    This estimator uses a neural network to map from function inputs to parameter estimates.
+    It supports different neural network architectures that can be selected during initialization.
+    
+    Available architectures:
+    - "mlp" (default): Multilayer Perceptron with fully connected layers
+    - "cnn": Convolutional Neural Network (future work)
+    - "transformer": Transformer network with self-attention (future work)
+    
+    You can also use "best" or "default" to use the recommended architecture.
+    """
     
     def __init__(
         self,
         function: Callable,
         param_ranges: Dict[str, Tuple[float, float]],
         independent_vars_sampling: Dict[str, np.ndarray],
-        hidden_layers: List[int] = [128, 64, 32],
+        architecture: str = "best",
+        architecture_params: Optional[Dict[str, Any]] = None,
         learning_rate: float = 0.0001,
         weight_decay: float = 0.0001,
         **kwargs
@@ -81,280 +46,335 @@ class NeuralNetworkEstimator(BaseEstimator):
             param_ranges: Dictionary mapping parameter names to (min, max) tuples
             independent_vars_sampling: Dictionary mapping independent variable names
                 to arrays of sampling points
-            hidden_layers: List of hidden layer sizes for the neural network
+            architecture: Architecture type to use (default: "best")
+                Options include: "mlp" (default), "cnn" (future), "transformer" (future)
+                You can also use "best" or "default" to use the recommended architecture.
+            architecture_params: Architecture-specific parameters
+                Use get_architecture_info() to see available parameters for each architecture
             learning_rate: Learning rate for the optimizer
             weight_decay: Weight decay for the optimizer
             **kwargs: Additional keyword arguments
         """
         super().__init__(function, param_ranges, independent_vars_sampling, **kwargs)
         
-        self.hidden_layers = hidden_layers
+        # Handle architecture parameters
+        if architecture_params is None:
+            architecture_params = {}
+            
+        self.architecture_name = architecture
+        self.architecture_params = architecture_params
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         # These will be initialized during training
         self.network = None
+        self.architecture = None
         self.data_generator = None
         self.scaler_x = None
         self.scaler_y = None
-    
-    def _initialize_network(self, input_size: int) -> None:
-        """Initialize the neural network.
         
-        Args:
-            input_size: Size of the input features
-        """
-        self.network = ParameterEstimationNetwork(
-            n_input_features=input_size,
-            n_output_params=len(self.param_names),
-            hidden_layers=self.hidden_layers,
-        ).to(self.device)
+        # Instantiate the architecture
+        self._create_architecture()
     
-    def _normalize_parameters(self, params: np.ndarray) -> np.ndarray:
-        """Normalize parameters to [0, 1] range based on param_ranges.
+    def _create_architecture(self):
+        """Create the specified neural network architecture."""
+        self.architecture = get_architecture(
+            self.architecture_name,
+            **self.architecture_params
+        )
+    
+    @staticmethod
+    def list_available_architectures() -> List[str]:
+        """List all available neural network architectures.
         
-        Args:
-            params: Array of parameter values
-            
         Returns:
-            Normalized parameters
+            List of available architecture names
         """
-        normalized = np.zeros_like(params)
-        
-        for i, param_name in enumerate(self.param_names):
-            min_val, max_val = self.param_ranges[param_name]
-            normalized[:, i] = (params[:, i] - min_val) / (max_val - min_val)
-        
-        return normalized
+        return list_architectures()
     
-    def _denormalize_parameters(self, normalized_params: np.ndarray) -> np.ndarray:
-        """Denormalize parameters from [0, 1] range to original range.
+    @staticmethod
+    def get_architecture_details() -> Dict[str, Dict[str, Any]]:
+        """Get details about all available architectures.
         
-        Args:
-            normalized_params: Normalized parameter values
-            
         Returns:
-            Denormalized parameters clipped to their bounds
+            Dictionary mapping architecture names to information dictionaries
+            containing description and default parameters
         """
-        denormalized = np.zeros_like(normalized_params)
-        
-        for i, param_name in enumerate(self.param_names):
-            min_val, max_val = self.param_ranges[param_name]
-            # First, clip the normalized parameters to [0, 1] range to ensure
-            # they are in the valid normalized range
-            clipped_norm = np.clip(normalized_params[:, i], 0.0, 1.0)
-            # Then denormalize to the original range
-            denormalized[:, i] = clipped_norm * (max_val - min_val) + min_val
-        
-        return denormalized
+        return get_architecture_info()
     
     def train(
         self,
         n_samples: int = 1000,
-        batch_size: int = 32,
-        epochs: int = 100,
+        batch_size: int = 64,
+        n_epochs: int = 100,
         validation_split: float = 0.2,
-        add_noise: bool = True,
-        noise_level: float = 0.05,
+        verbose: bool = True,
         **kwargs
     ) -> Dict[str, Any]:
         """Train the neural network on synthetic data.
         
         Args:
-            n_samples: Number of synthetic data samples to generate
+            n_samples: Number of synthetic samples to generate
             batch_size: Batch size for training
-            epochs: Number of training epochs
+            n_epochs: Number of training epochs
             validation_split: Fraction of data to use for validation
-            add_noise: Whether to add noise to the training data
-            noise_level: Level of noise to add (if add_noise is True)
-            **kwargs: Additional training parameters
+            verbose: Whether to print progress during training
+            **kwargs: Additional keyword arguments
             
         Returns:
-            Dictionary containing training metrics
+            Dictionary containing training history and metrics
         """
-        # Initialize data generator
-        self.data_generator = SyntheticDataGenerator(
-            function=self.function,
-            param_ranges=self.param_ranges,
-            independent_vars_sampling=self.independent_vars_sampling,
+        # Create data generator if it doesn't exist
+        if self.data_generator is None:
+            self.data_generator = SyntheticDataGenerator(
+                function=self.function,
+                param_ranges=self.param_ranges,
+                independent_vars_sampling=self.independent_vars_sampling
+            )
+        
+        # Generate synthetic training data
+        params, function_values = self.data_generator.generate_dataset(n_samples=n_samples)
+        
+        # Process the data for training
+        # For now, we'll assume a single independent variable scenario
+        # In the future, this could be extended for multiple independent variables
+        if len(self.independent_var_names) == 1:
+            var_name = self.independent_var_names[0]
+            _, y_values = function_values[var_name]
+            
+            # Flatten the data for training
+            X = y_values.reshape(n_samples, -1)  # Shape: (n_samples, n_points)
+            
+            # Normalize parameters to [0, 1] range for training
+            y_normalized = np.zeros_like(params)
+            for i, name in enumerate(self.param_names):
+                min_val, max_val = self.param_ranges[name]
+                y_normalized[:, i] = (params[:, i] - min_val) / (max_val - min_val)
+            
+            y = y_normalized  # Use normalized parameters for training
+        else:
+            raise NotImplementedError("Multiple independent variables not yet implemented")
+        
+        # Split data into training and validation sets
+        n_val = int(n_samples * validation_split)
+        n_train = n_samples - n_val
+        
+        # Shuffle the data
+        indices = np.random.permutation(n_samples)
+        X = X[indices]
+        y = y[indices]
+        
+        X_train, X_val = X[:n_train], X[n_train:]
+        y_train, y_val = y[:n_train], y[n_train:]
+        
+        # Create PyTorch datasets and dataloaders
+        train_dataset = TensorDataset(
+            torch.tensor(X_train, dtype=torch.float32),
+            torch.tensor(y_train, dtype=torch.float32)
         )
-        
-        # Generate synthetic dataset
-        params, function_values = self.data_generator.generate_dataset(
-            n_samples=n_samples,
-            add_noise=add_noise,
-            noise_level=noise_level,
+        val_dataset = TensorDataset(
+            torch.tensor(X_val, dtype=torch.float32),
+            torch.tensor(y_val, dtype=torch.float32)
         )
-        
-        # For now, assume single independent variable for simplicity
-        if len(self.independent_var_names) != 1:
-            raise NotImplementedError("Only single independent variable is supported for now")
-        
-        var_name = self.independent_var_names[0]
-        _, y_values = function_values[var_name]
-        
-        # Prepare data for training
-        X = y_values  # The network input is the function values (curve)
-        y = self._normalize_parameters(params)  # Target is the normalized parameters
-        
-        # Convert to PyTorch tensors
-        X_tensor = torch.tensor(X, dtype=torch.float32)
-        y_tensor = torch.tensor(y, dtype=torch.float32)
-        
-        # Create dataset and dataloaders
-        dataset = TensorDataset(X_tensor, y_tensor)
-        
-        # Split into training and validation
-        val_size = int(validation_split * len(dataset))
-        train_size = len(dataset) - val_size
-        train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
         
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size)
         
-        # Initialize network (input size is the number of data points in the curve)
-        self._initialize_network(X.shape[1])
+        # Create the neural network if it doesn't exist
+        if self.network is None:
+            n_input_features = X.shape[1]
+            n_output_params = len(self.param_names)
+            
+            # Create the network using the selected architecture
+            self.network = self.architecture.create_network(
+                n_input_features=n_input_features,
+                n_output_params=n_output_params
+            )
+            
+            # Move the network to the appropriate device
+            self.network.to(self.device)
         
-        # Initialize optimizer and loss function
-        optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        # Create optimizer
+        optimizer = optim.Adam(
+            self.network.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay
+        )
+        
+        # Define loss function
         criterion = nn.MSELoss()
         
         # Training loop
-        train_losses = []
-        val_losses = []
+        history = {
+            "train_loss": [],
+            "val_loss": []
+        }
         
-        for epoch in range(epochs):
+        for epoch in range(n_epochs):
             # Training phase
             self.network.train()
             train_loss = 0.0
             
-            for inputs, targets in train_loader:
-                inputs = inputs.to(self.device)
-                targets = targets.to(self.device)
+            for X_batch, y_batch in train_loader:
+                X_batch = X_batch.to(self.device)
+                y_batch = y_batch.to(self.device)
                 
                 # Forward pass
-                outputs = self.network(inputs)
-                loss = criterion(outputs, targets)
+                y_pred = self.network(X_batch)
+                loss = criterion(y_pred, y_batch)
                 
-                # Backward pass and optimize
+                # Backward pass and optimization
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 
-                train_loss += loss.item() * inputs.size(0)
+                train_loss += loss.item() * X_batch.size(0)
             
             train_loss /= len(train_loader.dataset)
-            train_losses.append(train_loss)
             
             # Validation phase
             self.network.eval()
             val_loss = 0.0
             
             with torch.no_grad():
-                for inputs, targets in val_loader:
-                    inputs = inputs.to(self.device)
-                    targets = targets.to(self.device)
+                for X_batch, y_batch in val_loader:
+                    X_batch = X_batch.to(self.device)
+                    y_batch = y_batch.to(self.device)
                     
-                    outputs = self.network(inputs)
-                    loss = criterion(outputs, targets)
+                    y_pred = self.network(X_batch)
+                    loss = criterion(y_pred, y_batch)
                     
-                    val_loss += loss.item() * inputs.size(0)
+                    val_loss += loss.item() * X_batch.size(0)
+                
+                val_loss /= len(val_loader.dataset)
             
-            val_loss /= len(val_loader.dataset)
-            val_losses.append(val_loss)
+            # Record history
+            history["train_loss"].append(train_loss)
+            history["val_loss"].append(val_loss)
             
             # Print progress
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{epochs}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
+            if verbose and (epoch + 1) % 10 == 0:
+                print(f"Epoch {epoch + 1}/{n_epochs} - "
+                      f"train_loss: {train_loss:.6f} - "
+                      f"val_loss: {val_loss:.6f}")
         
         self.is_trained = True
-        
-        return {
-            "train_losses": train_losses,
-            "val_losses": val_losses,
-            "final_train_loss": train_losses[-1],
-            "final_val_loss": val_losses[-1],
-            "epochs": epochs,
-            "n_samples": n_samples,
-        }
+        return history
     
-    def predict(self, x_data: np.ndarray, y_data: np.ndarray) -> Dict[str, float]:
-        """Predict parameter values for the given data.
+    def predict(self, *args, **kwargs) -> Dict[str, float]:
+        """Predict initial parameters for a function.
         
         Args:
-            x_data: Independent variable values
-            y_data: Dependent variable values (the curve to fit)
+            *args: Positional arguments to pass to the function
+            **kwargs: Keyword arguments to pass to the function
             
         Returns:
-            Dictionary mapping parameter names to estimated values,
-            clipped to stay within the specified parameter ranges
+            Dictionary mapping parameter names to predicted values
+            
+        Raises:
+            RuntimeError: If the estimator is not trained
+            ValueError: If the input size doesn't match what the network expects
         """
-        if not self.is_trained:
+        if not self.is_trained or self.network is None:
             raise RuntimeError("Estimator must be trained before prediction")
         
-        # Convert y_data to the right shape for the network
-        # Resample if necessary to match the training input size
-        if len(self.independent_var_names) != 1:
-            raise NotImplementedError("Only single independent variable is supported for now")
+        # Handle input data differently based on the form (args vs kwargs)
+        if len(args) > 0:
+            # Extract independent variable data from args
+            if len(args) != 1 and len(self.independent_var_names) == 1:
+                # If we expected y values directly (special case for examples)
+                if len(args) == 2 or 'y' in kwargs:
+                    # Extract y values (function output) from the second argument or kwargs
+                    x_data = args[0]
+                    y_data = args[1] if len(args) > 1 else kwargs.get('y')
+                else:
+                    raise ValueError(
+                        f"Expected {len(self.independent_var_names)} positional arguments, "
+                        f"got {len(args)}"
+                    )
+            else:
+                # Normal case: extract data from args in expected order
+                x_data = args[0]
+                y_data = kwargs.get('y', None)
+                
+                if y_data is None:
+                    raise ValueError("y data must be provided for prediction")
+        else:
+            # Extract independent variable data from kwargs
+            if len(self.independent_var_names) == 1:
+                var_name = self.independent_var_names[0]
+                if var_name not in kwargs:
+                    raise ValueError(f"Missing required independent variable: {var_name}")
+                x_data = kwargs[var_name]
+                y_data = kwargs.get('y', None)
+                
+                if y_data is None:
+                    raise ValueError("y data must be provided for prediction")
+            else:
+                raise NotImplementedError("Multiple independent variables not yet implemented")
         
-        var_name = self.independent_var_names[0]
-        training_x = self.independent_vars_sampling[var_name]
+        # Check the network input size from the state dictionary
+        # Get the first layer's weight shape
+        first_layer_params = next(iter(self.network.parameters()))
+        expected_input_size = first_layer_params.shape[1]
         
-        # Check if x_data matches the training sampling points
-        if x_data.shape != training_x.shape or not np.allclose(x_data, training_x):
-            # Resample y_data to match training_x
-            # This is a simplistic approach - could be improved with interpolation
-            raise NotImplementedError(
-                "Input x_data must match the training sampling points for now"
+        # Check if the input size matches what the network expects
+        if len(y_data) != expected_input_size:
+            raise ValueError(
+                f"Input data size ({len(y_data)}) does not match the network's expected input size "
+                f"({expected_input_size}). The network must be trained with the same number of data points "
+                f"as used for prediction."
             )
         
-        # Prepare input for the network
-        X = y_data.reshape(1, -1)  # Add batch dimension
-        X_tensor = torch.tensor(X, dtype=torch.float32).to(self.device)
+        # Convert y_data to tensor and prepare for model input
+        features = y_data.flatten()
         
-        # Get prediction from the network
+        # Convert to tensor and move to device
+        features_tensor = torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
+        
+        # Make prediction
         self.network.eval()
         with torch.no_grad():
-            normalized_params = self.network(X_tensor).cpu().numpy()
+            # Get normalized predictions from network
+            predictions_normalized = self.network(features_tensor).cpu().numpy()[0]
+            
+            # Ensure predictions are clipped to [0, 1] range before denormalizing
+            predictions_normalized = np.clip(predictions_normalized, 0.0, 1.0)
         
-        # Denormalize parameters
-        params = self._denormalize_parameters(normalized_params)[0]  # Remove batch dimension
-        
-        # Create dictionary of parameter name to value
-        result = {}
+        # Convert predictions back to parameter dictionary with denormalization
+        param_dict = {}
         for i, name in enumerate(self.param_names):
-            # Get parameter value
-            param_value = params[i]
-            # Apply final clipping to ensure bounds are respected
             min_val, max_val = self.param_ranges[name]
-            clipped_value = np.clip(param_value, min_val, max_val)
-            result[name] = clipped_value
+            # Denormalize predictions to the original parameter range
+            param_dict[name] = min_val + predictions_normalized[i] * (max_val - min_val)
         
-        return result
+        return param_dict
     
     def save(self, path: str) -> None:
-        """Save the trained estimator to a file.
+        """Save the trained model to disk.
         
         Args:
-            path: Path to save the estimator to
+            path: Path to save the model
+            
+        Raises:
+            RuntimeError: If the estimator is not trained
         """
-        if not self.is_trained:
-            raise RuntimeError("Cannot save an untrained estimator")
+        if not self.is_trained or self.network is None:
+            raise RuntimeError("Estimator must be trained before saving")
         
-        # Create directory if it doesn't exist
+        # Create parent directory if it doesn't exist
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         
-        # Save model state and metadata
+        # Save the model state
         state = {
-            "network_state": self.network.state_dict(),
-            "param_names": self.param_names,
+            "architecture_name": self.architecture_name,
+            "architecture_params": self.architecture_params,
             "param_ranges": self.param_ranges,
+            "param_names": self.param_names,
             "independent_var_names": self.independent_var_names,
-            "independent_vars_sampling": {
-                k: v.tolist() for k, v in self.independent_vars_sampling.items()
-            },
-            "hidden_layers": self.hidden_layers,
+            "independent_vars_sampling": self.independent_vars_sampling,
+            "network_state_dict": self.network.state_dict(),
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
         }
@@ -362,44 +382,66 @@ class NeuralNetworkEstimator(BaseEstimator):
         torch.save(state, path)
     
     @classmethod
-    def load(cls, path: str) -> 'NeuralNetworkEstimator':
-        """Load a trained estimator from a file.
+    def load(cls, path: str) -> "NeuralNetworkEstimator":
+        """Load a trained model from disk.
         
         Args:
-            path: Path to load the estimator from
+            path: Path to load the model from
             
         Returns:
-            Loaded estimator instance
+            Loaded NeuralNetworkEstimator instance
+            
+        Raises:
+            FileNotFoundError: If the model file does not exist
         """
-        # Load state dictionary
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Model file not found: {path}")
+        
+        # Load the model state
         state = torch.load(path, map_location=torch.device("cpu"))
         
-        # Convert sampling points back to numpy arrays
-        independent_vars_sampling = {
-            k: np.array(v) for k, v in state["independent_vars_sampling"].items()
-        }
+        # Extract the independent_vars_sampling from the state, or create a dummy one
+        # that will pass validation in the base class
+        independent_vars_sampling = state.get("independent_vars_sampling", None)
+        if independent_vars_sampling is None:
+            # Create dummy sampling for validation
+            independent_vars_sampling = {}
+            for var_name in state["independent_var_names"]:
+                independent_vars_sampling[var_name] = np.array([0.0])  # Dummy value that will pass validation
         
-        # Create a dummy function for initialization
-        # This will be replaced with the actual function later
-        def dummy_function(*args, **kwargs):
-            return np.zeros(10)
-        
-        # Create instance
+        # Create a new estimator instance
         estimator = cls(
-            function=dummy_function,
+            function=None,  # Function is not necessary for prediction
             param_ranges=state["param_ranges"],
             independent_vars_sampling=independent_vars_sampling,
-            hidden_layers=state["hidden_layers"],
+            architecture=state["architecture_name"],
+            architecture_params=state["architecture_params"],
             learning_rate=state["learning_rate"],
             weight_decay=state["weight_decay"],
         )
         
-        # Initialize network
-        input_size = list(independent_vars_sampling.values())[0].shape[0]
-        estimator._initialize_network(input_size)
+        # Set additional attributes
+        estimator.param_names = state["param_names"]
+        estimator.independent_var_names = state["independent_var_names"]
         
-        # Load network state
-        estimator.network.load_state_dict(state["network_state"])
+        # Check the network input size from the state dictionary
+        # Get the first layer's weight shape from the network state dict
+        first_layer_key = [k for k in state["network_state_dict"].keys() if 'weight' in k][0]
+        n_input_features = state["network_state_dict"][first_layer_key].shape[1]
+            
+        n_output_params = len(estimator.param_names)
+        
+        # Create the network using the architecture
+        estimator.network = estimator.architecture.create_network(
+            n_input_features=n_input_features,
+            n_output_params=n_output_params
+        )
+        
+        # Load the network state
+        estimator.network.load_state_dict(state["network_state_dict"])
+        estimator.network.to(estimator.device)
+        estimator.network.eval()
+        
         estimator.is_trained = True
         
         return estimator

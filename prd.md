@@ -25,12 +25,49 @@ The library then:
 
 The neural network architecture will be based on an autoencoder-like approach, where the encoder is given by the fitting function and the decoder is learned. The exact architecture will be determined during implementation.
 
+## Features
+
+### Core Parameter Estimation
+- Neural network-based parameter estimation with configurable architecture
+- Synthetic data generation from user-defined parameter ranges
+- Training with customizable hyperparameters (learning rate, batch size, epochs)
+- Support for adding realistic noise to training data
+- Parameter normalization and denormalization for robust training
+- Parameter prediction from experimental data with minimal user input
+
+### Architecture Selection
+- Multiple neural network architectures optimized for different fitting scenarios
+- Simple selection mechanism for choosing specialized architectures
+- Default "universal" architecture that performs well across most common use cases
+- Architectures optimized for specific function types (e.g., peaks, oscillatory, multi-modal)
+- Architecture-specific hyperparameter configurations
+
+### Integrations
+- SciPy integration: Enhanced `curve_fit` function with automatic parameter estimation
+- lmfit integration: Enhanced `Model` class with automatic parameter guessing capability
+- Seamless connection to existing curve fitting workflows
+
+### Model Management
+- Model persistence: Save and load trained estimator models
+- Training history tracking and analysis
+
+### Visualization and Diagnostics
+- Visualization tools for comparing parameter estimates
+- Fit quality visualization
+- Training history visualization
+- Diagnostic information for training process
+
+### Supported Functions
+- Demonstrated with common fitting functions (Gaussian, wavelet)
+- Extendable to arbitrary user-defined functions with numeric parameters
+
 ## What are the inputs?
 - Curve fitting target function (compatible with SciPy or lmfit)
 - Relevant range for each starting parameter (min/max values)
 - Sampling points for independent variables
 - (Optional) Training configuration parameters (epochs, learning rate, etc.)
 - (Optional) Dataset with noise characteristics for more realistic training
+- (Optional) Selection of neural network architecture type (defaults to universal architecture)
 
 ## What are the outputs?
 - Starting parameter estimates for the specified function
@@ -49,6 +86,8 @@ The neural network architecture will be based on an autoencoder-like approach, w
 - The library should seamlessly integrate with supported curve fitting libraries
 - It should provide a starting parameter estimation function requiring minimal additional information beyond what is already specified within the library APIs
 - It should follow consistent naming conventions and patterns familiar to users of SciPy and lmfit
+- Architecture selection should be exposed through a simple parameter in the primary API
+- Architecture-specific parameters should be handled through sensible defaults when not explicitly provided
 
 ### Error Handling
 The library should properly handle edge cases:
@@ -75,5 +114,8 @@ The library will be considered successful if:
 - Implementing more sophisticated machine learning architectures
 - Adding support for constraints and boundary conditions
 - Creating a web service for cloud-based parameter estimation
+- Supporting user-defined custom estimator architectures
+- Providing automated architecture selection based on function characteristics
+- Implementing architecture comparison tools to help users select optimal architectures
 
 

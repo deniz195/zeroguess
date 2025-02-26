@@ -42,6 +42,13 @@ zeroguess/
 │   ├── __init__.py
 │   ├── base.py          # Base estimator interfaces
 │   ├── nn_estimator.py  # Neural network implementation
+│   ├── architectures/   # Neural network architectures
+│   │   ├── __init__.py
+│   │   ├── base.py      # Base architecture interface
+│   │   ├── mlp.py       # Multilayer perceptron architecture
+│   │   ├── cnn.py       # Convolutional neural network architecture
+│   │   ├── transformer.py # Transformer architecture (Future Work)
+│   │   └── registry.py  # Architecture registry and selection
 │   └── factory.py       # Factory for creating estimators
 ├── data/                # Data handling components
 │   ├── __init__.py
@@ -55,7 +62,8 @@ zeroguess/
 ├── training/            # Model training components
 │   ├── __init__.py
 │   ├── trainer.py       # Training loop implementation
-│   └── metrics.py       # Training metrics and evaluation
+│   ├── metrics.py       # Training metrics and evaluation
+│   └── benchmarking.py  # Architecture benchmarking utilities (Future Work)
 ├── io/                  # Persistence components
 │   ├── __init__.py
 │   ├── serialization.py # Model serialization/deserialization
@@ -81,6 +89,30 @@ zeroguess/
   - Define network architecture
   - Implement forward/backward pass
   - Handle tensor operations
+  - Select and configure appropriate network architectures
+
+#### Neural Network Architecture Components
+- **Purpose**: Provide different neural network architectures optimized for various fitting scenarios
+- **Responsibilities**:
+  - Implement specific neural network architectures (MLP, CNN, Transformer, etc.)
+  - Provide architecture-specific hyperparameter configurations
+  - Register architectures with the architecture registry
+  - Apply architecture-specific regularization and optimization techniques
+
+#### Architecture Registry
+- **Purpose**: Manage available neural network architectures
+- **Responsibilities**:
+  - Register and catalog available architectures
+  - Provide a selection mechanism for choosing architectures
+  - Manage default "best" architecture selection
+  - Handle backward compatibility for code not specifying an architecture
+
+#### Architecture Benchmarking
+- **Purpose**: Evaluate and compare different architectures
+- **Responsibilities**:
+  - Measure performance metrics for different architectures on specific problems
+   - Compare architecture performance across different function types
+   - Generate reports on architecture performance
 
 #### Data Generation
 - **Purpose**: Generate synthetic data for training
@@ -121,27 +153,41 @@ zeroguess/
 
 1. **Configuration Phase**:
    - User provides fitting function and parameter ranges
+   - User optionally selects a neural network architecture and configuration
    - System validates inputs and configures data generation
+   - Architecture-specific configurations are validated and defaults applied
 
 2. **Data Generation Phase**:
    - System generates random parameter sets within ranges
    - System evaluates fitting function with these parameters
    - Training dataset is created from parameter-output pairs
 
-3. **Training Phase**:
-   - Neural network is initialized with appropriate architecture
+3. **Architecture Initialization Phase**:
+   - Selected architecture (or default) is instantiated
+   - Architecture-specific components are configured
+   - Model is built with appropriate input/output dimensions
+
+4. **Training Phase**:
+   - Neural network is trained with architecture-specific optimizations
    - Model is trained on synthetic data
    - Training metrics are monitored for convergence/issues
+   - Architecture-specific regularization is applied
 
-4. **Inference Phase**:
+5. **Inference Phase**:
    - User provides experimental data
-   - System preprocesses the data
+   - System preprocesses the data according to architecture requirements
    - Model predicts initial parameters
    - System validates prediction quality
    - Parameters are returned to user or injected into fitting workflow
 
-5. **Persistence (Optional)**:
-   - Trained model is serialized to disk
+6. **Benchmarking Phase (Optional)** *(Future Work)*:
+   - Multiple architectures are instantiated and trained
+   - Performance metrics are collected for each architecture
+   - Results are compared and visualized
+   - Recommendations are generated based on performance
+
+7. **Persistence (Optional)**:
+   - Trained model is serialized to disk with architecture information
    - Model can be loaded for later use without retraining
 
 ## Key Interfaces
@@ -161,7 +207,7 @@ def gaussian(x, amplitude, center, width):
 # Define independent variable sampling points
 x_sampling = np.linspace(-10, 10, 100)  # Domain for training
 
-# Create parameter estimator
+# Create parameter estimator with specific architecture
 estimator = zeroguess.create_estimator(
     function=gaussian,
     param_ranges={
@@ -171,6 +217,12 @@ estimator = zeroguess.create_estimator(
     },
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for the independent variable
+    },
+    architecture='mlp',  # Select MLP architecture (optional, defaults to "best")
+    architecture_params={  # Architecture-specific parameters (optional)
+        'hidden_layers': [64, 128, 64],
+        'activation': 'relu',
+        'dropout_rate': 0.1
     }
 )
 
@@ -189,6 +241,26 @@ optimal_params, _ = optimize.curve_fit(
     gaussian, x_data, y_data,
     p0=initial_params  # Use our estimated parameters
 )
+
+# Benchmark different architectures for this function (optional) (Future Work)
+benchmark_results = zeroguess.benchmark_architectures(
+    function=gaussian,
+    param_ranges={
+        'amplitude': (0, 10),
+        'center': (-5, 5),
+        'width': (0.1, 2)
+    },
+    independent_vars_sampling={
+        'x': x_sampling
+    },
+    architectures=['mlp', 'cnn', 'transformer'],  # Architectures to benchmark
+    metrics=['mse', 'parameter_error', 'training_time']  # Metrics to evaluate
+)
+
+# Print benchmark results
+print(benchmark_results.summary())
+# Or visualize the results
+benchmark_results.plot()
 ```
 
 ### SciPy Integration
@@ -211,6 +283,12 @@ optimal_params, pcov = scipy_integration.curve_fit(
     },
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for training
+    },
+    architecture='cnn',  # Optional: Select CNN architecture
+    architecture_params={  # Optional: Architecture-specific parameters
+        'n_conv_layers': 2,
+        'filters': [16, 32],
+        'kernel_size': 3
     }
 )
 ```
@@ -229,13 +307,13 @@ x_sampling = np.linspace(-10, 10, 100)
 # Create an lmfit model with automatic parameter estimation
 model = lmfit_integration.Model(
     gaussian,
-    param_ranges={  # Additional parameter for estimation
-        'amplitude': (0, 10),
-        'center': (-5, 5),
-        'width': (0.1, 2)
-    },
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for training
+    },
+    architecture='mlp',  # Optional: Select MLP architecture
+    architecture_params={  # Optional: Architecture-specific parameters
+        'hidden_layers': [64, 128, 64],
+        'activation': 'relu'
     }
 )
 
@@ -297,26 +375,89 @@ To better align with lmfit's design patterns, we should enhance our `lmfit_adapt
 
 This approach focuses on filling the functionality gap in lmfit models that don't provide their own parameter estimation, without attempting to replace or enhance existing `guess()` implementations.
 
-## Neural Network Architecture
+# Note: Transformer architecture integration is planned for future work
 
-The default neural network architecture will follow a modular design:
+## Neural Network Architectures
 
-1. **Input Layer**: 
-   - Accepts the data points (x, y values) with variable shapes to accommodate different numbers of independent variables and data points.
+ZeroGuess supports multiple neural network architectures, each optimized for different types of curve fitting problems. The architecture selection feature allows users to choose the most appropriate architecture for their specific needs.
 
-2. **Feature Extraction Layers**:
-   - Convolutional or attention-based layers to extract patterns from the data.
-   - Dimensionality reduction to create fixed-size representations.
+### Architecture Types
 
-3. **Parameter Prediction Layers**:
-   - Fully connected layers that map from the extracted features to parameter estimates.
-   - Output layer normalized to the parameter ranges.
+#### 1. Multilayer Perceptron (MLP)
+- **Description**: A standard feedforward neural network with fully connected layers
+- **Strengths**: 
+  - General-purpose architecture suitable for a wide range of functions
+  - Good performance on smooth, continuous functions
+  - Computationally efficient for small to medium-sized problems
+- **Configuration Parameters**:
+  - `hidden_layers`: List of integers specifying the size of each hidden layer
+  - `activation`: Activation function to use (relu, tanh, sigmoid, etc.)
+  - `dropout_rate`: Dropout rate for regularization (0.0-1.0)
+- **Best For**: General-purpose use, simple unimodal functions, default architecture
 
-4. **Loss Function**:
-   - Primary: Mean squared error between predicted output curve and target curve.
-   - Regularization: Penalties to encourage realistic parameter values.
+#### 2. Convolutional Neural Network (CNN)
+- **Description**: Architecture using convolutional layers to capture local patterns in data
+- **Strengths**:
+  - Excels at capturing local patterns and periodicities
+  - Robust to input size variations
+  - Can handle higher-dimensional inputs efficiently
+- **Configuration Parameters**:
+  - `n_conv_layers`: Number of convolutional layers
+  - `filters`: List of integers specifying the number of filters in each layer
+  - `kernel_size`: Size of the convolutional kernels
+  - `pool_size`: Size of the pooling windows (if used)
+- **Best For**: Oscillatory functions, functions with repeating patterns, multi-peak functions
 
-The specific number of layers and neurons will be determined during implementation, with sensible defaults chosen to balance complexity and performance for the expected scale (≤10 parameters, ≤5 independent variables, ≤1000 data points).
+#### 3. Transformer Architecture *(Not Currently Implemented - Future Work)*
+- **Description**: Based on the transformer architecture with self-attention mechanisms
+- **Strengths**:
+  - Excels at capturing global relationships in data
+  - Can handle complex dependencies between different regions of the input
+  - Superior performance on multi-modal and complex functions
+- **Configuration Parameters**:
+  - `n_heads`: Number of attention heads
+  - `n_layers`: Number of transformer layers
+  - `dim_feedforward`: Dimension of the feedforward network in each transformer layer
+  - `dropout`: Dropout rate for attention layers
+- **Best For**: Complex, multi-modal functions, functions with long-range dependencies
+
+### Default "Universal" Architecture
+
+The default architecture (selected when no specific architecture is specified) is a carefully tuned MLP configuration designed to perform well across a wide range of common functions. This architecture is referred to as the "universal" architecture and features:
+
+- A pyramid-like structure of hidden layers that gradually reduces dimensionality
+- Batch normalization for improved training stability
+- Residual connections to help with gradient flow
+- Adaptive learning rate scheduling
+
+### Architecture Selection Mechanism
+
+The architecture selection is implemented through a registry pattern:
+
+1. **Architecture Registry**: A central registry that maintains a catalog of available architectures
+2. **Factory Function**: Creates the appropriate architecture instance based on the selected type
+3. **Configuration Validation**: Validates and applies defaults for architecture-specific parameters
+
+### Benchmarking System *(Not Currently Implemented - Future Work)*
+
+The benchmarking system allows users to compare different architectures on their specific problems:
+
+1. **Metrics Collection**: Gathers performance metrics for each architecture
+   - Mean squared error (MSE) on validation data
+   - Parameter estimation error
+   - Training time
+   - Inference time
+   - Memory usage
+
+2. **Comparison Visualization**: Generates visualizations comparing architectures
+   - Bar charts for quantitative metrics
+   - Radar plots for multi-dimensional comparison
+   - Training curve comparisons
+
+3. **Results Analysis**: Provides recommendations based on benchmarking results
+   - Identifies the best architecture for the specific problem
+   - Highlights trade-offs between different architectures
+   - Suggests potential hyperparameter improvements
 
 ## Extension Points
 
@@ -374,17 +515,31 @@ The recommended implementation approach is:
    - SciPy integration
    - lmfit integration
 
-1. **Phase 2**: Verification
+2. **Phase 2**: Architecture Selection
+   - Base architecture interface
+   - MLP architecture implementation
+   - Architecture registry
+   - Factory function enhancements
+   - API updates for architecture selection
+   - Backward compatibility layer
+
+3. **Phase 3**: Advanced Architectures *(Partial Implementation)*
+   - CNN architecture implementation
+   - ~~Transformer architecture implementation~~ *(Future Work)*
+   - Architecture-specific hyperparameter handling
+   - ~~Architecture benchmarking system~~ *(Future Work)*
+
+4. **Phase 4**: Verification and Optimization
    - Add verification examples as unit tests
-   - Add verification tests for the core functionality
-
-2. **Phase 3**: Enhanced functionality
-   - Improved neural architectures
-   - Model persistence
+   - Add verification tests for each architecture
    - Comprehensive error handling
-
-3. **Phase 4**: Optimization and extensions
    - Performance optimizations
+
+5. **Phase 5**: Enhanced functionality and Future Extensions
+   - Architecture benchmarking system
+   - Transformer architecture implementation
+   - Improved architecture selection heuristics
+   - Model persistence
    - Additional visualizations
    - Extended documentation and examples
    - GPU acceleration (optional)

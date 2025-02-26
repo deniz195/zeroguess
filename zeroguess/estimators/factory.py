@@ -13,6 +13,8 @@ def create_estimator(
     param_ranges: Dict[str, Tuple[float, float]],
     independent_vars_sampling: Dict[str, np.ndarray],
     estimator_type: str = "neural_network",
+    architecture: str = "best",
+    architecture_params: Dict[str, Any] = None,
     **kwargs
 ) -> BaseEstimator:
     """Create a parameter estimator instance.
@@ -23,21 +25,31 @@ def create_estimator(
         independent_vars_sampling: Dictionary mapping independent variable names
             to arrays of sampling points
         estimator_type: Type of estimator to create (default: "neural_network")
+        architecture: Neural network architecture to use (default: "best")
+                     Available options: "mlp", "cnn", or "best"
+        architecture_params: Architecture-specific parameters
         **kwargs: Additional arguments to pass to the estimator constructor
         
     Returns:
         Instance of a BaseEstimator subclass
         
     Raises:
-        ValueError: If the estimator type is not recognized
+        ValueError: If the estimator type or architecture is not recognized
     """
     if estimator_type == "neural_network":
         # Import here to avoid circular imports
         from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
+        
+        # Handle architecture selection
+        if architecture_params is None:
+            architecture_params = {}
+            
         return NeuralNetworkEstimator(
             function=function,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
+            architecture=architecture,
+            architecture_params=architecture_params,
             **kwargs
         )
     else:
