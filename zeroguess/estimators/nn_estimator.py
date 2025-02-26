@@ -20,7 +20,7 @@ class ParameterEstimationNetwork(nn.Module):
         self,
         n_input_features: int,
         n_output_params: int,
-        hidden_layers: List[int] = [128, 64, 32],
+        hidden_layers: List[int] = [128, 256, 256, 256, 128, 64, 32],
     ):
         """Initialize the neural network.
         
@@ -30,6 +30,8 @@ class ParameterEstimationNetwork(nn.Module):
             hidden_layers: List of hidden layer sizes
         """
         super().__init__()
+
+        print(f"Initializing network with {n_input_features} input features and {n_output_params} output parameters")
         
         # Create the network layers
         layers = []
@@ -68,7 +70,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         param_ranges: Dict[str, Tuple[float, float]],
         independent_vars_sampling: Dict[str, np.ndarray],
         hidden_layers: List[int] = [128, 64, 32],
-        learning_rate: float = 0.001,
+        learning_rate: float = 0.0001,
+        weight_decay: float = 0.0001,
         **kwargs
     ):
         """Initialize the neural network estimator.
@@ -80,12 +83,14 @@ class NeuralNetworkEstimator(BaseEstimator):
                 to arrays of sampling points
             hidden_layers: List of hidden layer sizes for the neural network
             learning_rate: Learning rate for the optimizer
+            weight_decay: Weight decay for the optimizer
             **kwargs: Additional keyword arguments
         """
         super().__init__(function, param_ranges, independent_vars_sampling, **kwargs)
         
         self.hidden_layers = hidden_layers
         self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         # These will be initialized during training
@@ -208,7 +213,7 @@ class NeuralNetworkEstimator(BaseEstimator):
         self._initialize_network(X.shape[1])
         
         # Initialize optimizer and loss function
-        optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
+        optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
         criterion = nn.MSELoss()
         
         # Training loop
@@ -339,6 +344,7 @@ class NeuralNetworkEstimator(BaseEstimator):
             },
             "hidden_layers": self.hidden_layers,
             "learning_rate": self.learning_rate,
+            "weight_decay": self.weight_decay,
         }
         
         torch.save(state, path)
@@ -373,6 +379,7 @@ class NeuralNetworkEstimator(BaseEstimator):
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=state["hidden_layers"],
             learning_rate=state["learning_rate"],
+            weight_decay=state["weight_decay"],
         )
         
         # Initialize network

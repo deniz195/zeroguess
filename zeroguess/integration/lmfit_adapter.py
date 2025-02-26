@@ -111,7 +111,6 @@ class Model(lmfit.Model):
         self.independent_vars_sampling = independent_vars_sampling
         self.auto_extract_bounds = auto_extract_bounds
         self._estimator = None
-        self._latest_params = None  # Store most recent params
         
         # Check if this model has a guess method from the parent class
         self._has_parent_guess = self._has_custom_guess_method()
@@ -212,28 +211,6 @@ class Model(lmfit.Model):
         
         return params
     
-    def set_param_bounds(self, params):
-        """Set parameter bounds on the model and store for future use.
-        
-        This method is called when parameter bounds are set after make_params().
-        
-        Args:
-            params: Parameters object with bounds set
-        """
-        self._latest_params = params
-        
-        # If using auto extract bounds, try to initialize the estimator
-        if self.auto_extract_bounds and self._estimator is None and self.independent_vars_sampling is not None:
-            try:
-                # Extract parameter bounds
-                self.param_ranges = self._extract_bounds_from_params(params)
-                
-                # Initialize the estimator
-                self._initialize_estimator()
-            except (ValueError, RuntimeError) as e:
-                # If initialization fails, just continue
-                pass
-                
     def guess(self, data, **kwargs) -> lmfit.Parameters:
         """Guess initial parameter values based on data.
         
@@ -251,6 +228,9 @@ class Model(lmfit.Model):
         Raises:
             ValueError: If required independent variables are missing
         """
+
+        print(f"DEBUG [guess]: auto_extract_bounds={self.auto_extract_bounds}, estimator_initialized={self._estimator is not None}")
+
         # If the parent class has a custom guess implementation, use it
         if self._has_parent_guess:
             return super().guess(data, **kwargs)
@@ -270,15 +250,10 @@ class Model(lmfit.Model):
         
         # Create parameters - IMPORTANT: For test_guess_method_success, we need to use the
         # latest parameters with bounds, not create new ones
-        params = super().make_params() if self._latest_params is None else self._latest_params.copy()
-        
+        params = super().make_params()
+
         # Handle the case where auto_extract_bounds is enabled but estimator not initialized
         if self.auto_extract_bounds and self._estimator is None and self.independent_vars_sampling is not None:
-            # Check if we might be in a test environment to avoid warnings
-            import inspect
-            stack = inspect.stack()
-            in_test_method = any('test_' in frame.function for frame in stack[1:5])
-            
             try:
                 # Extract bounds from params
                 extracted_param_ranges = self._extract_bounds_from_params(params)
@@ -289,14 +264,12 @@ class Model(lmfit.Model):
                 # Initialize and train estimator
                 self._initialize_estimator()
             except Exception as e:
-                # Don't issue warnings in test environments expecting no warnings
-                if not in_test_method:
-                    import warnings
-                    warnings.warn(
-                        f"Failed to extract parameter bounds or train estimator: {str(e)}. "
-                        f"Parameter estimation will be skipped."
-                    )
-                return params
+                # Raise an exception instead of warning
+                raise RuntimeError(
+                    f"Failed to extract parameter bounds or train estimator: {str(e)}. "
+                    f"Parameter estimation cannot proceed without valid bounds."
+                    f"Use model.set_param_hint('param_name', min=..., max=...) to set bounds on parameters."
+                )
         
         # If estimator is available, use it to guess parameters
         if self._estimator is not None:
@@ -309,16 +282,11 @@ class Model(lmfit.Model):
                     if name in params:
                         params[name].set(value=value)
             except Exception as e:
-                # Don't issue warnings in test environments expecting no warnings
-                import inspect
-                stack = inspect.stack()
-                in_test_method = any('test_' in frame.function for frame in stack[1:5])
-                if not in_test_method:
-                    import warnings
-                    warnings.warn(
-                        f"Parameter estimation failed: {str(e)}. "
-                        f"Using default parameter values instead."
-                    )
+                # Raise an exception instead of warning
+                raise RuntimeError(
+                    f"Parameter estimation failed: {str(e)}. "
+                    f"Unable to guess initial parameter values."
+                )
         
         return params
     

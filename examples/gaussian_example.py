@@ -114,10 +114,6 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points for training if not provided
-    if x_sampling is None:
-        x_sampling = np.linspace(-5, 10, 100)
-    
     # Create and train estimator
     print("Creating and training estimator...")
     estimator = zeroguess.create_estimator(
@@ -134,7 +130,7 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     
     training_results = estimator.train(
         n_samples=1000,
-        epochs=50,
+        epochs=1000,
         batch_size=32,
         add_noise=True,
         noise_level=0.1,
@@ -209,10 +205,6 @@ def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points for training if not provided
-    if x_sampling is None:
-        x_sampling = np.linspace(-10, 10, 100)
-    
     # Use enhanced curve_fit function
     print("Performing curve fitting with automatic parameter estimation...")
     popt, _ = scipy_integration.curve_fit(
@@ -278,38 +270,51 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points for training if not provided
-    if x_sampling is None:
-        x_sampling = np.linspace(-5, 10, 100)
-    
     # Create enhanced lmfit Model with automatic parameter estimation
     print("Creating model with automatic parameter estimation...")
     model = lmfit_integration.Model(
         gaussian,
-        param_ranges={
-            'amplitude': (0.1, 10.0),
-            'center': (-5.0, 5.0),
-            'width': (0.1, 5.0),
-        },
+        # param_ranges={
+        #     'amplitude': (0.1, 10.0),
+        #     'center': (-5.0, 5.0),
+        #     'width': (0.1, 5.0),
+        # },
         independent_vars_sampling={
             'x': x_sampling,
         },
+        auto_extract_bounds=True,  # Enable automatic extraction of bounds from params
     )
+
+    # Set parameter bounds to help convergence
+    # These bounds will also be used for parameter estimation due to auto_extract_bounds=True
+    model.set_param_hint('amplitude', min=0.1, max=10.0)
+    model.set_param_hint('center', min=-5.0, max=5.0)
+    model.set_param_hint('width', min=0.1, max=5.0)
+    params = model.make_params()
+
+    # Using guess() method directly to demonstrate how it works
+    print("Demonstrating guess() method directly...")
+    
+    # Get parameters directly from guess()
+    guessed_params = model.guess(y_data, x=x_data)
+    
+    print("Parameters from guess() method:")
+    for param, value in guessed_params.items():
+        true_value = true_params[param]
+        print(f"  {param}: {value.value:.6f} (true: {true_value:.6f})")
     
     # Fit data using automatic parameter estimation
-    print("Fitting data with automatic parameter estimation...")
-    result = model.fit(y_data, x=x_data)
+    print("Fitting without explicit parameters (using guess() automatically)...")
+    result = model.fit(y_data, params=guessed_params, x=x_data)  # No params provided
+    
     
     # Extract fitted parameters
-    fitted_params = {
-        'amplitude': result.params['amplitude'].value,
-        'center': result.params['center'].value,
-        'width': result.params['width'].value,
-    }
+    fitted_params = result.params
     
     print("Fitted parameters:")
     for param, value in fitted_params.items():
-        print(f"  {param}: {value:.6f}")
+        true_value = true_params[param]
+        print(f"  {param}: {value.value:.6f} (true: {true_value:.6f})")
     
     # Print fit statistics
     print(f"Fit quality: reduced chi-square = {result.redchi:.6f}")
@@ -318,82 +323,20 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     plot_fit_comparison(
         gaussian, x_data, y_data,
         true_params=true_params,
+        estimated_params=guessed_params,
         fitted_params=fitted_params,
         title="Gaussian Fit with lmfit Integration",
     )
-    plt.savefig("gaussian_lmfit_integration.png")
+    plt.savefig("gaussian_fit_lmfit.png")
     
     plot_parameter_comparison(
-        true_params, fitted_params,
+        true_params, guessed_params, fitted_params,
         title="Gaussian Parameter Comparison (lmfit Integration)",
     )
     plt.savefig("gaussian_parameter_comparison_lmfit.png")
     
     print("Saved plots to current directory")
 
-
-def example_lmfit_manual(true_params, x_data, y_data, x_sampling=None):
-    """Example of using standard lmfit without automatic parameter estimation.
-    
-    Args:
-        true_params: Dictionary of true parameter values to use
-        x_data: Independent variable values for fitting
-        y_data: Dependent variable values (noisy data) for fitting
-        x_sampling: Optional pre-defined sampling points for training
-    """
-    if not LMFIT_AVAILABLE:
-        print("\n=========================================================")
-        print("Skipping standard lmfit example: lmfit not installed")
-        print("=========================================================")
-        return
-
-    print("\n=========================================================")
-    print("Running example: Standard lmfit Model (Gaussian)")
-    print("=========================================================")
-    
-    print("Using true parameters:")
-    for param, value in true_params.items():
-        print(f"  {param}: {value:.6f}")
-    
-    # Create standard lmfit Model
-    print("Creating standard lmfit Model...")
-    model = lmfit.Model(gaussian)
-    
-    # Set initial parameter guesses (intentionally off)
-    params = model.make_params(
-        amplitude=1.0,  # Generic initial guess
-        center=0.0,     # Generic initial guess
-        width=1.0,      # Generic initial guess
-    )
-    
-    # Fit data with standard lmfit
-    print("Fitting data with standard lmfit (generic initial guesses)...")
-    result = model.fit(y_data, params, x=x_data)
-    
-    # Extract fitted parameters
-    fitted_params = {
-        'amplitude': result.params['amplitude'].value,
-        'center': result.params['center'].value,
-        'width': result.params['width'].value,
-    }
-    
-    print("Fitted parameters:")
-    for param, value in fitted_params.items():
-        print(f"  {param}: {value:.6f}")
-    
-    # Print fit statistics
-    print(f"Fit quality: reduced chi-square = {result.redchi:.6f}")
-    
-    # Plot results
-    plot_fit_comparison(
-        gaussian, x_data, y_data,
-        true_params=true_params,
-        fitted_params=fitted_params,
-        title="Gaussian Fit with Standard lmfit",
-    )
-    plt.savefig("gaussian_standard_lmfit.png")
-    
-    print("Saved plot to current directory")
 
 
 if __name__ == "__main__":
@@ -429,7 +372,7 @@ if __name__ == "__main__":
         print(f"  {param}: {value:.6f}")
     
     # Define common sampling points for both training and fitting
-    x_sampling = np.linspace(-5, 10, 100)
+    x_sampling = np.linspace(-10, 10, 100)
     
     # Generate noisy data once to use across all examples
     x_data = x_sampling.copy()
@@ -446,6 +389,3 @@ if __name__ == "__main__":
     if args.method in ['all', 'lmfit']:
         example_lmfit_integration(true_params, x_data, y_data, x_sampling)
         
-        # Only run the standard lmfit example if we're specifically running lmfit examples
-        if args.method == 'lmfit':
-            example_lmfit_manual(true_params, x_data, y_data, x_sampling) 

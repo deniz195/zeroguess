@@ -126,10 +126,6 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points for training if not provided
-    if x_sampling is None:
-        x_sampling = np.linspace(-5, 5, 200)
-    
     # Create and train estimator
     print("Creating and training estimator...")
     estimator = zeroguess.create_estimator(
@@ -147,7 +143,7 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     
     training_results = estimator.train(
         n_samples=1000,
-        epochs=100,
+        epochs=3000,
         batch_size=32,
         add_noise=True,
         noise_level=0.05,
@@ -228,10 +224,6 @@ def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points for training if not provided
-    if x_sampling is None:
-        x_sampling = np.linspace(-5, 5, 200)
-    
     # Use enhanced curve_fit function
     print("Performing curve fitting with automatic parameter estimation...")
     
@@ -270,7 +262,7 @@ def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
         fitted_params=fitted_params,
         title="Wavelet Fit with SciPy Integration",
     )
-    plt.savefig("wavelet_scipy_integration.png")
+    plt.savefig("wavelet_fit_scipy.png")
     
     plot_parameter_comparison(
         true_params, fitted_params,
@@ -304,10 +296,6 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     for param, value in true_params.items():
         print(f"  {param}: {value:.6f}")
     
-    # Define the sampling points for training if not provided
-    if x_sampling is None:
-        x_sampling = np.linspace(-5, 5, 200)
-    
     # Create enhanced lmfit Model with automatic parameter estimation
     print("Creating model with ZeroGuess integration...")
     model = lmfit_integration.Model(
@@ -317,24 +305,15 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
         },
         auto_extract_bounds=True,  # Enable automatic extraction of bounds from params
     )
-    
+
     # Set parameter bounds to help convergence
     # These bounds will also be used for parameter estimation due to auto_extract_bounds=True
+    model.set_param_hint('frequency', min=0.1, max=5.0)
+    model.set_param_hint('phase', min=0, max=2 * np.pi)
+    model.set_param_hint('position', min=-5, max=5)
+    model.set_param_hint('width', min=0.5, max=5)  # Set a more strict lower bound for width
     params = model.make_params()
-    for param_name, param in params.items():
-        if param_name == 'frequency':
-            param.min = 0.1
-            param.max = 5.0
-        elif param_name == 'phase':
-            param.min = 0
-            param.max = 2 * np.pi
-        elif param_name == 'position':
-            param.min = -5
-            param.max = 5
-        elif param_name == 'width':
-            param.min = 0.1  # Ensure width is positive
-            param.max = 5
-    
+
     # Using guess() method directly to demonstrate how it works
     print("Demonstrating guess() method directly...")
     
@@ -342,31 +321,38 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     guessed_params = model.guess(y_data, x=x_data)
     
     print("Parameters from guess() method:")
-    for param_name, param in guessed_params.items():
-        print(f"  {param_name}: {param.value}")
+    for param, value in guessed_params.items():
+        true_value = true_params[param]
+        print(f"  {param}: {value.value:.6f} (true: {true_value:.6f})")
     
     # Fit using no initial parameters - will use guess() automatically
     print("Fitting without explicit parameters (using guess() automatically)...")
-    result = model.fit(y_data, x=x_data)  # No params provided
+    result = model.fit(y_data, params=guessed_params, x=x_data)  # No params provided
     
     # Extract fitted parameters
-    fitted_params = {
-        'frequency': result.params['frequency'].value,
-        'phase': result.params['phase'].value,
-        'position': result.params['position'].value,
-        'width': result.params['width'].value,
-    }
+    fitted_params = result.params
     
     print("Fitted parameters:")
     for param, value in fitted_params.items():
-        print(f"  {param}: {value:.6f}")
+        true_value = true_params[param]
+        print(f"  {param}: {value.value:.6f} (true: {true_value:.6f})")
     
     # Print fit statistics
     print(f"Fit quality: reduced chi-square = {result.redchi:.6f}")
-    
+
+    # Plot results
+    plot_fit_comparison(
+        wavelet, x_data, y_data,
+        true_params=true_params,
+        estimated_params=guessed_params,
+        fitted_params=fitted_params,
+        title="Wavelet Fit with lmfit Integration",
+    )
+    plt.savefig("wavelet_fit_lmfit.png")
+
     # Plot parameter comparison
     plot_parameter_comparison(
-        true_params, fitted_params,
+        true_params, guessed_params, fitted_params,
         title="Wavelet Parameter Comparison (lmfit Integration)",
     )
     plt.savefig("wavelet_parameter_comparison_lmfit.png")
@@ -407,7 +393,7 @@ if __name__ == "__main__":
         print(f"  {param}: {value:.6f}")
     
     # Define common sampling points for both training and fitting
-    x_sampling = np.linspace(-5, 5, 200)
+    x_sampling = np.linspace(-10, 10, 300)
     
     # Generate noisy data once to use across all examples
     x_data = x_sampling.copy()

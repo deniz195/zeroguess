@@ -129,19 +129,22 @@ class TestLmfitIntegration(unittest.TestCase):
         )
         
         # Set parameter bounds
+        print("DEBUG [before make_params]")
+        model.set_param_hint('frequency', min=0.1, max=5.0)
+        model.set_param_hint('phase', min=0, max=2 * np.pi)
+        model.set_param_hint('position', min=-5, max=5)
+        model.set_param_hint('width', min=0.5, max=5)  # Set a more strict lower bound for width
         params = model.make_params()
-        params['frequency'].set(min=0.1, max=5.0)
-        params['phase'].set(min=0, max=2 * np.pi)
-        params['position'].set(min=-5, max=5)
-        params['width'].set(min=0.5, max=5)  # Set a more strict lower bound for width
         
         # Store the params with bounds in the model for proper initialization
-        model.set_param_bounds(params)
+        print("DEBUG [after make_params]")
                         
         # Now test guess() after the estimator is properly initialized
         with warnings.catch_warnings(record=True) as estimation_warnings:
-            warnings.filterwarnings("ignore", message=".*Failed to initialize or train parameter estimator.*")
+            warnings.filterwarnings("ignore", message=".*torch.utils._pytree._register_pytree_node.*")
+            print("DEBUG [before guess]")
             guessed_params = model.guess(self.y_data, x=self.x_data)
+            print("DEBUG [after guess]")
             
         # Filter out training-related warnings which would only occur once in real usage
         estimation_warnings = [w for w in estimation_warnings 
