@@ -62,6 +62,31 @@ class BaseArchitecture(ABC):
         
         return validated
     
+    def validate_input_size(self, network: nn.Module, input_size: int, expected_size: int) -> bool:
+        """Validate if the input size is compatible with what the network expects.
+        
+        Each architecture can implement its own validation logic.
+        The default implementation simply checks if input_size matches expected_size.
+        
+        Args:
+            network: The neural network model
+            input_size: The size of the input data
+            expected_size: The expected input size based on network's first layer
+            
+        Returns:
+            True if the input size is valid for this architecture, False otherwise
+            
+        Raises:
+            ValueError: If input size is incompatible with the network
+        """
+        if input_size != expected_size:
+            raise ValueError(
+                f"Input data size ({input_size}) does not match the network's expected input size "
+                f"({expected_size}). The network must be trained with the same number of data points "
+                f"as used for prediction."
+            )
+        return True
+    
     @classmethod
     def get_name(cls) -> str:
         """Get the name of this architecture.

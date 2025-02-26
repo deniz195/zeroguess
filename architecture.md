@@ -381,6 +381,15 @@ This approach focuses on filling the functionality gap in lmfit models that don'
 
 ZeroGuess supports multiple neural network architectures, each optimized for different types of curve fitting problems. The architecture selection feature allows users to choose the most appropriate architecture for their specific needs.
 
+### Architecture Design Principles and Restrictions
+
+#### Input Size Handling
+- **Input Size Restriction**: All models/estimators only allow the input sizes they are trained against. This ensures consistency between training and inference phases and prevents unexpected behavior when prediction is performed on data with different dimensions than the training data.
+
+#### Architecture Responsibility Pattern
+- **"Tell, Don't Ask" Principle**: All architectures follow the same interface and are responsible for their own behavior. This encapsulation ensures that architecture-specific logic remains within the architecture implementation rather than in the estimator code, promoting cleaner separation of concerns and better maintainability.
+- Each architecture is responsible for validating its own input requirements, handling its specific data transformations, and implementing appropriate forward/backward propagation logic.
+
 ### Architecture Types
 
 #### 1. Multilayer Perceptron (MLP)

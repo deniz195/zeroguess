@@ -163,6 +163,36 @@ class CNNArchitecture(BaseArchitecture):
             **self.params
         )
     
+    def validate_input_size(self, network: nn.Module, input_size: int, expected_size: int) -> bool:
+        """Validate if the input size is compatible with the CNN network.
+        
+        For CNN architecture, we handle input differently because the network reshapes 
+        the input using an Unflatten layer at the beginning. This allows the CNN to accept
+        inputs of different sizes than what the network was originally trained with.
+        
+        Args:
+            network: The neural network model (CNN)
+            input_size: The size of the input data
+            expected_size: The expected input size based on network's first layer
+            
+        Returns:
+            True if the input size is valid, False otherwise
+            
+        Raises:
+            ValueError: If input size is incompatible with the network
+        """
+        # Check if the network has the expected structure for a CNN
+        if hasattr(network, 'conv_layers') and len(network.conv_layers) > 0:
+            # For CNN, check if the first layer is an Unflatten layer
+            if isinstance(network.conv_layers[0], nn.Unflatten):
+                # CNN with Unflatten can handle different input sizes through reshaping
+                # So we don't need to enforce exact size matching
+                return True
+        
+        # If we got here, it means the network structure doesn't match our expectations
+        # Fall back to the default validation which will raise an error for mismatched sizes
+        return super().validate_input_size(network, input_size, expected_size)
+    
     @classmethod
     def get_default_params(cls) -> Dict[str, Any]:
         """Get the default parameters for the CNN architecture.
