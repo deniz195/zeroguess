@@ -36,6 +36,37 @@ setup(
     ],
     extras_require={
         "lmfit": ["lmfit>=1.0.0"],
-        "dev": ["pytest", "pytest-cov", "black", "flake8", "mypy"],
+        "dev": [
+            # Testing
+            "pytest>=7.0.0",
+            "pytest-cov>=4.0.0",
+            "pytest-benchmark>=4.0.0",
+            "pytest-xdist>=3.0.0",
+            
+            # Code formatting
+            "black>=23.3.0",
+            "isort>=5.12.0",
+            
+            # Linting
+            "flake8>=6.0.0",
+            "flake8-bugbear>=23.3.23",
+            "flake8-docstrings>=1.7.0",
+            "flake8-import-order>=0.18.2",
+            "pep8-naming>=0.13.3",
+            "mypy>=1.3.0",
+            "vulture>=2.7",
+            
+            # Security
+            "bandit>=1.7.5",
+            "safety>=2.3.5",
+            
+            # Development tools
+            "pre-commit>=3.3.2",
+            "pip-tools>=6.13.0",
+            
+            # Documentation
+            "sphinx>=7.0.0",
+            "sphinx-rtd-theme>=1.2.0",
+        ],
     },
 )
