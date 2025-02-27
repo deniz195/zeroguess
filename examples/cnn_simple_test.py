@@ -112,7 +112,7 @@ def run_test(args):
 
     # Patch the estimator.predict method to handle our specific case
     # This is a workaround for the input size mismatch issue
-    original_predict = estimator.predict
+    estimator.predict
 
     def patched_predict(self, **kwargs):
         """Patched predict method to bypass input size check."""
@@ -123,17 +123,13 @@ def run_test(args):
 
         # Check if network is initialized
         if self.network is None:
-            raise ValueError(
-                "Network is not initialized. Please train the model first."
-            )
+            raise ValueError("Network is not initialized. Please train the model first.")
 
         # Convert y_data to tensor and prepare for model input
         features = y_data.flatten()
 
         # Convert to tensor and move to device
-        features_tensor = (
-            torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
-        )
+        features_tensor = torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
 
         # Make prediction
         self.network.eval()
@@ -174,9 +170,7 @@ def run_test(args):
     # Calculate parameter errors
     errors = {}
     for param in real_params:
-        errors[param] = (
-            abs(real_params[param] - predicted_params[param]) / real_params[param] * 100
-        )
+        errors[param] = abs(real_params[param] - predicted_params[param]) / real_params[param] * 100
 
     print("\nParameter errors (%):")
     for param, error in errors.items():
@@ -208,9 +202,7 @@ def run_test(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CNN Architecture Test for ZeroGuess")
-    parser.add_argument(
-        "--force-train", action="store_true", help="Force training a new model"
-    )
+    parser.add_argument("--force-train", action="store_true", help="Force training a new model")
     args = parser.parse_args()
 
     run_test(args)

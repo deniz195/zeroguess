@@ -11,11 +11,7 @@ Arguments:
 """
 
 import argparse
-import datetime
-import glob
 import os
-import shutil
-import sys
 import time
 from pathlib import Path
 
@@ -25,9 +21,7 @@ VISUALIZATION_OUTPUT_DIR = os.path.join("tests", "output", "visualizations")
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Clean up old visualization files from tests"
-    )
+    parser = argparse.ArgumentParser(description="Clean up old visualization files from tests")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -36,9 +30,7 @@ def parse_args():
         default=7,
         help="Remove files older than N days (default: 7)",
     )
-    group.add_argument(
-        "--all", action="store_true", help="Remove all visualization files"
-    )
+    group.add_argument("--all", action="store_true", help="Remove all visualization files")
 
     return parser.parse_args()
 

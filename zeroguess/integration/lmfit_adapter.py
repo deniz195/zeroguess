@@ -2,18 +2,14 @@
 Integration with lmfit's Model class.
 """
 
-import inspect
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
 try:
     import lmfit
 except ImportError:
-    raise ImportError(
-        "lmfit is required for this functionality. "
-        "Please install it with `pip install lmfit`."
-    )
+    raise ImportError("lmfit is required for this functionality. " "Please install it with `pip install lmfit`.")
 
 import zeroguess
 
@@ -106,9 +102,7 @@ class Model(lmfit.Model):
             **kwargs: Additional keyword arguments passed to lmfit.Model
         """
         # Initialize the parent lmfit.Model
-        super().__init__(
-            func, independent_vars=independent_vars, prefix=prefix, name=name, **kwargs
-        )
+        super().__init__(func, independent_vars=independent_vars, prefix=prefix, name=name, **kwargs)
 
         # Store ZeroGuess-specific parameters
         self.param_ranges = param_ranges
@@ -147,9 +141,7 @@ class Model(lmfit.Model):
             # that might work with proper data
             return True
 
-    def _extract_bounds_from_params(
-        self, params: lmfit.Parameters
-    ) -> Dict[str, Tuple[float, float]]:
+    def _extract_bounds_from_params(self, params: lmfit.Parameters) -> Dict[str, Tuple[float, float]]:
         """Extract parameter bounds from lmfit Parameters object.
 
         Args:
@@ -173,9 +165,7 @@ class Model(lmfit.Model):
 
             # Ensure bounds are in a valid range (min < max)
             if param.min >= param.max:
-                raise ValueError(
-                    f"Parameter '{param_name}' has invalid bounds: min ({param.min}) >= max ({param.max})"
-                )
+                raise ValueError(f"Parameter '{param_name}' has invalid bounds: min ({param.min}) >= max ({param.max})")
 
             param_ranges[param_name] = (param.min, param.max)
 
@@ -246,16 +236,12 @@ class Model(lmfit.Model):
 
         # Extract independent variables from kwargs
         if len(self.independent_vars) != 1:
-            raise NotImplementedError(
-                "Currently only supports models with one independent variable"
-            )
+            raise NotImplementedError("Currently only supports models with one independent variable")
 
         # Get the independent variable (typically 'x')
         indep_var_name = self.independent_vars[0]
         if indep_var_name not in kwargs:
-            raise ValueError(
-                f"Independent variable '{indep_var_name}' must be provided"
-            )
+            raise ValueError(f"Independent variable '{indep_var_name}' must be provided")
 
         x_data = kwargs[indep_var_name]
 
@@ -264,11 +250,7 @@ class Model(lmfit.Model):
         params = super().make_params()
 
         # Handle the case where auto_extract_bounds is enabled but estimator not initialized
-        if (
-            self.auto_extract_bounds
-            and self._estimator is None
-            and self.independent_vars_sampling is not None
-        ):
+        if self.auto_extract_bounds and self._estimator is None and self.independent_vars_sampling is not None:
             try:
                 # Extract bounds from params
                 extracted_param_ranges = self._extract_bounds_from_params(params)
@@ -299,8 +281,7 @@ class Model(lmfit.Model):
             except Exception as e:
                 # Raise an exception instead of warning
                 raise RuntimeError(
-                    f"Parameter estimation failed: {str(e)}. "
-                    f"Unable to guess initial parameter values."
+                    f"Parameter estimation failed: {str(e)}. " f"Unable to guess initial parameter values."
                 )
 
         return params

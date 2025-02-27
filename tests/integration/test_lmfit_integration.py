@@ -13,12 +13,10 @@ import numpy as np
 import pytest
 
 # Import test utilities
-from ..conftest import set_random_seeds
-from ..test_utils import calculate_parameter_error, is_within_tolerance
 
 # Try to import lmfit, but allow tests to be skipped if not available
 try:
-    import lmfit
+    pass
 
     HAS_LMFIT = True
 except ImportError:
@@ -35,14 +33,10 @@ except ImportError:
     warnings.warn("ZeroGuess is not available. The tests will be skipped.")
 
 # Create marker to skip tests if lmfit is not available
-requires_lmfit = pytest.mark.skipif(
-    not HAS_LMFIT, reason="lmfit is required for this test"
-)
+requires_lmfit = pytest.mark.skipif(not HAS_LMFIT, reason="lmfit is required for this test")
 
 # Create marker to skip tests if zeroguess is not available
-requires_zeroguess = pytest.mark.skipif(
-    not HAS_ZEROGUESS, reason="ZeroGuess is required for this test"
-)
+requires_zeroguess = pytest.mark.skipif(not HAS_ZEROGUESS, reason="ZeroGuess is required for this test")
 
 
 def wavelet(x, frequency, phase, position, width):
@@ -102,9 +96,7 @@ def disable_plots():
 class TestLmfitIntegration:
     """Tests for the lmfit integration functionality."""
 
-    def test_handle_when_estimation_fails(
-        self, set_random_seeds, wavelet_function, x_sampling, noisy_data
-    ):
+    def test_handle_when_estimation_fails(self, set_random_seeds, wavelet_function, x_sampling, noisy_data):
         """Test that failures in the parameter estimator are properly detected."""
         x_data, y_data = noisy_data
 
@@ -139,9 +131,7 @@ class TestLmfitIntegration:
 
             # There should be a warning about parameter estimation
             assert any(
-                "Failed to initialize or train parameter estimator"
-                in str(warning.message)
-                for warning in w
+                "Failed to initialize or train parameter estimator" in str(warning.message) for warning in w
             ), "Expected warning about parameter estimation failure"
 
         # Check that some parameters are invalid (-inf)
@@ -152,13 +142,9 @@ class TestLmfitIntegration:
                 break
 
         # There should be invalid parameters
-        assert (
-            has_invalid_params
-        ), "The guess() method should return invalid parameters for this test case"
+        assert has_invalid_params, "The guess() method should return invalid parameters for this test case"
 
-    def test_guess_method_success(
-        self, set_random_seeds, wavelet_function, x_sampling, noisy_data, true_params
-    ):
+    def test_guess_method_success(self, set_random_seeds, wavelet_function, x_sampling, noisy_data, true_params):
         """Test that the guess() method successfully estimates parameters."""
         x_data, y_data = noisy_data
 
@@ -175,35 +161,25 @@ class TestLmfitIntegration:
         model.set_param_hint("frequency", min=0.1, max=5.0)
         model.set_param_hint("phase", min=0, max=2 * np.pi)
         model.set_param_hint("position", min=-5, max=5)
-        model.set_param_hint(
-            "width", min=0.5, max=5
-        )  # Set a more strict lower bound for width
-        params = model.make_params()
+        model.set_param_hint("width", min=0.5, max=5)  # Set a more strict lower bound for width
+        model.make_params()
 
         # Now test guess() after the estimator is properly initialized
         with warnings.catch_warnings(record=True) as estimation_warnings:
-            warnings.filterwarnings(
-                "ignore", message=".*torch.utils._pytree._register_pytree_node.*"
-            )
+            warnings.filterwarnings("ignore", message=".*torch.utils._pytree._register_pytree_node.*")
             guessed_params = model.guess(y_data, x=x_data)
 
         # Filter out training-related warnings which would only occur once in real usage
         estimation_warnings = [
-            w
-            for w in estimation_warnings
-            if "Failed to initialize or train parameter estimator" not in str(w.message)
+            w for w in estimation_warnings if "Failed to initialize or train parameter estimator" not in str(w.message)
         ]
 
         # Check that no warnings were issued (excluding estimator initialization warnings)
-        assert (
-            len(estimation_warnings) == 0
-        ), "guess() should not produce parameter estimation warnings"
+        assert len(estimation_warnings) == 0, "guess() should not produce parameter estimation warnings"
 
         # Verify that guessed parameters are valid
         for param_name, param in guessed_params.items():
-            assert np.isfinite(
-                param.value
-            ), f"Parameter {param_name} should have a finite value"
+            assert np.isfinite(param.value), f"Parameter {param_name} should have a finite value"
             assert param.value != -np.inf, f"Parameter {param_name} should not be -inf"
 
         # Verify that guessed parameters are similar enough to true parameters
@@ -225,9 +201,7 @@ class TestLmfitIntegration:
 
         # Fit the model with the guessed parameters and check if the fit is successful
         guess_result = model.fit(y_data, params=guessed_params, x=x_data)
-        assert (
-            guess_result.success
-        ), "Fitting should be successful with guessed parameters"
+        assert guess_result.success, "Fitting should be successful with guessed parameters"
 
         # Verify that the fitted parameters are close to the true parameters
         for param_name in ["frequency", "phase", "position", "width"]:
@@ -245,9 +219,7 @@ class TestLmfitIntegration:
                 relative_diff < tolerance
             ), f"Fitted {param_name} ({fitted_value}) should be reasonably close to true value ({true_value})"
 
-    def test_direct_parameter_fitting(
-        self, set_random_seeds, wavelet_function, x_sampling, noisy_data, true_params
-    ):
+    def test_direct_parameter_fitting(self, set_random_seeds, wavelet_function, x_sampling, noisy_data, true_params):
         """Test fitting with direct parameter specification (bypassing guess)."""
         x_data, y_data = noisy_data
 
@@ -299,9 +271,7 @@ class TestLmfitIntegration:
         # Check that the fit quality is good
         assert result.redchi < 0.1, "Reduced chi-square should be small for a good fit"
 
-    def test_model_creation_with_auto_extract_bounds(
-        self, wavelet_function, x_sampling
-    ):
+    def test_model_creation_with_auto_extract_bounds(self, wavelet_function, x_sampling):
         """Test that model creation with auto_extract_bounds works correctly."""
         # Create model with auto_extract_bounds
         model = lmfit_integration.Model(

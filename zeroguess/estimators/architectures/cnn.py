@@ -6,7 +6,7 @@ optimized for curve fitting problems, especially those with oscillatory
 or multi-peak characteristics.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import torch
 import torch.nn as nn
@@ -168,9 +168,7 @@ class CNNArchitecture(BaseArchitecture):
             **self.params,
         )
 
-    def validate_input_size(
-        self, network: nn.Module, input_size: int, expected_size: int
-    ) -> bool:
+    def validate_input_size(self, network: nn.Module, input_size: int, expected_size: int) -> bool:
         """Validate if the input size is compatible with the CNN network.
 
         For CNN architecture, we need to check for the Unflatten layer which reshapes the input.

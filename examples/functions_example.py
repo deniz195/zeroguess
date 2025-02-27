@@ -7,7 +7,6 @@ provided by the zeroguess.functions submodule.
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from zeroguess.functions import (
     DampedSineFunction,

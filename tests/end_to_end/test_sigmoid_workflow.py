@@ -5,7 +5,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import torch
 
 # Import the real ZeroGuess components
 from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
@@ -17,17 +16,13 @@ from zeroguess.functions import (
     add_gaussian_noise,
 )
 from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
     plot_training_history,
 )
 
 # Import test utilities
-from ..conftest import set_random_seeds
 from ..test_utils import (
     calculate_curve_fit_quality,
     calculate_parameter_error,
-    is_within_tolerance,
 )
 
 # Import end-to-end test utilities
@@ -112,9 +107,7 @@ def sample_data_double_sigmoid(double_sigmoid_instance):
 class TestSigmoidWorkflow:
     """End-to-end tests for the full ZeroGuess workflow with a sigmoid/logistic function."""
 
-    def test_full_workflow(
-        self, set_random_seeds, sigmoid_instance, sample_data_sigmoid, monkeypatch
-    ):
+    def test_full_workflow(self, set_random_seeds, sigmoid_instance, sample_data_sigmoid, monkeypatch):
         """Test the full ZeroGuess workflow for sigmoid function parameter estimation."""
         # Get sample data
         x_data, y_data, true_params = sample_data_sigmoid
@@ -185,9 +178,7 @@ class TestSigmoidWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -218,9 +209,7 @@ class TestSigmoidWorkflow:
         )
 
         # Train the estimator
-        training_metrics = estimator.train(
-            n_samples=300, epochs=25, batch_size=32, add_noise=True, noise_level=0.2
-        )
+        training_metrics = estimator.train(n_samples=300, epochs=25, batch_size=32, add_noise=True, noise_level=0.2)
         assert estimator.is_trained
 
         # Test different rate parameter scenarios
@@ -249,9 +238,7 @@ class TestSigmoidWorkflow:
             errors = calculate_parameter_error(predicted_params, true_params)
 
             # Calculate fit quality
-            quality = calculate_curve_fit_quality(
-                sigmoid_instance, x_data, y_data, predicted_params
-            )
+            quality = calculate_curve_fit_quality(sigmoid_instance, x_data, y_data, predicted_params)
 
             # Print results for debugging
             print(f"\nScenario {i+1} (Rate parameter: {true_params['rate']}):")
@@ -264,31 +251,21 @@ class TestSigmoidWorkflow:
             # Define error thresholds based on rate difficulty
             # Higher rates can be more difficult to estimate precisely
             if i == 0:  # Gentle slope
-                max_error = (
-                    3.0  # Increased from 1.5 to account for rate parameter difficulty
-                )
+                max_error = 3.0  # Increased from 1.5 to account for rate parameter difficulty
                 max_rmse = 1.0
             elif i == 1:  # Medium slope
-                max_error = (
-                    3.5  # Increased from 2.0 to account for rate parameter difficulty
-                )
+                max_error = 3.5  # Increased from 2.0 to account for rate parameter difficulty
                 max_rmse = 1.5
             else:  # Steep slope
-                max_error = (
-                    4.0  # Increased from 2.5 to account for rate parameter difficulty
-                )
+                max_error = 4.0  # Increased from 2.5 to account for rate parameter difficulty
                 max_rmse = 2.0
 
             # Check individual parameter errors
             for param_name, error in errors.items():
-                assert (
-                    error <= max_error
-                ), f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
+                assert error <= max_error, f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
 
             # Check overall fit quality
-            assert (
-                quality <= max_rmse
-            ), f"RMSE too high in scenario {i+1}: {quality:.4f}"
+            assert quality <= max_rmse, f"RMSE too high in scenario {i+1}: {quality:.4f}"
 
             # Generate and save visualizations for each scenario
             scenario_name = f"test_sigmoid_rate_{true_params['rate']}"
@@ -379,9 +356,7 @@ class TestSigmoidWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -394,9 +369,7 @@ class TestSigmoidWorkflow:
             # Close the figure
             plt.close(fig3)
 
-    def test_visualization_functions(
-        self, set_random_seeds, sigmoid_instance, sample_data_sigmoid, monkeypatch
-    ):
+    def test_visualization_functions(self, set_random_seeds, sigmoid_instance, sample_data_sigmoid, monkeypatch):
         """Test the visualization functions using the sigmoid workflow."""
         # Get sample data
         x_data, y_data, true_params = sample_data_sigmoid
@@ -452,12 +425,8 @@ class TestSigmoidWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
-            assert (
-                fig3 is not None
-            ), "plot_training_history should return a matplotlib figure"
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
+            assert fig3 is not None, "plot_training_history should return a matplotlib figure"
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -520,9 +489,7 @@ class TestSigmoidWorkflow:
 
         # Basic sanity check that predicted parameters are within the specified ranges
         for param_name, (min_val, max_val) in param_ranges.items():
-            assert (
-                min_val <= predicted_params[param_name] <= max_val
-            ), f"Parameter {param_name} outside expected range"
+            assert min_val <= predicted_params[param_name] <= max_val, f"Parameter {param_name} outside expected range"
 
         # Generate and save visualizations for the benchmark results
         create_and_save_visualizations(

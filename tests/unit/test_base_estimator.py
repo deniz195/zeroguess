@@ -4,7 +4,6 @@ Unit tests for base estimator functionality.
 
 import unittest
 from abc import ABC
-from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -13,7 +12,6 @@ from zeroguess import create_estimator
 from zeroguess.estimators.base import BaseEstimator
 
 # Import the test fixtures
-from ..conftest import gaussian_function, set_random_seeds
 
 # Try to import the BaseEstimator class (legacy code, can be removed if BaseEstimator is always available)
 try:
@@ -29,9 +27,7 @@ except ImportError:
 
 
 # Create marker to skip tests if zeroguess is not available
-requires_zeroguess = pytest.mark.skipif(
-    not HAS_ZEROGUESS, reason="ZeroGuess is required for this test"
-)
+requires_zeroguess = pytest.mark.skipif(not HAS_ZEROGUESS, reason="ZeroGuess is required for this test")
 
 
 # Create a minimal implementation of BaseEstimator for testing
@@ -49,25 +45,16 @@ class MockEstimator(BaseEstimator):
 
         for param_name, param_range in param_ranges.items():
             if not isinstance(param_range, tuple) or len(param_range) != 2:
-                raise ValueError(
-                    f"Range for parameter {param_name} must be a tuple of (min, max)"
-                )
+                raise ValueError(f"Range for parameter {param_name} must be a tuple of (min, max)")
             if param_range[0] >= param_range[1]:
-                raise ValueError(
-                    f"Min value must be less than max value for parameter {param_name}"
-                )
+                raise ValueError(f"Min value must be less than max value for parameter {param_name}")
 
-        if (
-            not isinstance(independent_vars_sampling, dict)
-            or not independent_vars_sampling
-        ):
+        if not isinstance(independent_vars_sampling, dict) or not independent_vars_sampling:
             raise ValueError("independent_vars_sampling must be a non-empty dictionary")
 
         for var_name, sampling in independent_vars_sampling.items():
             if not isinstance(sampling, np.ndarray):
-                raise ValueError(
-                    f"Sampling points for {var_name} must be a numpy array"
-                )
+                raise ValueError(f"Sampling points for {var_name} must be a numpy array")
             if sampling.size == 0:
                 raise ValueError(f"Sampling points for {var_name} must not be empty")
 
@@ -85,20 +72,19 @@ class MockEstimator(BaseEstimator):
             raise RuntimeError("Model must be trained before prediction")
 
         # Return middle of range for all parameters
-        return {
-            name: (min_val + max_val) / 2
-            for name, (min_val, max_val) in self.param_ranges.items()
-        }
+        return {name: (min_val + max_val) / 2 for name, (min_val, max_val) in self.param_ranges.items()}
 
     def save(self, path):
         """Mock implementation of save method."""
-        pass
 
     @classmethod
     def load(cls, path):
         """Mock implementation of load method."""
+
         # Return a dummy instance
-        dummy_function = lambda x: x
+        def dummy_function(x):
+            return x
+
         param_ranges = {"a": (0, 1)}
         independent_vars_sampling = {"x": np.array([0, 1])}
         return cls(dummy_function, param_ranges, independent_vars_sampling)
@@ -117,17 +103,13 @@ class TestBaseEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Initialize estimator
-        estimator = MockEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Check that parameters are stored correctly
         assert estimator.param_ranges == param_ranges
         assert estimator.independent_vars_sampling == independent_vars_sampling
         assert set(estimator.param_names) == set(param_ranges.keys())
-        assert set(estimator.independent_var_names) == set(
-            independent_vars_sampling.keys()
-        )
+        assert set(estimator.independent_var_names) == set(independent_vars_sampling.keys())
         assert not estimator.is_trained
 
     def test_function_validation(self):
@@ -146,22 +128,16 @@ class TestBaseEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Test with empty param_ranges
-        with pytest.raises(
-            ValueError, match="param_ranges must be a non-empty dictionary"
-        ):
+        with pytest.raises(ValueError, match="param_ranges must be a non-empty dictionary"):
             MockEstimator(gaussian_function, {}, independent_vars_sampling)
 
         # Test with non-dictionary param_ranges
-        with pytest.raises(
-            ValueError, match="param_ranges must be a non-empty dictionary"
-        ):
+        with pytest.raises(ValueError, match="param_ranges must be a non-empty dictionary"):
             MockEstimator(gaussian_function, "not_a_dict", independent_vars_sampling)
 
         # Test with invalid range format
         invalid_ranges = {"amplitude": [0, 10]}  # List instead of tuple
-        with pytest.raises(
-            ValueError, match="Range for parameter amplitude must be a tuple"
-        ):
+        with pytest.raises(ValueError, match="Range for parameter amplitude must be a tuple"):
             MockEstimator(gaussian_function, invalid_ranges, independent_vars_sampling)
 
         # Test with min > max
@@ -175,22 +151,16 @@ class TestBaseEstimator:
         param_ranges = {"amplitude": (0, 10), "center": (-5, 5), "width": (0.1, 2)}
 
         # Test with empty independent_vars_sampling
-        with pytest.raises(
-            ValueError, match="independent_vars_sampling must be a non-empty dictionary"
-        ):
+        with pytest.raises(ValueError, match="independent_vars_sampling must be a non-empty dictionary"):
             MockEstimator(gaussian_function, param_ranges, {})
 
         # Test with non-dictionary independent_vars_sampling
-        with pytest.raises(
-            ValueError, match="independent_vars_sampling must be a non-empty dictionary"
-        ):
+        with pytest.raises(ValueError, match="independent_vars_sampling must be a non-empty dictionary"):
             MockEstimator(gaussian_function, param_ranges, "not_a_dict")
 
         # Test with non-numpy array sampling
         invalid_sampling = {"x": [0, 1, 2]}  # List instead of numpy array
-        with pytest.raises(
-            ValueError, match="Sampling points for x must be a numpy array"
-        ):
+        with pytest.raises(ValueError, match="Sampling points for x must be a numpy array"):
             MockEstimator(gaussian_function, param_ranges, invalid_sampling)
 
         # Test with empty sampling array
@@ -204,9 +174,7 @@ class TestBaseEstimator:
         param_ranges = {"amplitude": (0, 10), "center": (-5, 5), "width": (0.1, 2)}
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
-        estimator = MockEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Check that the estimator is not initially trained
         assert not estimator.is_trained
@@ -227,14 +195,10 @@ class TestBaseEstimator:
         param_ranges = {"amplitude": (0, 10), "center": (-5, 5), "width": (0.1, 2)}
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
-        estimator = MockEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Prediction should raise error because model is not trained
-        with pytest.raises(
-            RuntimeError, match="Model must be trained before prediction"
-        ):
+        with pytest.raises(RuntimeError, match="Model must be trained before prediction"):
             estimator.predict(x_data, y_data)
 
         # Train the estimator
@@ -340,9 +304,7 @@ class TestBaseEstimator(unittest.TestCase):
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
                 architecture="mlp",
-                architecture_params={
-                    "invalid_mlp_param": 123  # Parameter that doesn't exist for MLP
-                },
+                architecture_params={"invalid_mlp_param": 123},  # Parameter that doesn't exist for MLP
             )
 
         # Test with invalid architecture parameters for CNN
@@ -352,9 +314,7 @@ class TestBaseEstimator(unittest.TestCase):
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
                 architecture="cnn",
-                architecture_params={
-                    "unknown_cnn_param": 456  # Parameter that doesn't exist for CNN
-                },
+                architecture_params={"unknown_cnn_param": 456},  # Parameter that doesn't exist for CNN
             )
 
         # Test that valid architecture parameters work correctly
@@ -380,9 +340,7 @@ class TestBaseEstimator(unittest.TestCase):
                 architecture_params={"n_conv_layers": 3, "filters": [16, 32, 64]},
             )
         except Exception as e:
-            self.fail(
-                f"Creating estimator with valid architecture parameters raised {type(e).__name__}: {e}"
-            )
+            self.fail(f"Creating estimator with valid architecture parameters raised {type(e).__name__}: {e}")
 
 
 if __name__ == "__main__":

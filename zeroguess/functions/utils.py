@@ -5,7 +5,7 @@ This module provides utility functions for working with fitting functions,
 such as adding noise to generated data.
 """
 
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 

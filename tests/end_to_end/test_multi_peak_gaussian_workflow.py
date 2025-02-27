@@ -1,13 +1,10 @@
 """End-to-end test for ZeroGuess using a multi-peak Gaussian function."""
 
-import datetime
 import os
-import pathlib
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import torch
 
 # Import the real ZeroGuess components
 from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
@@ -15,17 +12,13 @@ from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 # Import the functions module components
 from zeroguess.functions import MultiPeakGaussianFunction, add_gaussian_noise
 from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
     plot_training_history,
 )
 
 # Import test utilities
-from ..conftest import set_random_seeds
 from ..test_utils import (
     calculate_curve_fit_quality,
     calculate_parameter_error,
-    is_within_tolerance,
 )
 
 # Import end-to-end test utilities
@@ -158,9 +151,7 @@ class TestMultiPeakGaussianWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -173,9 +164,7 @@ class TestMultiPeakGaussianWorkflow:
             # Close the figure
             plt.close(fig3)
 
-    def test_peak_separation_sensitivity(
-        self, set_random_seeds, multi_peak_gaussian_instance, monkeypatch
-    ):
+    def test_peak_separation_sensitivity(self, set_random_seeds, multi_peak_gaussian_instance, monkeypatch):
         """Test the ability to resolve peaks with varying degrees of separation."""
         # Use parameter ranges from the MultiPeakGaussianFunction instance
         param_ranges = multi_peak_gaussian_instance.param_ranges
@@ -250,15 +239,11 @@ class TestMultiPeakGaussianWorkflow:
             errors = calculate_parameter_error(predicted_params, true_params)
 
             # Calculate fit quality
-            y_predicted = multi_peak_gaussian_instance(x_data, **predicted_params)
-            quality = calculate_curve_fit_quality(
-                multi_peak_gaussian_instance, x_data, y_data, predicted_params
-            )
+            multi_peak_gaussian_instance(x_data, **predicted_params)
+            quality = calculate_curve_fit_quality(multi_peak_gaussian_instance, x_data, y_data, predicted_params)
 
             # Print results for debugging
-            print(
-                f"\nScenario {i+1} (Peak Separation: {abs(true_params['center_1'] - true_params['center_2']):.1f}):"
-            )
+            print(f"\nScenario {i+1} (Peak Separation: {abs(true_params['center_1'] - true_params['center_2']):.1f}):")
             for param, error in errors.items():
                 print(
                     f"  {param}: true={true_params[param]:.2f}, pred={predicted_params[param]:.2f}, error={error:.2f}"
@@ -269,33 +254,25 @@ class TestMultiPeakGaussianWorkflow:
             # Higher tolerance for more difficult cases (closer peaks)
             if i == 0:  # Well-separated peaks
                 max_error = 2.0
-                max_rmse = (
-                    2.0  # Increased from 0.5 to account for neural network variability
-                )
+                max_rmse = 2.0  # Increased from 0.5 to account for neural network variability
             elif i == 1:  # Moderately separated
                 max_error = 3.0
-                max_rmse = (
-                    2.5  # Increased from 0.7 to account for neural network variability
-                )
+                max_rmse = 2.5  # Increased from 0.7 to account for neural network variability
             else:  # Closely spaced
                 max_error = 4.0
-                max_rmse = (
-                    3.0  # Increased from 1.0 to account for neural network variability
-                )
+                max_rmse = 3.0  # Increased from 1.0 to account for neural network variability
 
             # Check individual parameter errors
             for param_name, error in errors.items():
-                assert (
-                    error <= max_error
-                ), f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
+                assert error <= max_error, f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
 
             # Check overall fit quality
-            assert (
-                quality <= max_rmse
-            ), f"RMSE too high in scenario {i+1}: {quality:.4f}"
+            assert quality <= max_rmse, f"RMSE too high in scenario {i+1}: {quality:.4f}"
 
             # Generate and save visualizations for each scenario
-            scenario_name = f"test_multi_peak_gaussian_separation_{abs(true_params['center_1'] - true_params['center_2']):.1f}"
+            scenario_name = (
+                f"test_multi_peak_gaussian_separation_{abs(true_params['center_1'] - true_params['center_2']):.1f}"
+            )
             create_and_save_visualizations(
                 function=multi_peak_gaussian_instance,
                 x_data=x_data,
@@ -317,9 +294,7 @@ class TestMultiPeakGaussianWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -394,12 +369,8 @@ class TestMultiPeakGaussianWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
-            assert (
-                fig3 is not None
-            ), "plot_training_history should return a matplotlib figure"
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
+            assert fig3 is not None, "plot_training_history should return a matplotlib figure"
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -464,9 +435,7 @@ class TestMultiPeakGaussianWorkflow:
 
         # Basic sanity check that predicted parameters are within the specified ranges
         for param_name, (min_val, max_val) in param_ranges.items():
-            assert (
-                min_val <= predicted_params[param_name] <= max_val
-            ), f"Parameter {param_name} outside expected range"
+            assert min_val <= predicted_params[param_name] <= max_val, f"Parameter {param_name} outside expected range"
 
         # Generate and save visualizations for the benchmark results
         create_and_save_visualizations(
@@ -509,6 +478,4 @@ class TestMultiPeakGaussianWorkflow:
         y_noisy = add_gaussian_noise(y_data, sigma=0.15)
 
         # Verify that noise was added (y_noisy should be different from y_data)
-        assert not np.allclose(
-            y_noisy, y_data, rtol=1e-10, atol=1e-10
-        ), "Noise should have been added"
+        assert not np.allclose(y_noisy, y_data, rtol=1e-10, atol=1e-10), "Noise should have been added"

@@ -2,7 +2,7 @@
 Factory for creating parameter estimator instances.
 """
 
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Tuple
 
 import numpy as np
 

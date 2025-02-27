@@ -1,12 +1,8 @@
 """Unit tests for the data generation module of ZeroGuess."""
 
-from unittest.mock import patch
-
 import numpy as np
-import pytest
 
 # Import the test fixtures
-from ..conftest import set_random_seeds
 
 # Once the ZeroGuess library is implemented, you would import from it directly
 # For now, we'll create a mock or assume the implementation details
@@ -93,9 +89,7 @@ class TestDataGeneration:
         param_sets = mock_generate_parameter_sets(param_ranges, num_samples)
 
         # Generate training data
-        outputs, param_values = mock_generate_training_data(
-            gaussian_function, param_sets, independent_vars_sampling
-        )
+        outputs, param_values = mock_generate_training_data(gaussian_function, param_sets, independent_vars_sampling)
 
         # Check that the correct number of outputs is generated
         assert len(outputs) == num_samples

@@ -10,7 +10,6 @@ import numpy as np
 from zeroguess.utils.visualization import (
     plot_fit_comparison,
     plot_parameter_comparison,
-    plot_training_history,
 )
 
 # Define the output directory for visualization files
@@ -57,9 +56,7 @@ def create_and_save_visualizations(
     # Create some fitted parameters (typically from optimization, but we'll use true params with small noise)
     # This simulates what would happen after further refinement with a curve fitting library
     np.random.seed(42)
-    fitted_params = {
-        param: value + np.random.normal(0, 0.05) for param, value in true_params.items()
-    }
+    fitted_params = {param: value + np.random.normal(0, 0.05) for param, value in true_params.items()}
 
     # Test 1: Plot fit comparison
     fig1 = plot_fit_comparison(
@@ -73,9 +70,7 @@ def create_and_save_visualizations(
     assert fig1 is not None, "plot_fit_comparison should return a matplotlib figure"
 
     # Save the fit comparison figure
-    fit_comparison_path = os.path.join(
-        VISUALIZATION_OUTPUT_DIR, f"{test_name}_fit_comparison_{timestamp}.png"
-    )
+    fit_comparison_path = os.path.join(VISUALIZATION_OUTPUT_DIR, f"{test_name}_fit_comparison_{timestamp}.png")
     fig1.savefig(fit_comparison_path, dpi=300, bbox_inches="tight")
     print(f"Saved fit comparison visualization to: {fit_comparison_path}")
 
@@ -85,14 +80,10 @@ def create_and_save_visualizations(
         estimated_params=estimated_params,
         fitted_params=fitted_params,
     )
-    assert (
-        fig2 is not None
-    ), "plot_parameter_comparison should return a matplotlib figure"
+    assert fig2 is not None, "plot_parameter_comparison should return a matplotlib figure"
 
     # Save the parameter comparison figure
-    param_comparison_path = os.path.join(
-        VISUALIZATION_OUTPUT_DIR, f"{test_name}_parameter_comparison_{timestamp}.png"
-    )
+    param_comparison_path = os.path.join(VISUALIZATION_OUTPUT_DIR, f"{test_name}_parameter_comparison_{timestamp}.png")
     fig2.savefig(param_comparison_path, dpi=300, bbox_inches="tight")
     print(f"Saved parameter comparison visualization to: {param_comparison_path}")
 

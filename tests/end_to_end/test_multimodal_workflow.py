@@ -5,7 +5,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import torch
 
 # Import the real ZeroGuess components
 from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
@@ -13,17 +12,13 @@ from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 # Import the functions module components
 from zeroguess.functions import MultimodalFunction, add_gaussian_noise
 from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
     plot_training_history,
 )
 
 # Import test utilities
-from ..conftest import set_random_seeds
 from ..test_utils import (
     calculate_curve_fit_quality,
     calculate_parameter_error,
-    is_within_tolerance,
 )
 
 # Import end-to-end test utilities
@@ -77,9 +72,7 @@ def sample_data_multimodal(multimodal_instance):
 class TestMultimodalWorkflow:
     """End-to-end tests for the full ZeroGuess workflow with a multimodal function (local minima)."""
 
-    def test_full_workflow(
-        self, set_random_seeds, multimodal_instance, sample_data_multimodal, monkeypatch
-    ):
+    def test_full_workflow(self, set_random_seeds, multimodal_instance, sample_data_multimodal, monkeypatch):
         """Test the full ZeroGuess workflow for multimodal function estimation."""
         # Get sample data
         x_data, y_data, true_params = sample_data_multimodal
@@ -151,9 +144,7 @@ class TestMultimodalWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -166,9 +157,7 @@ class TestMultimodalWorkflow:
             # Close the figure
             plt.close(fig3)
 
-    def test_frequency_sensitivity(
-        self, set_random_seeds, multimodal_instance, monkeypatch
-    ):
+    def test_frequency_sensitivity(self, set_random_seeds, multimodal_instance, monkeypatch):
         """Test the ability to estimate multimodal functions with different frequency parameters."""
         # Use parameter ranges from the MultimodalFunction instance
         param_ranges = multimodal_instance.param_ranges
@@ -222,15 +211,11 @@ class TestMultimodalWorkflow:
             errors = calculate_parameter_error(predicted_params, true_params)
 
             # Calculate fit quality
-            y_predicted = multimodal_instance(x_data, **predicted_params)
-            quality = calculate_curve_fit_quality(
-                multimodal_instance, x_data, y_data, predicted_params
-            )
+            multimodal_instance(x_data, **predicted_params)
+            quality = calculate_curve_fit_quality(multimodal_instance, x_data, y_data, predicted_params)
 
             # Print results for debugging
-            print(
-                f"\nScenario {i+1} (Frequencies: Sine={true_params['a2']:.1f}, Cosine={true_params['a4']:.1f}):"
-            )
+            print(f"\nScenario {i+1} (Frequencies: Sine={true_params['a2']:.1f}, Cosine={true_params['a4']:.1f}):")
             for param, error in errors.items():
                 print(
                     f"  {param}: true={true_params[param]:.2f}, pred={predicted_params[param]:.2f}, error={error:.2f}"
@@ -256,18 +241,12 @@ class TestMultimodalWorkflow:
             # Check individual parameter errors with special case for phase parameter
             for param_name, error in errors.items():
                 if param_name == "a5":  # Special case for phase parameter
-                    assert (
-                        error <= phase_error
-                    ), f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
+                    assert error <= phase_error, f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
                 else:  # Normal case for other parameters
-                    assert (
-                        error <= max_error
-                    ), f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
+                    assert error <= max_error, f"Error for {param_name} too high in scenario {i+1}: {error:.2f}"
 
             # Check overall fit quality
-            assert (
-                quality <= max_rmse
-            ), f"RMSE too high in scenario {i+1}: {quality:.4f}"
+            assert quality <= max_rmse, f"RMSE too high in scenario {i+1}: {quality:.4f}"
 
             # Generate and save visualizations for each scenario
             scenario_name = f"test_multimodal_frequency_sine{true_params['a2']:.1f}_cos{true_params['a4']:.1f}"
@@ -292,9 +271,7 @@ class TestMultimodalWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -307,9 +284,7 @@ class TestMultimodalWorkflow:
             # Close the figure
             plt.close(fig3)
 
-    def test_visualization_functions(
-        self, set_random_seeds, multimodal_instance, sample_data_multimodal, monkeypatch
-    ):
+    def test_visualization_functions(self, set_random_seeds, multimodal_instance, sample_data_multimodal, monkeypatch):
         """Test the visualization functions using the multimodal workflow."""
         # Get sample data
         x_data, y_data, true_params = sample_data_multimodal
@@ -365,12 +340,8 @@ class TestMultimodalWorkflow:
             # Generate timestamp for unique filename
             timestamp = get_timestamp()
 
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
-            assert (
-                fig3 is not None
-            ), "plot_training_history should return a matplotlib figure"
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
+            assert fig3 is not None, "plot_training_history should return a matplotlib figure"
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -435,9 +406,7 @@ class TestMultimodalWorkflow:
 
         # Basic sanity check that predicted parameters are within the specified ranges
         for param_name, (min_val, max_val) in param_ranges.items():
-            assert (
-                min_val <= predicted_params[param_name] <= max_val
-            ), f"Parameter {param_name} outside expected range"
+            assert min_val <= predicted_params[param_name] <= max_val, f"Parameter {param_name} outside expected range"
 
         # Generate and save visualizations for the benchmark results
         create_and_save_visualizations(
@@ -473,9 +442,7 @@ class TestMultimodalWorkflow:
         y_noisy = add_gaussian_noise(y_data, sigma=0.2)
 
         # Verify that noise was added (y_noisy should be different from y_data)
-        assert not np.allclose(
-            y_noisy, y_data, rtol=1e-10, atol=1e-10
-        ), "Noise should have been added"
+        assert not np.allclose(y_noisy, y_data, rtol=1e-10, atol=1e-10), "Noise should have been added"
 
     def test_generate_data_with_noise(self, set_random_seeds, multimodal_instance):
         """Test the generate_data method with noise using the add_gaussian_noise function."""
@@ -484,7 +451,7 @@ class TestMultimodalWorkflow:
 
         # Generate clean data using the generate_data method
         indep_vars, y_clean = multimodal_instance.generate_data(params)
-        x = indep_vars["x"]
+        indep_vars["x"]
 
         # Add noise with different sigma values
         sigma_values = [0.1, 0.2, 0.5]
@@ -521,9 +488,7 @@ class TestMultimodalWorkflow:
                 prev_snr = 10 * np.log10(signal_power / prev_noise_power)
 
                 # Verify that higher sigma results in lower SNR
-                assert (
-                    snr < prev_snr
-                ), f"SNR with sigma={sigma} should be lower than SNR with sigma={prev_sigma}"
+                assert snr < prev_snr, f"SNR with sigma={sigma} should be lower than SNR with sigma={prev_sigma}"
 
         # Test with a very high sigma to ensure the signal is completely dominated by noise
         np.random.seed(42)
@@ -533,6 +498,4 @@ class TestMultimodalWorkflow:
         correlation = np.corrcoef(y_clean, y_very_noisy)[0, 1]
 
         # With very high noise, correlation should be low
-        assert (
-            abs(correlation) < 0.5
-        ), f"Correlation with very high noise should be low, got {correlation:.2f}"
+        assert abs(correlation) < 0.5, f"Correlation with very high noise should be low, got {correlation:.2f}"

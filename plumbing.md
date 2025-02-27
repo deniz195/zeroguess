@@ -6,7 +6,7 @@ This file describes the ZeroGuess project's coding and linting standards, CI/CD 
 ## Code Quality Standards
 
 ### Formatting
-- **Black**: We use Black for code formatting with a line length of 88 characters.
+- **Black**: We use Black for code formatting with a line length of 120 characters.
 - **isort**: We use isort for sorting imports, configured to be compatible with Black.
 
 ### Linting
@@ -43,6 +43,13 @@ Install with: `pre-commit install`
 
 ## Running Tools Manually
 
+### Scripts
+
+We have a few scripts to help with development.
+
+- `scripts/quality.py` - Runs linters, formatters, and tests.
+
+
 ### Running Tests
 ```bash
 # Run all tests
@@ -70,11 +77,39 @@ mypy zeroguess
 ### Running Formatters
 ```bash
 # Run black
-black zeroguess tests
+black --line-length=120 zeroguess tests
 
 # Run isort
 isort zeroguess tests
 ```
+
+### Auto-fixing Flake8 Issues
+While Flake8 itself doesn't have auto-fix capabilities, we use several tools to automatically fix common issues:
+
+```bash
+# Fix unused imports with autoflake
+find zeroguess tests examples -name '*.py' | xargs autoflake --in-place --remove-all-unused-imports --remove-unused-variables
+
+# Fix import order with isort
+isort zeroguess tests examples
+
+# Fix code style issues with black
+black --line-length=120 zeroguess tests examples
+
+# Fix PEP 8 style issues with autopep8
+find zeroguess tests examples -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120
+```
+
+These tools can be installed with:
+```bash
+pip install autoflake autopep8
+```
+
+For a comprehensive fix, run them in this order:
+1. autoflake (removes unused imports)
+2. isort (sorts imports)
+3. autopep8 (fixes PEP 8 issues)
+4. black (formats code according to our style)
 
 ## CI/CD Pipeline
 

@@ -2,7 +2,7 @@
 Multilayer Perceptron (MLP) architecture for ZeroGuess.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import torch
 import torch.nn as nn

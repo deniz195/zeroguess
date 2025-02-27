@@ -140,11 +140,7 @@ def main(args):
         # Calculate parameter errors
         errors = {}
         for param in real_params:
-            errors[param] = (
-                abs(real_params[param] - predicted_params[param])
-                / real_params[param]
-                * 100
-            )
+            errors[param] = abs(real_params[param] - predicted_params[param]) / real_params[param] * 100
 
         print("\nParameter errors (%):")
         for param, error in errors.items():
@@ -186,9 +182,7 @@ if __name__ == "__main__":
         help="Train a new model (otherwise tries to load a pre-trained model)",
     )
 
-    parser.add_argument(
-        "--predict", action="store_true", help="Perform prediction using the model"
-    )
+    parser.add_argument("--predict", action="store_true", help="Perform prediction using the model")
 
     parser.add_argument(
         "--samples",
@@ -197,21 +191,15 @@ if __name__ == "__main__":
         help="Number of training samples to generate",
     )
 
-    parser.add_argument(
-        "--epochs", type=int, default=100, help="Number of training epochs"
-    )
+    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
 
-    parser.add_argument(
-        "--batch-size", type=int, default=64, help="Batch size for training"
-    )
+    parser.add_argument("--batch-size", type=int, default=64, help="Batch size for training")
 
     # Convert architecture params from command line to a dictionary
     parser.add_argument(
         "--architecture-params",
         type=lambda params: {
-            param.split(":")[0]: eval(param.split(":")[1])
-            for param in params.split()
-            if ":" in param
+            param.split(":")[0]: eval(param.split(":")[1]) for param in params.split() if ":" in param
         },
         default={},
         help="Architecture-specific parameters (format: 'param:value param2:value2')",

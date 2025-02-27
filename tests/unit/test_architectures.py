@@ -115,9 +115,7 @@ class TestArchitectureSelection(unittest.TestCase):
                     valid_params = {param_name: param_value}
                     get_architecture(arch_name, **valid_params)
             except Exception as e:
-                self.fail(
-                    f"Creating {arch_name} with valid parameters raised {type(e).__name__}: {e}"
-                )
+                self.fail(f"Creating {arch_name} with valid parameters raised {type(e).__name__}: {e}")
 
     def test_create_network(self):
         """Test creating networks with different architectures."""
@@ -190,15 +188,11 @@ class TestArchitectureSelection(unittest.TestCase):
         try:
             mlp_arch.validate_input_size(mlp_network, valid_size, valid_size)
         except ValueError:
-            self.fail(
-                "validate_input_size raised ValueError for valid input size in MLP"
-            )
+            self.fail("validate_input_size raised ValueError for valid input size in MLP")
 
         # Different size should raise ValueError for MLP
         invalid_size = 15
-        with self.assertRaises(
-            ValueError, msg="MLP should reject mismatched input sizes"
-        ):
+        with self.assertRaises(ValueError, msg="MLP should reject mismatched input sizes"):
             mlp_arch.validate_input_size(mlp_network, invalid_size, valid_size)
 
         # Test CNN architecture input size validation
@@ -209,14 +203,10 @@ class TestArchitectureSelection(unittest.TestCase):
         try:
             cnn_arch.validate_input_size(cnn_network, valid_size, valid_size)
         except ValueError:
-            self.fail(
-                "validate_input_size raised ValueError for valid input size in CNN"
-            )
+            self.fail("validate_input_size raised ValueError for valid input size in CNN")
 
         # Different size should now raise ValueError for CNN as well, after our update
-        with self.assertRaises(
-            ValueError, msg="CNN should reject mismatched input sizes"
-        ):
+        with self.assertRaises(ValueError, msg="CNN should reject mismatched input sizes"):
             cnn_arch.validate_input_size(cnn_network, invalid_size, valid_size)
 
 

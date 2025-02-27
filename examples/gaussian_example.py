@@ -24,9 +24,17 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
+import zeroguess
+from zeroguess.integration import scipy_integration
+from zeroguess.utils.visualization import (
+    plot_fit_comparison,
+    plot_parameter_comparison,
+    plot_training_history,
+)
+
 # Check if lmfit is installed
 try:
-    import lmfit
+    pass
 
     LMFIT_AVAILABLE = True
 except ImportError:
@@ -37,18 +45,10 @@ except ImportError:
 # Add the parent directory to the path so we can import zeroguess
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import zeroguess
-from zeroguess.integration import scipy_integration
 
 # Only import lmfit_integration if lmfit is available
 if LMFIT_AVAILABLE:
     from zeroguess.integration import lmfit_integration
-
-from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
-    plot_training_history,
-)
 
 
 def gaussian(x, amplitude, center, width):
@@ -305,7 +305,7 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     model.set_param_hint("amplitude", min=0.1, max=10.0)
     model.set_param_hint("center", min=-5.0, max=5.0)
     model.set_param_hint("width", min=0.1, max=5.0)
-    params = model.make_params()
+    model.make_params()
 
     # Using guess() method directly to demonstrate how it works
     print("Demonstrating guess() method directly...")
@@ -358,9 +358,7 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
 
 if __name__ == "__main__":
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(
-        description="Run comprehensive ZeroGuess examples with a Gaussian function"
-    )
+    parser = argparse.ArgumentParser(description="Run comprehensive ZeroGuess examples with a Gaussian function")
     parser.add_argument(
         "--random",
         action="store_true",

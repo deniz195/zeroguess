@@ -3,7 +3,7 @@ Integration with SciPy's curve_fit function.
 """
 
 import inspect
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
 from scipy import optimize
@@ -77,8 +77,7 @@ def curve_fit(
         import warnings
 
         warnings.warn(
-            "Initial parameter guess (p0) already provided. "
-            "ZeroGuess's parameter estimation will be ignored."
+            "Initial parameter guess (p0) already provided. " "ZeroGuess's parameter estimation will be ignored."
         )
     else:
         kwargs["p0"] = p0

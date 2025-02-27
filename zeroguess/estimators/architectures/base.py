@@ -3,9 +3,8 @@ Base interface for neural network architectures.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
-import torch
 import torch.nn as nn
 
 
@@ -27,7 +26,6 @@ class BaseArchitecture(ABC):
         Returns:
             A PyTorch neural network module
         """
-        pass
 
     @classmethod
     def get_default_params(cls) -> Dict[str, Any]:
@@ -63,9 +61,7 @@ class BaseArchitecture(ABC):
 
         return validated
 
-    def validate_input_size(
-        self, network: nn.Module, input_size: int, expected_size: int
-    ) -> bool:
+    def validate_input_size(self, network: nn.Module, input_size: int, expected_size: int) -> bool:
         """Validate if the input size is compatible with what the network expects.
 
         Each architecture can implement its own validation logic.

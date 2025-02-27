@@ -1,6 +1,5 @@
 """Common test fixtures and utilities for ZeroGuess tests."""
 
-import os
 import random
 
 import numpy as np
@@ -14,9 +13,7 @@ except ImportError:
     HAS_TORCH = False
 
 # Skip tests that require torch if it's not installed
-requires_torch = pytest.mark.skipif(
-    not HAS_TORCH, reason="PyTorch is required for this test"
-)
+requires_torch = pytest.mark.skipif(not HAS_TORCH, reason="PyTorch is required for this test")
 
 
 @pytest.fixture(scope="function")
@@ -206,9 +203,7 @@ def double_sigmoid_function():
     """Return a double sigmoid function for testing more complex sigmoid cases."""
 
     def double_sigmoid(x, amp1, center1, rate1, amp2, center2, rate2):
-        return amp1 / (1 + np.exp(-rate1 * (x - center1))) + amp2 / (
-            1 + np.exp(-rate2 * (x - center2))
-        )
+        return amp1 / (1 + np.exp(-rate1 * (x - center1))) + amp2 / (1 + np.exp(-rate2 * (x - center2)))
 
     return double_sigmoid
 
@@ -236,9 +231,7 @@ def sample_data_double_sigmoid():
 
     # Get the double sigmoid function
     def double_sigmoid(x, amp1, center1, rate1, amp2, center2, rate2):
-        return amp1 / (1 + np.exp(-rate1 * (x - center1))) + amp2 / (
-            1 + np.exp(-rate2 * (x - center2))
-        )
+        return amp1 / (1 + np.exp(-rate1 * (x - center1))) + amp2 / (1 + np.exp(-rate2 * (x - center2)))
 
     # Generate clean data
     y_clean = double_sigmoid(x_data, **true_params)

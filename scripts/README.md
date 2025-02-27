@@ -29,7 +29,7 @@ Usage:
 # Run all code quality tools (format and lint)
 python scripts/quality.py
 
-# Run only formatters (black, isort)
+# Run only formatters (black, isort, autoflake, autopep8)
 python scripts/quality.py format
 
 # Run only linters (flake8, mypy, vulture)
@@ -40,6 +40,9 @@ python scripts/quality.py check
 
 # Run pre-commit hooks on all files
 python scripts/quality.py pre-commit
+
+# Automatically fix common flake8 issues
+python scripts/quality.py fix
 ```
 
 You can also make the script executable and run it directly:

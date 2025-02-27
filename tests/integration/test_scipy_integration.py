@@ -6,12 +6,11 @@ import numpy as np
 import pytest
 
 # Import test utilities
-from ..conftest import gaussian_function, sample_data_1d, set_random_seeds
-from ..test_utils import calculate_parameter_error, is_within_tolerance
+from ..test_utils import calculate_parameter_error
 
 # Try to import scipy, but allow tests to be skipped if not available
 try:
-    from scipy import optimize
+    pass
 
     HAS_SCIPY = True
 except ImportError:
@@ -26,14 +25,10 @@ except ImportError:
     HAS_ZEROGUESS = False
 
 # Create marker to skip tests if scipy is not available
-requires_scipy = pytest.mark.skipif(
-    not HAS_SCIPY, reason="SciPy is required for this test"
-)
+requires_scipy = pytest.mark.skipif(not HAS_SCIPY, reason="SciPy is required for this test")
 
 # Create marker to skip tests if zeroguess is not available
-requires_zeroguess = pytest.mark.skipif(
-    not HAS_ZEROGUESS, reason="ZeroGuess is required for this test"
-)
+requires_zeroguess = pytest.mark.skipif(not HAS_ZEROGUESS, reason="ZeroGuess is required for this test")
 
 
 @requires_scipy
@@ -41,9 +36,7 @@ requires_zeroguess = pytest.mark.skipif(
 class TestScipyIntegration:
     """Tests for SciPy integration."""
 
-    def test_zeroguess_curve_fit_with_param_ranges(
-        self, set_random_seeds, gaussian_function, sample_data_1d
-    ):
+    def test_zeroguess_curve_fit_with_param_ranges(self, set_random_seeds, gaussian_function, sample_data_1d):
         """Test that ZeroGuess-enhanced curve_fit works with parameter ranges."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
@@ -136,9 +129,7 @@ class TestScipyIntegration:
         assert "p0" in kwargs
         assert len(kwargs["p0"]) == len(param_ranges)
 
-    def test_zeroguess_curve_fit_respects_user_p0(
-        self, set_random_seeds, gaussian_function, sample_data_1d
-    ):
+    def test_zeroguess_curve_fit_respects_user_p0(self, set_random_seeds, gaussian_function, sample_data_1d):
         """Test that ZeroGuess doesn't override p0 if the user provides it."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
@@ -167,9 +158,7 @@ class TestScipyIntegration:
             assert "p0" in kwargs
             assert np.array_equal(kwargs["p0"], user_p0)
 
-    def test_zeroguess_curve_fit_without_param_ranges(
-        self, set_random_seeds, gaussian_function, sample_data_1d
-    ):
+    def test_zeroguess_curve_fit_without_param_ranges(self, set_random_seeds, gaussian_function, sample_data_1d):
         """Test that ZeroGuess falls back to standard curve_fit when no param_ranges are provided."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
@@ -187,6 +176,4 @@ class TestScipyIntegration:
 
             # Verify that scipy.optimize.curve_fit was called without p0
             args, kwargs = mock_scipy_curve_fit.call_args
-            assert (
-                "p0" not in kwargs
-            ), "p0 should not be provided when param_ranges is not provided"
+            assert "p0" not in kwargs, "p0 should not be provided when param_ranges is not provided"

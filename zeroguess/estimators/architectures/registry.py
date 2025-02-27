@@ -2,9 +2,11 @@
 Registry for neural network architectures.
 """
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Type
 
 from zeroguess.estimators.architectures.base import BaseArchitecture
+from zeroguess.estimators.architectures.cnn import CNNArchitecture
+from zeroguess.estimators.architectures.mlp import MLPArchitecture
 
 # Global registry of architectures
 _ARCHITECTURE_REGISTRY: Dict[str, Type[BaseArchitecture]] = {}
@@ -47,8 +49,7 @@ def get_architecture(architecture_name: str, **params) -> BaseArchitecture:
     if architecture_name not in _ARCHITECTURE_REGISTRY:
         registered = ", ".join(_ARCHITECTURE_REGISTRY.keys())
         raise ValueError(
-            f"Architecture '{architecture_name}' is not registered. "
-            f"Available architectures: {registered}"
+            f"Architecture '{architecture_name}' is not registered. " f"Available architectures: {registered}"
         )
 
     architecture_class = _ARCHITECTURE_REGISTRY[architecture_name]
@@ -79,12 +80,7 @@ def get_architecture_info() -> Dict[str, Dict[str, Any]]:
     return info
 
 
-from zeroguess.estimators.architectures.cnn import CNNArchitecture
-
 # Register built-in architectures
-from zeroguess.estimators.architectures.mlp import MLPArchitecture
-from zeroguess.estimators.architectures.transformer import TransformerArchitecture
-
 register_architecture(MLPArchitecture)
 # CNNArchitecture and TransformerArchitecture are planned for future work
 register_architecture(CNNArchitecture)

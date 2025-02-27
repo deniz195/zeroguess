@@ -3,7 +3,7 @@ Neural network-based parameter estimator implementation.
 """
 
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -99,9 +99,7 @@ class NeuralNetworkEstimator(BaseEstimator):
             if device == "cuda" and not torch.cuda.is_available():
                 print("Warning: CUDA requested but not available. Falling back to CPU.")
                 self.device = torch.device("cpu")
-            elif device == "mps" and not (
-                hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
-            ):
+            elif device == "mps" and not (hasattr(torch.backends, "mps") and torch.backends.mps.is_available()):
                 print("Warning: MPS requested but not available. Falling back to CPU.")
                 self.device = torch.device("cpu")
 
@@ -117,9 +115,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
     def _create_architecture(self):
         """Create the specified neural network architecture."""
-        self.architecture = get_architecture(
-            self.architecture_name, **self.architecture_params
-        )
+        self.architecture = get_architecture(self.architecture_name, **self.architecture_params)
 
     @staticmethod
     def list_available_architectures() -> List[str]:
@@ -181,9 +177,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         try:
             # Generate synthetic training data
-            params, function_values = self.data_generator.generate_dataset(
-                n_samples=n_samples
-            )
+            params, function_values = self.data_generator.generate_dataset(n_samples=n_samples)
 
             # Process the data for training
             # For now, we'll assume a single independent variable scenario
@@ -203,9 +197,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
                 y = y_normalized  # Use normalized parameters for training
             else:
-                raise NotImplementedError(
-                    "Multiple independent variables not yet implemented"
-                )
+                raise NotImplementedError("Multiple independent variables not yet implemented")
 
             # Split data into training and validation sets
             n_val = int(n_samples * validation_split)
@@ -229,9 +221,7 @@ class NeuralNetworkEstimator(BaseEstimator):
                 torch.tensor(y_val, dtype=torch.float32),
             )
 
-            train_loader = DataLoader(
-                train_dataset, batch_size=batch_size, shuffle=True
-            )
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
             val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
             # Create the neural network if it doesn't exist
@@ -321,9 +311,7 @@ class NeuralNetworkEstimator(BaseEstimator):
                 if completed_epochs > 0:
                     train_loss = history["train_loss"][-1]
                     val_loss = history["val_loss"][-1]
-                    print(
-                        f"Latest metrics - train_loss: {train_loss:.6f}, val_loss: {val_loss:.6f}"
-                    )
+                    print(f"Latest metrics - train_loss: {train_loss:.6f}, val_loss: {val_loss:.6f}")
 
                 print("Model saved with current state.")
 
@@ -365,16 +353,15 @@ class NeuralNetworkEstimator(BaseEstimator):
                 # If we expected y values directly (special case for examples)
                 if len(args) == 2 or "y" in kwargs:
                     # Extract y values (function output) from the second argument or kwargs
-                    x_data = args[0]
+                    args[0]
                     y_data = args[1] if len(args) > 1 else kwargs.get("y")
                 else:
                     raise ValueError(
-                        f"Expected {len(self.independent_var_names)} positional arguments, "
-                        f"got {len(args)}"
+                        f"Expected {len(self.independent_var_names)} positional arguments, " f"got {len(args)}"
                     )
             else:
                 # Normal case: extract data from args in expected order
-                x_data = args[0]
+                args[0]
                 y_data = kwargs.get("y", None)
 
                 if y_data is None:
@@ -384,18 +371,14 @@ class NeuralNetworkEstimator(BaseEstimator):
             if len(self.independent_var_names) == 1:
                 var_name = self.independent_var_names[0]
                 if var_name not in kwargs:
-                    raise ValueError(
-                        f"Missing required independent variable: {var_name}"
-                    )
-                x_data = kwargs[var_name]
+                    raise ValueError(f"Missing required independent variable: {var_name}")
+                kwargs[var_name]
                 y_data = kwargs.get("y", None)
 
                 if y_data is None:
                     raise ValueError("y data must be provided for prediction")
             else:
-                raise NotImplementedError(
-                    "Multiple independent variables not yet implemented"
-                )
+                raise NotImplementedError("Multiple independent variables not yet implemented")
 
         # Check the network input size from the state dictionary
         # Get the first layer's weight shape
@@ -413,9 +396,7 @@ class NeuralNetworkEstimator(BaseEstimator):
         features = y_data.flatten()
 
         # Convert to tensor and move to device
-        features_tensor = (
-            torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
-        )
+        features_tensor = torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
 
         # Make prediction
         self.network.eval()
@@ -497,9 +478,7 @@ class NeuralNetworkEstimator(BaseEstimator):
             if device == "cuda" and not torch.cuda.is_available():
                 print("Warning: CUDA requested but not available. Falling back to CPU.")
                 device_obj = torch.device("cpu")
-            elif device == "mps" and not (
-                hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
-            ):
+            elif device == "mps" and not (hasattr(torch.backends, "mps") and torch.backends.mps.is_available()):
                 print("Warning: MPS requested but not available. Falling back to CPU.")
                 device_obj = torch.device("cpu")
             else:
@@ -515,9 +494,7 @@ class NeuralNetworkEstimator(BaseEstimator):
             # Create dummy sampling for validation
             independent_vars_sampling = {}
             for var_name in state["independent_var_names"]:
-                independent_vars_sampling[var_name] = np.array(
-                    [0.0]
-                )  # Dummy value that will pass validation
+                independent_vars_sampling[var_name] = np.array([0.0])  # Dummy value that will pass validation
 
         # Create a new estimator instance
         estimator = cls(
@@ -537,9 +514,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         # Check the network input size from the state dictionary
         # Get the first layer's weight shape from the network state dict
-        first_layer_key = [
-            k for k in state["network_state_dict"].keys() if "weight" in k
-        ][0]
+        first_layer_key = [k for k in state["network_state_dict"].keys() if "weight" in k][0]
         n_input_features = state["network_state_dict"][first_layer_key].shape[1]
 
         n_output_params = len(estimator.param_names)

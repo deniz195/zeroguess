@@ -3,7 +3,7 @@ Base parameter estimator interface.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -51,17 +51,10 @@ class BaseEstimator(ABC):
 
         for param_name, (min_val, max_val) in self.param_ranges.items():
             if min_val >= max_val:
-                raise ValueError(
-                    f"Min value must be less than max value for parameter {param_name}"
-                )
+                raise ValueError(f"Min value must be less than max value for parameter {param_name}")
 
-        if (
-            not isinstance(self.independent_vars_sampling, dict)
-            or not self.independent_vars_sampling
-        ):
-            raise ValueError(
-                "Independent variable sampling must be a non-empty dictionary"
-            )
+        if not isinstance(self.independent_vars_sampling, dict) or not self.independent_vars_sampling:
+            raise ValueError("Independent variable sampling must be a non-empty dictionary")
 
         for var_name, sampling in self.independent_vars_sampling.items():
             if not isinstance(sampling, np.ndarray):
@@ -79,7 +72,6 @@ class BaseEstimator(ABC):
         Returns:
             Dictionary containing training results
         """
-        pass
 
     @abstractmethod
     def predict(self, *args, **kwargs) -> Dict[str, float]:
@@ -92,7 +84,6 @@ class BaseEstimator(ABC):
         Returns:
             Dictionary mapping parameter names to predicted values
         """
-        pass
 
     @abstractmethod
     def save(self, path: str) -> None:
@@ -101,7 +92,6 @@ class BaseEstimator(ABC):
         Args:
             path: Path to save the model
         """
-        pass
 
     @classmethod
     @abstractmethod
@@ -114,4 +104,3 @@ class BaseEstimator(ABC):
         Returns:
             Loaded estimator instance
         """
-        pass

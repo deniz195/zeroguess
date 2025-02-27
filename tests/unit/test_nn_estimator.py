@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 # Import the test fixtures
-from ..conftest import requires_torch, set_random_seeds
+from ..conftest import requires_torch
 
 # Try to import torch, but allow tests to be skipped if not available
 try:
@@ -18,8 +18,6 @@ except ImportError:
 # Try to import our actual NeuralNetworkEstimator instead of just using a mock
 if HAS_TORCH:
     try:
-        from zeroguess.data.generators import SyntheticDataGenerator
-        from zeroguess.estimators.architectures import get_architecture
         from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 
         HAS_REAL_ESTIMATOR = True
@@ -45,9 +43,7 @@ if HAS_TORCH:
             # Create a simple neural network
             self.model = nn.Sequential(
                 nn.Linear(
-                    sum(
-                        len(sampling) for sampling in independent_vars_sampling.values()
-                    ),
+                    sum(len(sampling) for sampling in independent_vars_sampling.values()),
                     64,
                 ),
                 nn.ReLU(),
@@ -77,15 +73,11 @@ if HAS_TORCH:
                 raise RuntimeError("Model must be trained before prediction")
 
             # Ensure we're matching the input size expected by the model
-            input_size = sum(
-                len(sampling) for sampling in self.independent_vars_sampling.values()
-            )
+            sum(len(sampling) for sampling in self.independent_vars_sampling.values())
 
             # Instead of using x_data directly, we'll use the sampling points
             # This ensures the input size matches what the model expects
-            x_tensor = torch.tensor(
-                self.independent_vars_sampling["x"], dtype=torch.float32
-            ).reshape(1, -1)
+            x_tensor = torch.tensor(self.independent_vars_sampling["x"], dtype=torch.float32).reshape(1, -1)
 
             # Run forward pass
             with torch.no_grad():
@@ -114,9 +106,7 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Initialize estimator
-        estimator = MockNNEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockNNEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Check that parameters are stored correctly
         assert estimator.param_ranges == param_ranges
@@ -137,9 +127,7 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Initialize estimator
-        estimator = MockNNEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockNNEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Train the model
         training_metrics = estimator.train(epochs=5, batch_size=16, learning_rate=0.01)
@@ -161,9 +149,7 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Initialize estimator
-        estimator = MockNNEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockNNEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Train the model
         estimator.train()
@@ -192,19 +178,13 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Initialize estimator
-        estimator = MockNNEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = MockNNEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Prediction should raise error because model is not trained
-        with pytest.raises(
-            RuntimeError, match="Model must be trained before prediction"
-        ):
+        with pytest.raises(RuntimeError, match="Model must be trained before prediction"):
             estimator.predict(x_data, y_data)
 
-    @pytest.mark.skipif(
-        not HAS_REAL_ESTIMATOR, reason="Real NeuralNetworkEstimator not available"
-    )
+    @pytest.mark.skipif(not HAS_REAL_ESTIMATOR, reason="Real NeuralNetworkEstimator not available")
     def test_device_selection(self, gaussian_function):
         """Test that the device selection logic works correctly."""
         # Define parameter ranges
@@ -214,9 +194,7 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Test auto-detection (default behavior)
-        estimator_auto = NeuralNetworkEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator_auto = NeuralNetworkEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Check if device is selected correctly based on what's available
         if torch.cuda.is_available():
@@ -227,9 +205,7 @@ class TestNNEstimator:
             assert estimator_auto.device.type == "cpu"
 
         # Test CPU explicit selection
-        estimator_cpu = NeuralNetworkEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling, device="cpu"
-        )
+        estimator_cpu = NeuralNetworkEstimator(gaussian_function, param_ranges, independent_vars_sampling, device="cpu")
         assert estimator_cpu.device.type == "cpu"
 
         # Test fallback to CPU when requesting unavailable hardware
@@ -248,9 +224,7 @@ class TestNNEstimator:
             )
             assert estimator_mps_fallback.device.type == "cpu"
 
-    @pytest.mark.skipif(
-        not HAS_REAL_ESTIMATOR, reason="Real NeuralNetworkEstimator not available"
-    )
+    @pytest.mark.skipif(not HAS_REAL_ESTIMATOR, reason="Real NeuralNetworkEstimator not available")
     def test_device_selection_in_load(self, gaussian_function, tmp_path):
         """Test that the device selection logic works correctly when loading a model."""
         # Skip if we don't have a real estimator to test
@@ -264,9 +238,7 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Create and train a minimal estimator to save
-        estimator = NeuralNetworkEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = NeuralNetworkEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Skip actual training, we just need a model file
         # Mock the training by setting up minimal requirements
@@ -300,9 +272,7 @@ class TestNNEstimator:
         loaded_cpu = NeuralNetworkEstimator.load(str(model_path), device="cpu")
         assert loaded_cpu.device.type == "cpu"
 
-    @pytest.mark.skipif(
-        not HAS_REAL_ESTIMATOR, reason="Real NeuralNetworkEstimator not available"
-    )
+    @pytest.mark.skipif(not HAS_REAL_ESTIMATOR, reason="Real NeuralNetworkEstimator not available")
     def test_keyboard_interrupt_handling(self, gaussian_function):
         """Test that the estimator handles keyboard interrupts gracefully during training."""
         if not HAS_REAL_ESTIMATOR:
@@ -315,9 +285,7 @@ class TestNNEstimator:
         independent_vars_sampling = {"x": np.linspace(-10, 10, 100)}
 
         # Initialize estimator
-        estimator = NeuralNetworkEstimator(
-            gaussian_function, param_ranges, independent_vars_sampling
-        )
+        estimator = NeuralNetworkEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # First train with minimal samples to ensure the model is created
         # Use small values to make the test fast

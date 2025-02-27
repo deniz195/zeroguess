@@ -6,7 +6,7 @@ curve fitting applications, such as Gaussian, multi-peak Gaussian, damped sine,
 and linear functions.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 
@@ -110,9 +110,7 @@ class MultiPeakGaussianFunction(FittingFunction):
         """Return default sampling points for independent variables."""
         return {"x": np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)}
 
-    def __call__(
-        self, x, amplitude_1, center_1, width_1, amplitude_2, center_2, width_2
-    ):
+    def __call__(self, x, amplitude_1, center_1, width_1, amplitude_2, center_2, width_2):
         """Evaluate the two-peak Gaussian function.
 
         Args:
@@ -248,9 +246,7 @@ class DampedSineFunction(FittingFunction):
         Returns:
             Function values at the specified points
         """
-        return (
-            amplitude * np.sin(2 * np.pi * frequency * x + phase) * np.exp(-decay * x)
-        )
+        return amplitude * np.sin(2 * np.pi * frequency * x + phase) * np.exp(-decay * x)
 
 
 class LinearFunction(FittingFunction):

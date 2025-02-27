@@ -6,10 +6,11 @@ Usage:
     python scripts/quality.py [command]
 
 Commands:
-    format: Run formatters (black, isort)
+    format: Run formatters (black, isort, autoflake, autopep8)
     lint: Run linters (flake8, mypy, vulture)
     check: Run formatters and linters in check mode (no changes)
     all: Run all code quality tools
+    fix: Run auto-fixers for common flake8 issues
 """
 import argparse
 import subprocess
@@ -37,16 +38,26 @@ def format_code(check_only=False):
     """Run code formatters."""
     success = True
     
-    # Run black
-    check_flag = "--check --diff" if check_only else ""
-    cmd = f"black {check_flag} {PYTHON_DIRS_STR}"
-    action = "Checking" if check_only else "Formatting"
-    success = run_command(cmd, f"{action} code with black") and success
+    # Run autoflake to remove unused imports
+    if not check_only:
+        cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autoflake --in-place --remove-all-unused-imports --remove-unused-variables"
+        success = run_command(cmd, "Removing unused imports with autoflake") and success
     
     # Run isort
     check_flag = "--check-only --diff" if check_only else ""
     cmd = f"isort {check_flag} {PYTHON_DIRS_STR}"
+    action = "Checking" if check_only else "Formatting"
     success = run_command(cmd, f"{action} imports with isort") and success
+    
+    # Run autopep8 for PEP 8 fixes
+    if not check_only:
+        cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120"
+        success = run_command(cmd, "Fixing PEP 8 issues with autopep8") and success
+    
+    # Run black
+    check_flag = "--check --diff" if check_only else ""
+    cmd = f"black {check_flag} --line-length=120 {PYTHON_DIRS_STR}"
+    success = run_command(cmd, f"{action} code with black") and success
     
     return success
 
@@ -70,6 +81,29 @@ def lint_code():
     return success
 
 
+def fix_flake8_issues():
+    """Fix common flake8 issues automatically."""
+    success = True
+    
+    # Remove unused imports
+    cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autoflake --in-place --remove-all-unused-imports --remove-unused-variables"
+    success = run_command(cmd, "Removing unused imports with autoflake") and success
+    
+    # Sort imports
+    cmd = f"isort {PYTHON_DIRS_STR}"
+    success = run_command(cmd, "Sorting imports with isort") and success
+    
+    # Fix PEP 8 issues
+    cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120"
+    success = run_command(cmd, "Fixing PEP 8 issues with autopep8") and success
+    
+    # Format code
+    cmd = f"black --line-length=120 {PYTHON_DIRS_STR}"
+    success = run_command(cmd, "Formatting code with black") and success
+    
+    return success
+
+
 def run_pre_commit():
     """Run pre-commit on all files."""
     return run_command("pre-commit run --all-files", "Running pre-commit hooks on all files")
@@ -80,10 +114,10 @@ def main():
     parser = argparse.ArgumentParser(description="Run code quality tools")
     parser.add_argument(
         "command",
-        choices=["format", "lint", "check", "all", "pre-commit"],
+        choices=["format", "lint", "check", "all", "pre-commit", "fix"],
         default="all",
         nargs="?",
-        help="Command to run (format, lint, check, all, or pre-commit)",
+        help="Command to run (format, lint, check, all, pre-commit, or fix)",
     )
     args = parser.parse_args()
     
@@ -97,6 +131,8 @@ def main():
         success = format_code(check_only=True) and lint_code()
     elif args.command == "pre-commit":
         success = run_pre_commit()
+    elif args.command == "fix":
+        success = fix_flake8_issues()
     else:  # all
         success = format_code(check_only=False) and lint_code()
     

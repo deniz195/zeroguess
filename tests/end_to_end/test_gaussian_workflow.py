@@ -7,7 +7,6 @@ import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import torch
 
 # Import the real ZeroGuess components
 from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
@@ -21,11 +20,8 @@ from zeroguess.utils.visualization import (
 )
 
 # Import test utilities
-from ..conftest import set_random_seeds
 from ..test_utils import (
-    calculate_curve_fit_quality,
     calculate_parameter_error,
-    is_within_tolerance,
 )
 
 # Define the output directory for visualization files
@@ -144,9 +140,7 @@ class TestGaussianWorkflow:
         # Correlation should be high
         assert correlation > 0.5, f"Correlation too low: {correlation:.2f}"
 
-    def test_estimator_performance_benchmark(
-        self, benchmark, set_random_seeds, gaussian_instance, sample_data_1d
-    ):
+    def test_estimator_performance_benchmark(self, benchmark, set_random_seeds, gaussian_instance, sample_data_1d):
         """Benchmark test for measuring the performance of the neural network estimator."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
@@ -189,13 +183,9 @@ class TestGaussianWorkflow:
 
         # Basic sanity check that predicted parameters are within the specified ranges
         for param_name, (min_val, max_val) in param_ranges.items():
-            assert (
-                min_val <= predicted_params[param_name] <= max_val
-            ), f"Parameter {param_name} outside expected range"
+            assert min_val <= predicted_params[param_name] <= max_val, f"Parameter {param_name} outside expected range"
 
-    def test_visualization_functions(
-        self, set_random_seeds, gaussian_instance, sample_data_1d, monkeypatch
-    ):
+    def test_visualization_functions(self, set_random_seeds, gaussian_instance, sample_data_1d, monkeypatch):
         """Test the visualization functions using the end-to-end workflow components."""
         # Mock the plt.show() to avoid displaying figures during tests
         monkeypatch.setattr(plt, "show", lambda: None)
@@ -243,10 +233,7 @@ class TestGaussianWorkflow:
         # Create some fitted parameters (typically from optimization, but we'll use true params with small noise)
         # This simulates what would happen after further refinement with a curve fitting library
         np.random.seed(42)
-        fitted_params = {
-            param: value + np.random.normal(0, 0.05)
-            for param, value in true_params.items()
-        }
+        fitted_params = {param: value + np.random.normal(0, 0.05) for param, value in true_params.items()}
 
         # Test 1: Plot fit comparison
         fig1 = plot_fit_comparison(
@@ -260,9 +247,7 @@ class TestGaussianWorkflow:
         assert fig1 is not None, "plot_fit_comparison should return a matplotlib figure"
 
         # Save the fit comparison figure
-        fit_comparison_path = os.path.join(
-            VISUALIZATION_OUTPUT_DIR, f"{test_name}_fit_comparison_{timestamp}.png"
-        )
+        fit_comparison_path = os.path.join(VISUALIZATION_OUTPUT_DIR, f"{test_name}_fit_comparison_{timestamp}.png")
         fig1.savefig(fit_comparison_path, dpi=300, bbox_inches="tight")
         print(f"Saved fit comparison visualization to: {fit_comparison_path}")
 
@@ -272,9 +257,7 @@ class TestGaussianWorkflow:
             estimated_params=estimated_params,
             fitted_params=fitted_params,
         )
-        assert (
-            fig2 is not None
-        ), "plot_parameter_comparison should return a matplotlib figure"
+        assert fig2 is not None, "plot_parameter_comparison should return a matplotlib figure"
 
         # Save the parameter comparison figure
         param_comparison_path = os.path.join(
@@ -291,12 +274,8 @@ class TestGaussianWorkflow:
 
         # Only test if we have training history
         if train_losses:
-            fig3 = plot_training_history(
-                train_losses=train_losses, val_losses=val_losses
-            )
-            assert (
-                fig3 is not None
-            ), "plot_training_history should return a matplotlib figure"
+            fig3 = plot_training_history(train_losses=train_losses, val_losses=val_losses)
+            assert fig3 is not None, "plot_training_history should return a matplotlib figure"
 
             # Save the training history figure
             training_history_path = os.path.join(
@@ -332,6 +311,4 @@ class TestGaussianWorkflow:
         y_noisy = add_gaussian_noise(y_data, sigma=0.1)
 
         # Verify that noise was added (y_noisy should be different from y_data)
-        assert not np.allclose(
-            y_noisy, y_data, rtol=1e-10, atol=1e-10
-        ), "Noise should have been added"
+        assert not np.allclose(y_noisy, y_data, rtol=1e-10, atol=1e-10), "Noise should have been added"

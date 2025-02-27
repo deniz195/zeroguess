@@ -24,9 +24,17 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
+import zeroguess
+from zeroguess.integration import scipy_integration
+from zeroguess.utils.visualization import (
+    plot_fit_comparison,
+    plot_parameter_comparison,
+    plot_training_history,
+)
+
 # Check if lmfit is installed
 try:
-    import lmfit
+    pass
 
     LMFIT_AVAILABLE = True
 except ImportError:
@@ -37,18 +45,10 @@ except ImportError:
 # Add the parent directory to the path so we can import zeroguess
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import zeroguess
-from zeroguess.integration import scipy_integration
 
 # Only import lmfit_integration if lmfit is available
 if LMFIT_AVAILABLE:
     from zeroguess.integration import lmfit_integration
-
-from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
-    plot_training_history,
-)
 
 
 def wavelet(x, frequency, phase, position, width):
@@ -170,10 +170,7 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
         wavelet,
         x_data,
         y_data,
-        p0=[
-            estimated_params[param]
-            for param in ["frequency", "phase", "position", "width"]
-        ],
+        p0=[estimated_params[param] for param in ["frequency", "phase", "position", "width"]],
         bounds=bounds,
     )
 
@@ -328,10 +325,8 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     model.set_param_hint("frequency", min=0.1, max=5.0)
     model.set_param_hint("phase", min=0, max=2 * np.pi)
     model.set_param_hint("position", min=-5, max=5)
-    model.set_param_hint(
-        "width", min=0.5, max=5
-    )  # Set a more strict lower bound for width
-    params = model.make_params()
+    model.set_param_hint("width", min=0.5, max=5)  # Set a more strict lower bound for width
+    model.make_params()
 
     # Using guess() method directly to demonstrate how it works
     print("Demonstrating guess() method directly...")
@@ -385,9 +380,7 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
 
 if __name__ == "__main__":
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(
-        description="Run comprehensive ZeroGuess examples with a wavelet function"
-    )
+    parser = argparse.ArgumentParser(description="Run comprehensive ZeroGuess examples with a wavelet function")
     parser.add_argument(
         "--random",
         action="store_true",

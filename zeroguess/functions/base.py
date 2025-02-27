@@ -6,7 +6,7 @@ must inherit from. It provides a common interface for working with curve fitting
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 
@@ -29,7 +29,6 @@ class FittingFunction(ABC):
         Returns:
             The function's name as a string.
         """
-        pass
 
     @property
     @abstractmethod
@@ -39,7 +38,6 @@ class FittingFunction(ABC):
         Returns:
             A dictionary mapping parameter names to (min, max) tuples.
         """
-        pass
 
     @property
     @abstractmethod
@@ -49,7 +47,6 @@ class FittingFunction(ABC):
         Returns:
             A dictionary mapping parameter names to description strings.
         """
-        pass
 
     @property
     @abstractmethod
@@ -59,7 +56,6 @@ class FittingFunction(ABC):
         Returns:
             A dictionary mapping independent variable names to numpy arrays of sampling points.
         """
-        pass
 
     @abstractmethod
     def __call__(self, *args, **kwargs) -> np.ndarray:
@@ -72,7 +68,6 @@ class FittingFunction(ABC):
         Returns:
             The function values as a numpy array.
         """
-        pass
 
     def generate_data(
         self,

@@ -4,9 +4,8 @@ Transformer architecture for ZeroGuess (Future Work).
 Note: This architecture is currently not implemented and is planned for future work.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
-import torch
 import torch.nn as nn
 
 from zeroguess.estimators.architectures.base import BaseArchitecture
@@ -22,8 +21,7 @@ class TransformerArchitecture(BaseArchitecture):
             **params: Architecture-specific parameters
         """
         raise NotImplementedError(
-            "Transformer architecture is not yet implemented. "
-            "This is planned for future work."
+            "Transformer architecture is not yet implemented. " "This is planned for future work."
         )
 
     def create_network(self, n_input_features: int, n_output_params: int) -> nn.Module:
@@ -37,8 +35,7 @@ class TransformerArchitecture(BaseArchitecture):
             A Transformer module
         """
         raise NotImplementedError(
-            "Transformer architecture is not yet implemented. "
-            "This is planned for future work."
+            "Transformer architecture is not yet implemented. " "This is planned for future work."
         )
 
     @classmethod
@@ -62,4 +59,6 @@ class TransformerArchitecture(BaseArchitecture):
         Returns:
             String description of the architecture
         """
-        return "Transformer: Architecture using self-attention mechanisms to capture global relationships (Future Work)."
+        return (
+            "Transformer: Architecture using self-attention mechanisms to capture global relationships (Future Work)."
+        )

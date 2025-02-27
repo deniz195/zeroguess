@@ -1,34 +1,27 @@
 """Tests for handling learning convergence failures."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 # Import test fixtures
-from ..conftest import difficult_function, set_random_seeds
 
 
 # Define a custom exception for convergence failures
 class MockConvergenceError(Exception):
     """Exception raised when the training process fails to converge."""
 
-    pass
-
 
 class MockConvergenceWarning(Warning):
     """Warning issued when the training process may have convergence issues."""
-
-    pass
 
 
 # Mock estimator that fails to converge
 class FailingEstimator:
     """Mock estimator that fails to converge during training."""
 
-    def __init__(
-        self, function, param_ranges, independent_vars_sampling, fail_type="error"
-    ):
+    def __init__(self, function, param_ranges, independent_vars_sampling, fail_type="error"):
         """Initialize the estimator.
 
         Args:
@@ -54,9 +47,7 @@ class FailingEstimator:
             # Check if learning is stalled
             if epoch > 5 and loss > 0.9:  # Not making good progress
                 if self.fail_type == "error":
-                    raise MockConvergenceError(
-                        "Training failed to converge. Loss did not decrease sufficiently."
-                    )
+                    raise MockConvergenceError("Training failed to converge. Loss did not decrease sufficiently.")
                 elif self.fail_type == "warning":
                     import warnings
 
@@ -139,9 +130,7 @@ class TestLearningFailure:
         # Verify the training result indicates non-convergence
         assert not training_result.get("converged", True)
 
-    def test_silent_failure_prediction_quality(
-        self, set_random_seeds, difficult_function
-    ):
+    def test_silent_failure_prediction_quality(self, set_random_seeds, difficult_function):
         """Test that predictions from a silently failed model are flagged as unreliable."""
         # Define parameter ranges for the difficult function
         param_ranges = {param: (-10, 10) for param in "abcdefghij"}
@@ -206,14 +195,10 @@ class TestLearningFailure:
             return_value={"loss": 0.1, "val_loss": 0.2, "converged": True},
         ) as mock_train:
             # Simulate a retry with different parameters
-            retry_result = estimator.train(
-                epochs=100, batch_size=64, learning_rate=0.0001
-            )
+            retry_result = estimator.train(epochs=100, batch_size=64, learning_rate=0.0001)
 
             # Verify that train was called with the new parameters
-            mock_train.assert_called_once_with(
-                epochs=100, batch_size=64, learning_rate=0.0001
-            )
+            mock_train.assert_called_once_with(epochs=100, batch_size=64, learning_rate=0.0001)
 
             # Verify that the retry succeeded
             assert retry_result.get("converged", False)
