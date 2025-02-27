@@ -13,6 +13,9 @@ from zeroguess.functions import (
     MultiPeakGaussianFunction,
     DampedSineFunction,
     LinearFunction,
+    MultimodalFunction,
+    SigmoidFunction,
+    DoubleSigmoidFunction,
     add_gaussian_noise
 )
 
@@ -24,6 +27,9 @@ def main():
     multi_peak = MultiPeakGaussianFunction()
     damped_sine = DampedSineFunction()
     linear = LinearFunction()
+    multimodal = MultimodalFunction()
+    sigmoid = SigmoidFunction()
+    double_sigmoid = DoubleSigmoidFunction()
     
     # Print information about each function
     print("=== Available Functions ===")
@@ -31,6 +37,9 @@ def main():
     print(f"2. {multi_peak.name}")
     print(f"3. {damped_sine.name}")
     print(f"4. {linear.name}")
+    print(f"5. {multimodal.name}")
+    print(f"6. {sigmoid.name}")
+    print(f"7. {double_sigmoid.name}")
     print()
     
     # Example 1: Working with Gaussian function
@@ -154,6 +163,98 @@ def main():
     plt.grid(True)
     plt.savefig('linear_example.png')
     print("Plot saved to linear_example.png")
+    
+    # Example 5: Working with Multimodal function
+    print("\n=== Multimodal Function Example ===")
+    
+    # Define parameters
+    params = {
+        'a1': 2.5,   # Amplitude of sine component
+        'a2': 0.8,   # Frequency of sine component
+        'a3': 3.0,   # Amplitude of cosine component
+        'a4': 1.5,   # Frequency of cosine component
+        'a5': 0.5    # Phase shift of cosine component
+    }
+    
+    # Generate data
+    indep_vars, y_data = multimodal.generate_data(params)
+    x = indep_vars['x']
+    
+    # Add noise to the data
+    y_noisy = add_gaussian_noise(y_data, sigma=0.2)
+    
+    # Plot the results
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y_data, 'b-', label='Clean Data')
+    plt.plot(x, y_noisy, 'r.', alpha=0.5, label='Noisy Data')
+    plt.title('Multimodal Function Example')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('multimodal_example.png')
+    print("Plot saved to multimodal_example.png")
+    
+    # Example 6: Working with Sigmoid function
+    print("\n=== Sigmoid Function Example ===")
+    
+    # Define parameters
+    params = {
+        'amplitude': 5.0,
+        'center': 0.0,
+        'rate': 2.0
+    }
+    
+    # Generate data
+    indep_vars, y_data = sigmoid.generate_data(params)
+    x = indep_vars['x']
+    
+    # Add noise to the data
+    y_noisy = add_gaussian_noise(y_data, sigma=0.2)
+    
+    # Plot the results
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y_data, 'b-', label='Clean Data')
+    plt.plot(x, y_noisy, 'r.', alpha=0.5, label='Noisy Data')
+    plt.title('Sigmoid Function Example')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('sigmoid_example.png')
+    print("Plot saved to sigmoid_example.png")
+    
+    # Example 7: Working with Double Sigmoid function
+    print("\n=== Double Sigmoid Function Example ===")
+    
+    # Define parameters
+    params = {
+        'amp1': 3.0,
+        'center1': -2.0,
+        'rate1': 1.5,
+        'amp2': 2.0,
+        'center2': 2.0,
+        'rate2': 1.0
+    }
+    
+    # Generate data
+    indep_vars, y_data = double_sigmoid.generate_data(params)
+    x = indep_vars['x']
+    
+    # Add noise to the data
+    y_noisy = add_gaussian_noise(y_data, sigma=0.15)
+    
+    # Plot the results
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y_data, 'b-', label='Clean Data')
+    plt.plot(x, y_noisy, 'r.', alpha=0.5, label='Noisy Data')
+    plt.title('Double Sigmoid Function Example')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('double_sigmoid_example.png')
+    print("Plot saved to double_sigmoid_example.png")
     
     print("\nAll examples completed.")
 

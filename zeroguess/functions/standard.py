@@ -11,6 +11,7 @@ from typing import Dict, Tuple, List, Optional
 
 from zeroguess.functions.base import FittingFunction
 
+DEFAULT_N_INDEPENDENT_POINTS = 100
 
 class GaussianFunction(FittingFunction):
     """Gaussian function implementation.
@@ -48,7 +49,7 @@ class GaussianFunction(FittingFunction):
     def default_independent_vars(self) -> Dict[str, np.ndarray]:
         """Return default sampling points for independent variables."""
         return {
-            'x': np.linspace(-10.0, 10.0, 200)
+            'x': np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
         }
     
     def __call__(self, x, amplitude, center, width):
@@ -112,7 +113,7 @@ class MultiPeakGaussianFunction(FittingFunction):
     def default_independent_vars(self) -> Dict[str, np.ndarray]:
         """Return default sampling points for independent variables."""
         return {
-            'x': np.linspace(-10.0, 10.0, 300)
+            'x': np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
         }
         
     def __call__(
@@ -147,6 +148,67 @@ class MultiPeakGaussianFunction(FittingFunction):
         
         # Sum the peaks
         return peak_1 + peak_2
+
+
+class MultimodalFunction(FittingFunction):
+    """Multimodal function implementation.
+    
+    A multimodal function with local minima, defined as a combination of sine and cosine waves.
+    This function creates a complex landscape with multiple local minima, making it useful
+    for testing optimization algorithms.
+    
+    The function has the form: f(x) = a1 * sin(a2 * x) + a3 * cos(a4 * x + a5)
+    """
+    
+    @property
+    def name(self) -> str:
+        """Return the name of the function."""
+        return "multimodal"
+        
+    @property
+    def param_ranges(self) -> Dict[str, Tuple[float, float]]:
+        """Return the default parameter ranges."""
+        return {
+            'a1': (0.0, 5.0),      # Amplitude of sine component
+            'a2': (0.1, 3.0),      # Frequency of sine component
+            'a3': (0.0, 5.0),      # Amplitude of cosine component
+            'a4': (0.1, 3.0),      # Frequency of cosine component
+            'a5': (0.0, 2.0 * np.pi)  # Phase shift of cosine component
+        }
+        
+    @property
+    def param_descriptions(self) -> Dict[str, str]:
+        """Return descriptions of what each parameter controls."""
+        return {
+            'a1': 'Amplitude of sine component',
+            'a2': 'Frequency of sine component',
+            'a3': 'Amplitude of cosine component',
+            'a4': 'Frequency of cosine component',
+            'a5': 'Phase shift of cosine component'
+        }
+        
+    @property
+    def default_independent_vars(self) -> Dict[str, np.ndarray]:
+        """Return default sampling points for independent variables."""
+        return {
+            'x': np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
+        }
+    
+    def __call__(self, x, a1, a2, a3, a4, a5):
+        """Evaluate the multimodal function.
+        
+        Args:
+            x: Independent variable values
+            a1: Amplitude of sine component
+            a2: Frequency of sine component
+            a3: Amplitude of cosine component
+            a4: Frequency of cosine component
+            a5: Phase shift of cosine component
+            
+        Returns:
+            Function values at the specified points
+        """
+        return a1 * np.sin(a2 * x) + a3 * np.cos(a4 * x + a5)
 
 
 class DampedSineFunction(FittingFunction):
@@ -187,7 +249,7 @@ class DampedSineFunction(FittingFunction):
     def default_independent_vars(self) -> Dict[str, np.ndarray]:
         """Return default sampling points for independent variables."""
         return {
-            'x': np.linspace(0.0, 10.0, 200)
+            'x': np.linspace(0.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
         }
     
     def __call__(self, x, amplitude, frequency, phase, decay):
@@ -240,7 +302,7 @@ class LinearFunction(FittingFunction):
     def default_independent_vars(self) -> Dict[str, np.ndarray]:
         """Return default sampling points for independent variables."""
         return {
-            'x': np.linspace(-10.0, 10.0, 100)
+            'x': np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
         }
     
     def __call__(self, x, slope, intercept):
@@ -255,3 +317,124 @@ class LinearFunction(FittingFunction):
             Function values at the specified points
         """
         return slope * x + intercept
+
+
+class SigmoidFunction(FittingFunction):
+    """Sigmoid/logistic function implementation.
+    
+    A sigmoid function is an S-shaped curve defined by three parameters:
+    amplitude, center, and rate.
+    
+    The function has the form: f(x) = amplitude / (1 + exp(-rate * (x - center)))
+    """
+    
+    @property
+    def name(self) -> str:
+        """Return the name of the function."""
+        return "sigmoid"
+        
+    @property
+    def param_ranges(self) -> Dict[str, Tuple[float, float]]:
+        """Return the default parameter ranges."""
+        return {
+            'amplitude': (0.0, 10.0),
+            'center': (-5.0, 5.0),
+            'rate': (0.1, 5.0)
+        }
+        
+    @property
+    def param_descriptions(self) -> Dict[str, str]:
+        """Return descriptions of what each parameter controls."""
+        return {
+            'amplitude': 'Maximum value of the sigmoid curve',
+            'center': 'Position of the midpoint of the curve',
+            'rate': 'Steepness of the curve (growth rate)'
+        }
+        
+    @property
+    def default_independent_vars(self) -> Dict[str, np.ndarray]:
+        """Return default sampling points for independent variables."""
+        return {
+            'x': np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
+        }
+    
+    def __call__(self, x, amplitude, center, rate):
+        """Evaluate the sigmoid function.
+        
+        Args:
+            x: Independent variable values
+            amplitude: Maximum value of the sigmoid curve
+            center: Position of the midpoint of the curve
+            rate: Steepness of the curve (growth rate)
+            
+        Returns:
+            Function values at the specified points
+        """
+        return amplitude / (1 + np.exp(-rate * (x - center)))
+
+
+class DoubleSigmoidFunction(FittingFunction):
+    """Double sigmoid function implementation.
+    
+    A double sigmoid function is a sum of two sigmoid functions, each with its own
+    amplitude, center, and rate parameters. This can model more complex transitions
+    or data with two distinct sigmoid-like features.
+    
+    The function has the form: 
+    f(x) = amp1 / (1 + exp(-rate1 * (x - center1))) + amp2 / (1 + exp(-rate2 * (x - center2)))
+    """
+    
+    @property
+    def name(self) -> str:
+        """Return the name of the function."""
+        return "double_sigmoid"
+        
+    @property
+    def param_ranges(self) -> Dict[str, Tuple[float, float]]:
+        """Return the default parameter ranges."""
+        return {
+            'amp1': (0.0, 5.0),
+            'center1': (-5.0, 0.0),
+            'rate1': (0.1, 3.0),
+            'amp2': (0.0, 5.0),
+            'center2': (0.0, 5.0),
+            'rate2': (0.1, 3.0)
+        }
+        
+    @property
+    def param_descriptions(self) -> Dict[str, str]:
+        """Return descriptions of what each parameter controls."""
+        return {
+            'amp1': 'Maximum value of the first sigmoid curve',
+            'center1': 'Position of the midpoint of the first curve',
+            'rate1': 'Steepness of the first curve (growth rate)',
+            'amp2': 'Maximum value of the second sigmoid curve',
+            'center2': 'Position of the midpoint of the second curve',
+            'rate2': 'Steepness of the second curve (growth rate)'
+        }
+        
+    @property
+    def default_independent_vars(self) -> Dict[str, np.ndarray]:
+        """Return default sampling points for independent variables."""
+        return {
+            'x': np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)
+        }
+    
+    def __call__(self, x, amp1, center1, rate1, amp2, center2, rate2):
+        """Evaluate the double sigmoid function.
+        
+        Args:
+            x: Independent variable values
+            amp1: Maximum value of the first sigmoid curve
+            center1: Position of the midpoint of the first curve
+            rate1: Steepness of the first curve (growth rate)
+            amp2: Maximum value of the second sigmoid curve
+            center2: Position of the midpoint of the second curve
+            rate2: Steepness of the second curve (growth rate)
+            
+        Returns:
+            Function values at the specified points
+        """
+        sigmoid1 = amp1 / (1 + np.exp(-rate1 * (x - center1)))
+        sigmoid2 = amp2 / (1 + np.exp(-rate2 * (x - center2)))
+        return sigmoid1 + sigmoid2

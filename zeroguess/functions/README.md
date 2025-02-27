@@ -10,6 +10,9 @@ The submodule includes the following standard functions:
 - **MultiPeakGaussianFunction**: A multi-peak Gaussian function that combines multiple Gaussian peaks.
 - **DampedSineFunction**: A damped sine wave function.
 - **LinearFunction**: A simple linear function.
+- **MultimodalFunction**: A multimodal function with local minima, defined as a combination of sine and cosine waves.
+- **SigmoidFunction**: A sigmoid/logistic function that produces an S-shaped curve.
+- **DoubleSigmoidFunction**: A double sigmoid function that combines two sigmoid curves, useful for modeling complex transitions.
 
 ## Usage
 
@@ -61,13 +64,13 @@ x = indep_vars['x']
 You can generate random parameters within the valid ranges:
 
 ```python
-from zeroguess.functions import MultiPeakGaussianFunction
+from zeroguess.functions import MultimodalFunction
 
-# Create a multi-peak Gaussian function with 3 peaks
-multi_gaussian = MultiPeakGaussianFunction(n_peaks=3)
+# Create a multimodal function
+multimodal = MultimodalFunction()
 
 # Generate random parameters
-random_params = multi_gaussian.get_random_params()
+random_params = multimodal.get_random_params()
 print(random_params)
 ```
 

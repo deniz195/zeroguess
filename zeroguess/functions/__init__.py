@@ -18,7 +18,10 @@ from zeroguess.functions.standard import (
     GaussianFunction,
     MultiPeakGaussianFunction,
     DampedSineFunction,
-    LinearFunction
+    LinearFunction,
+    MultimodalFunction,
+    SigmoidFunction,
+    DoubleSigmoidFunction
 )
 
 # Import utility functions
@@ -34,6 +37,9 @@ __all__ = [
     'MultiPeakGaussianFunction',
     'DampedSineFunction',
     'LinearFunction',
+    'MultimodalFunction',
+    'SigmoidFunction',
+    'DoubleSigmoidFunction',
     
     # Utility functions
     'add_gaussian_noise',
