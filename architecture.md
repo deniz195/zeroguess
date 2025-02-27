@@ -582,3 +582,168 @@ The recommended implementation approach is:
    - GPU acceleration (optional)
 
 This phased approach allows for early validation of the core concept while systematically building out the full feature set.
+
+## ZeroGuess Functions Submodule
+
+### Overview
+
+The functions submodule provides a collection of pre-defined fitting functions commonly used in curve fitting applications. Each function is encapsulated in a class that provides the function implementation, default parameter ranges, and default independent variable sampling points.
+
+This submodule is designed to be:
+- **Independent**: No dependencies on core ZeroGuess functionality
+- **User-friendly**: Easy to use with sensible defaults
+- **Extensible**: Easy to add new functions
+- **Educational**: Includes parameter descriptions
+
+### Module Structure
+
+```
+zeroguess/
+├── functions/
+│   ├── __init__.py           # Exports all functions
+│   ├── base.py               # Base class definition
+│   ├── standard.py           # Common fitting functions
+│   └── utils.py              # Utility functions (noise, etc.)
+```
+
+### Base Function Class
+
+The `FittingFunction` base class defines the interface that all function implementations must follow:
+
+```python
+class FittingFunction:
+    """Base class for fitting functions."""
+    
+    @property
+    def name(self) -> str:
+        """Return the name of the function."""
+        pass
+        
+    @property
+    def param_ranges(self) -> Dict[str, Tuple[float, float]]:
+        """Return the default parameter ranges."""
+        pass
+        
+    @property
+    def param_descriptions(self) -> Dict[str, str]:
+        """Return descriptions of what each parameter controls."""
+        pass
+        
+    @property
+    def default_independent_vars(self) -> Dict[str, np.ndarray]:
+        """Return default sampling points for independent variables."""
+        pass
+        
+    def __call__(self, *args, **kwargs):
+        """Evaluate the function with the given parameters."""
+        pass
+        
+    def generate_data(self, params: Optional[Dict[str, float]] = None, 
+                     indep_vars: Optional[Dict[str, np.ndarray]] = None) -> Tuple[Dict[str, np.ndarray], np.ndarray]:
+        """Generate data for the function with the given parameters."""
+        pass
+```
+
+### Standard Functions
+
+The following standard fitting functions will be included:
+
+1. **Gaussian Function**: A bell-shaped curve defined by amplitude, center, and width
+2. **Multi-Peak Gaussian**: A sum of multiple Gaussian functions
+3. **Damped Sine Wave**: Oscillatory function with exponential decay
+4. **Linear Function**: Simple linear relationship with slope and intercept
+
+### Noise Utility
+
+The module includes a noise utility for adding Gaussian noise to generated data:
+
+```python
+def add_gaussian_noise(data: np.ndarray, sigma: float = 0.1, relative: bool = True) -> np.ndarray:
+    """Add Gaussian noise to data."""
+    pass
+```
+
+### Usage Example
+
+```python
+from zeroguess.functions import GaussianFunction
+
+# Create a Gaussian function instance
+gaussian = GaussianFunction()
+
+# View parameter descriptions
+print(gaussian.param_descriptions)
+
+# Generate data with default parameters
+indep_vars, dependent_var = gaussian.generate_data()
+
+# Generate data with custom parameters
+params = {'amplitude': 2.0, 'center': 0.5, 'width': 1.5}
+indep_vars, dependent_var = gaussian.generate_data(params)
+
+# Add noise to the data
+from zeroguess.functions.utils import add_gaussian_noise
+noisy_dependent_var = add_gaussian_noise(dependent_var, sigma=0.05)
+```
+
+### Integration with ZeroGuess (Optional)
+
+While designed to be independent, these function classes can be easily used with the core ZeroGuess functionality:
+
+```python
+from zeroguess import create_estimator
+from zeroguess.functions import GaussianFunction
+
+# Create function instance
+gaussian = GaussianFunction()
+
+# Create estimator using function information
+estimator = create_estimator(
+    function=gaussian,
+    param_ranges=gaussian.param_ranges,
+    independent_vars_sampling=gaussian.default_independent_vars
+)
+```
+
+### Extension
+
+Users can create custom fitting functions by subclassing `FittingFunction`:
+
+```python
+from zeroguess.functions import FittingFunction
+import numpy as np
+from typing import Dict, Tuple
+
+class CustomFunction(FittingFunction):
+    """Custom fitting function implementation."""
+    
+    @property
+    def name(self) -> str:
+        return "custom_function"
+        
+    @property
+    def param_ranges(self) -> Dict[str, Tuple[float, float]]:
+        return {
+            'param1': (0.0, 10.0),
+            'param2': (-5.0, 5.0)
+        }
+        
+    @property
+    def param_descriptions(self) -> Dict[str, str]:
+        return {
+            'param1': 'Description of parameter 1',
+            'param2': 'Description of parameter 2'
+        }
+        
+    @property
+    def default_independent_vars(self) -> Dict[str, np.ndarray]:
+        return {
+            'x': np.linspace(-10, 10, 100)
+        }
+        
+    def __call__(self, x, param1, param2):
+        """Evaluate the function with the given parameters."""
+        return param1 * x + param2
+```
+
+This architecture provides a clean, user-friendly way to work with common fitting functions while maintaining flexibility and extensibility.
