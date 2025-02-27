@@ -15,13 +15,13 @@ from zeroguess.functions.base import FittingFunction
 
 # Import standard functions
 from zeroguess.functions.standard import (
-    GaussianFunction,
-    MultiPeakGaussianFunction,
     DampedSineFunction,
+    DoubleSigmoidFunction,
+    GaussianFunction,
     LinearFunction,
     MultimodalFunction,
+    MultiPeakGaussianFunction,
     SigmoidFunction,
-    DoubleSigmoidFunction
 )
 
 # Import utility functions
@@ -30,18 +30,16 @@ from zeroguess.functions.utils import add_gaussian_noise, signal_to_noise_ratio
 # Define what's available to import with 'from zeroguess.functions import *'
 __all__ = [
     # Base class
-    'FittingFunction',
-    
+    "FittingFunction",
     # Standard functions
-    'GaussianFunction',
-    'MultiPeakGaussianFunction',
-    'DampedSineFunction',
-    'LinearFunction',
-    'MultimodalFunction',
-    'SigmoidFunction',
-    'DoubleSigmoidFunction',
-    
+    "GaussianFunction",
+    "MultiPeakGaussianFunction",
+    "DampedSineFunction",
+    "LinearFunction",
+    "MultimodalFunction",
+    "SigmoidFunction",
+    "DoubleSigmoidFunction",
     # Utility functions
-    'add_gaussian_noise',
-    'signal_to_noise_ratio'
-] 
+    "add_gaussian_noise",
+    "signal_to_noise_ratio",
+]

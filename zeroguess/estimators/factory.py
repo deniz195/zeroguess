@@ -1,6 +1,7 @@
 """
 Factory for creating parameter estimator instances.
 """
+
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 import numpy as np
@@ -15,10 +16,10 @@ def create_estimator(
     estimator_type: str = "neural_network",
     architecture: str = "best",
     architecture_params: Dict[str, Any] = None,
-    **kwargs
+    **kwargs,
 ) -> BaseEstimator:
     """Create a parameter estimator instance.
-    
+
     Args:
         function: The curve fitting target function
         param_ranges: Dictionary mapping parameter names to (min, max) tuples
@@ -29,28 +30,28 @@ def create_estimator(
                      Available options: "mlp", "cnn", or "best"
         architecture_params: Architecture-specific parameters
         **kwargs: Additional arguments to pass to the estimator constructor
-        
+
     Returns:
         Instance of a BaseEstimator subclass
-        
+
     Raises:
         ValueError: If the estimator type or architecture is not recognized
     """
     if estimator_type == "neural_network":
         # Import here to avoid circular imports
         from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
-        
+
         # Handle architecture selection
         if architecture_params is None:
             architecture_params = {}
-            
+
         return NeuralNetworkEstimator(
             function=function,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
             architecture=architecture,
             architecture_params=architecture_params,
-            **kwargs
+            **kwargs,
         )
     else:
         raise ValueError(f"Unknown estimator type: {estimator_type}")

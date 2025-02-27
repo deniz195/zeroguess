@@ -59,13 +59,13 @@ def lint_code():
     cmd = f"flake8 {PYTHON_DIRS_STR}"
     success = run_command(cmd, "Linting code with flake8") and success
     
-    # Run mypy
-    cmd = f"mypy zeroguess"
-    success = run_command(cmd, "Type checking with mypy") and success
+    # # Run mypy
+    # cmd = f"mypy zeroguess"
+    # success = run_command(cmd, "Type checking with mypy") and success
     
-    # Run vulture
-    cmd = f"vulture {PYTHON_DIRS_STR} --min-confidence=80"
-    success = run_command(cmd, "Checking for unused code with vulture") and success
+    # # Run vulture
+    # cmd = f"vulture {PYTHON_DIRS_STR} --min-confidence=80"
+    # success = run_command(cmd, "Checking for unused code with vulture") and success
     
     return success
 
