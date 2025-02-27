@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Import test utilities
-from ..conftest import set_random_seeds, sigmoid_function, sample_data_sigmoid
-from ..conftest import double_sigmoid_function, sample_data_double_sigmoid
+from ..conftest import set_random_seeds
 from ..test_utils import calculate_parameter_error, is_within_tolerance, calculate_curve_fit_quality
 
 # Import end-to-end test utilities
@@ -23,34 +22,94 @@ from .test_utils import (
 from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison, plot_training_history
 
+# Import the functions module components
+from zeroguess.functions import SigmoidFunction, DoubleSigmoidFunction, add_gaussian_noise
+
 
 # Define the output directory for visualization files
 VISUALIZATION_OUTPUT_DIR = os.path.join("tests", "output", "visualizations")
 
 
+@pytest.fixture
+def sigmoid_instance():
+    """Return a SigmoidFunction instance for testing."""
+    return SigmoidFunction()
+
+
+@pytest.fixture
+def double_sigmoid_instance():
+    """Return a DoubleSigmoidFunction instance for testing."""
+    return DoubleSigmoidFunction()
+
+
+@pytest.fixture
+def sample_data_sigmoid(sigmoid_instance):
+    """Generate a sigmoid dataset with controlled parameters.
+    
+    Returns:
+        tuple: (x_data, y_data, true_params) containing the independent variable,
+               dependent variable, and the true parameters used to generate the data.
+    """
+    # Fixed parameters for reproducibility
+    true_params = {'amplitude': 5.0, 'center': 0.0, 'rate': 2.0}
+    
+    # Generate data points
+    x_data = np.linspace(-10, 10, 100)
+    
+    # Generate clean data
+    y_clean = sigmoid_instance(x_data, **true_params)
+    
+    # Add noise
+    np.random.seed(42)  # Set seed for reproducibility
+    y_data = add_gaussian_noise(y_clean, sigma=0.2, relative=False, seed=42)
+    
+    return x_data, y_data, true_params
+
+
+@pytest.fixture
+def sample_data_double_sigmoid(double_sigmoid_instance):
+    """Generate a double sigmoid dataset with controlled parameters.
+    
+    Returns:
+        tuple: (x_data, y_data, true_params) containing the independent variable,
+               dependent variable, and the true parameters used to generate the data.
+    """
+    # Fixed parameters for reproducibility
+    true_params = {
+        'amp1': 3.0, 'center1': -2.0, 'rate1': 1.5,
+        'amp2': 2.0, 'center2': 2.0, 'rate2': 1.0
+    }
+    
+    # Generate data points with higher sampling density
+    x_data = np.linspace(-10, 10, 100)
+    
+    # Generate clean data
+    y_clean = double_sigmoid_instance(x_data, **true_params)
+    
+    # Add noise
+    np.random.seed(42)  # Set seed for reproducibility
+    y_data = add_gaussian_noise(y_clean, sigma=0.15, relative=False, seed=42)
+    
+    return x_data, y_data, true_params
+
+
 class TestSigmoidWorkflow:
     """End-to-end tests for the full ZeroGuess workflow with a sigmoid/logistic function."""
     
-    def test_full_workflow(self, set_random_seeds, sigmoid_function, sample_data_sigmoid, monkeypatch):
+    def test_full_workflow(self, set_random_seeds, sigmoid_instance, sample_data_sigmoid, monkeypatch):
         """Test the full ZeroGuess workflow for sigmoid function parameter estimation."""
         # Get sample data
         x_data, y_data, true_params = sample_data_sigmoid
         
         # Step 1: Define parameter ranges for sigmoid
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'rate': (0.1, 5)
-        }
+        param_ranges = sigmoid_instance.param_ranges
         
         # Step 2: Define sampling points
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)  # Match the x_data dimension from sample_data_sigmoid
-        }
+        independent_vars_sampling = sigmoid_instance.default_independent_vars
         
         # Step 3: Create estimator
         estimator = NeuralNetworkEstimator(
-            function=sigmoid_function, 
+            function=sigmoid_instance, 
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[16, 32, 16],  # Smaller network for sigmoid (less complex)
@@ -76,7 +135,7 @@ class TestSigmoidWorkflow:
         
         # Using the utility function for evaluation
         evaluate_prediction_quality(
-            function=sigmoid_function,
+            function=sigmoid_instance,
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
@@ -88,7 +147,7 @@ class TestSigmoidWorkflow:
         
         # Generate and save visualizations
         create_and_save_visualizations(
-            function=sigmoid_function,
+            function=sigmoid_instance,
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
@@ -124,23 +183,17 @@ class TestSigmoidWorkflow:
             # Close the figure
             plt.close(fig3)
     
-    def test_rate_sensitivity(self, set_random_seeds, sigmoid_function, monkeypatch):
+    def test_rate_sensitivity(self, set_random_seeds, sigmoid_instance, monkeypatch):
         """Test the ability to estimate sigmoid functions with different rate parameters."""
         # Define parameter ranges
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'rate': (0.1, 5)
-        }
+        param_ranges = sigmoid_instance.param_ranges
         
         # Define sampling points
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)
-        }
+        independent_vars_sampling = sigmoid_instance.default_independent_vars
         
         # Create neural network estimator
         estimator = NeuralNetworkEstimator(
-            function=sigmoid_function, 
+            function=sigmoid_instance, 
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[16, 32, 16],
@@ -176,12 +229,11 @@ class TestSigmoidWorkflow:
         for i, true_params in enumerate(rate_scenarios):
             # Generate test data
             x_data = np.linspace(-10, 10, 100)
-            y_clean = sigmoid_function(x_data, **true_params)
+            y_clean = sigmoid_instance(x_data, **true_params)
             
             # Add noise
             np.random.seed(42 + i)  # Different seed for each scenario
-            noise = np.random.normal(0, 0.2, size=len(x_data))
-            y_data = y_clean + noise
+            y_data = add_gaussian_noise(y_clean, sigma=0.2, relative=False, seed=42+i)
             
             # Predict parameters
             predicted_params = estimator.predict(x_data, y_data)
@@ -190,7 +242,7 @@ class TestSigmoidWorkflow:
             errors = calculate_parameter_error(predicted_params, true_params)
             
             # Calculate fit quality
-            quality = calculate_curve_fit_quality(sigmoid_function, x_data, y_data, predicted_params)
+            quality = calculate_curve_fit_quality(sigmoid_instance, x_data, y_data, predicted_params)
             
             # Print results for debugging
             print(f"\nScenario {i+1} (Rate parameter: {true_params['rate']}):")
@@ -220,7 +272,7 @@ class TestSigmoidWorkflow:
             # Generate and save visualizations for each scenario
             scenario_name = f"test_sigmoid_rate_{true_params['rate']}"
             create_and_save_visualizations(
-                function=sigmoid_function,
+                function=sigmoid_instance,
                 x_data=x_data,
                 y_data=y_data,
                 true_params=true_params,
@@ -229,29 +281,20 @@ class TestSigmoidWorkflow:
                 monkeypatch=monkeypatch
             )
     
-    def test_double_sigmoid_workflow(self, set_random_seeds, double_sigmoid_function, sample_data_double_sigmoid, monkeypatch):
+    def test_double_sigmoid_workflow(self, set_random_seeds, double_sigmoid_instance, sample_data_double_sigmoid, monkeypatch):
         """Test the ability to handle more complex sigmoid transitions (double sigmoid)."""
         # Get sample data
         x_data, y_data, true_params = sample_data_double_sigmoid
         
         # Define parameter ranges for double sigmoid
-        param_ranges = {
-            'amp1': (0, 5),
-            'center1': (-5, 0),
-            'rate1': (0.1, 3),
-            'amp2': (0, 5),
-            'center2': (0, 5),
-            'rate2': (0.1, 3)
-        }
+        param_ranges = double_sigmoid_instance.param_ranges
         
         # Define sampling points
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)
-        }
+        independent_vars_sampling = double_sigmoid_instance.default_independent_vars
         
         # Create estimator with a larger network for more complex function
         estimator = NeuralNetworkEstimator(
-            function=double_sigmoid_function, 
+            function=double_sigmoid_instance, 
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[32, 64, 32],  # Larger network for more complex function
@@ -277,7 +320,7 @@ class TestSigmoidWorkflow:
         
         # Evaluate with higher thresholds for complex function
         evaluate_prediction_quality(
-            function=double_sigmoid_function,
+            function=double_sigmoid_instance,
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
@@ -289,7 +332,7 @@ class TestSigmoidWorkflow:
         
         # Generate and save visualizations
         create_and_save_visualizations(
-            function=double_sigmoid_function,
+            function=double_sigmoid_instance,
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
@@ -325,27 +368,21 @@ class TestSigmoidWorkflow:
             # Close the figure
             plt.close(fig3)
     
-    def test_visualization_functions(self, set_random_seeds, sigmoid_function, 
+    def test_visualization_functions(self, set_random_seeds, sigmoid_instance, 
                                     sample_data_sigmoid, monkeypatch):
         """Test the visualization functions using the sigmoid workflow."""
         # Get sample data
         x_data, y_data, true_params = sample_data_sigmoid
         
         # Step 1: Define parameter ranges
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'rate': (0.1, 5)
-        }
+        param_ranges = sigmoid_instance.param_ranges
         
         # Step 2: Define sampling points
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)
-        }
+        independent_vars_sampling = sigmoid_instance.default_independent_vars
         
         # Step 3: Create a real estimator with a small network for testing
         estimator = NeuralNetworkEstimator(
-            function=sigmoid_function, 
+            function=sigmoid_instance, 
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[16, 32, 16],
@@ -368,7 +405,7 @@ class TestSigmoidWorkflow:
         
         # Test visualization functions using our utility
         fig1, fig2, _ = create_and_save_visualizations(
-            function=sigmoid_function,
+            function=sigmoid_instance,
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
@@ -409,25 +446,18 @@ class TestSigmoidWorkflow:
         plt.close('all')
     
     def test_estimator_performance_benchmark(self, benchmark, set_random_seeds, 
-                                            sigmoid_function, sample_data_sigmoid, monkeypatch):
+                                            sigmoid_instance, sample_data_sigmoid, monkeypatch):
         """Benchmark test for measuring the performance of the neural network estimator with sigmoid functions."""
         # Get sample data
         x_data, y_data, true_params = sample_data_sigmoid
         
         # Define parameter ranges and sampling points
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'rate': (0.1, 5)
-        }
-        
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 100)
-        }
+        param_ranges = sigmoid_instance.param_ranges
+        independent_vars_sampling = sigmoid_instance.default_independent_vars
         
         # Create estimator with tiny network for benchmark
         estimator = NeuralNetworkEstimator(
-            function=sigmoid_function, 
+            function=sigmoid_instance, 
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[8, 16, 8],  # Very small network for benchmarking
@@ -460,11 +490,47 @@ class TestSigmoidWorkflow:
             
         # Generate and save visualizations for the benchmark results
         create_and_save_visualizations(
-            function=sigmoid_function,
+            function=sigmoid_instance,
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
             estimated_params=predicted_params,
             test_name="test_sigmoid_benchmark",
             monkeypatch=monkeypatch
-        ) 
+        )
+        
+    def test_generate_data_method(self, set_random_seeds, sigmoid_instance):
+        """Test the generate_data method of the SigmoidFunction class."""
+        # Define parameters
+        params = {
+            'amplitude': 5.0,
+            'center': 0.0,
+            'rate': 2.0
+        }
+        
+        # Generate data using the generate_data method
+        indep_vars, data = sigmoid_instance.generate_data(params)
+        
+        # Verify the shape of the data
+        assert 'x' in indep_vars
+        assert len(indep_vars['x']) == len(data)
+        
+        # Verify the data matches what we expect
+        expected_data = sigmoid_instance(indep_vars['x'], **params)
+        np.testing.assert_allclose(data, expected_data)
+        
+        # Test adding noise to the generated data
+        noisy_data = add_gaussian_noise(data, sigma=0.1, relative=False, seed=42)
+        
+        # Verify the noisy data is different from the clean data
+        assert not np.allclose(data, noisy_data)
+        
+        # Calculate signal-to-noise ratio
+        from zeroguess.functions import signal_to_noise_ratio
+        snr = signal_to_noise_ratio(data, noisy_data)
+        
+        # Print SNR for debugging
+        print(f"Signal-to-noise ratio: {snr:.2f} dB")
+        
+        # SNR should be reasonable for the noise level we added
+        assert snr > 10.0, f"SNR too low: {snr:.2f} dB" 

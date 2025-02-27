@@ -9,12 +9,15 @@ import datetime
 import pathlib
 
 # Import test utilities
-from ..conftest import set_random_seeds, gaussian_function, sample_data_1d
+from ..conftest import set_random_seeds
 from ..test_utils import calculate_parameter_error, is_within_tolerance, calculate_curve_fit_quality
 
 # Import the real ZeroGuess components
 from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison, plot_training_history
+
+# Import the functions module components
+from zeroguess.functions import GaussianFunction, add_gaussian_noise
 
 
 # Define the output directory for visualization files
@@ -31,29 +34,54 @@ def ensure_output_dir_exists():
     pathlib.Path(VISUALIZATION_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 
+@pytest.fixture
+def gaussian_instance():
+    """Return a GaussianFunction instance for testing."""
+    return GaussianFunction()
+
+
+@pytest.fixture
+def sample_data_1d(gaussian_instance):
+    """Generate a 1D sample dataset with controlled parameters using GaussianFunction.
+    
+    Returns:
+        tuple: (x_data, y_data, true_params) containing the independent variable,
+               dependent variable, and the true parameters used to generate the data.
+    """
+    # Fixed parameters for reproducibility
+    true_params = {'amplitude': 7.5, 'center': 2.0, 'width': 1.2}
+    
+    # Generate data points using the default independent variables from GaussianFunction
+    x_data = np.linspace(-10, 10, 50)  # Match the original test's x_data dimension
+    
+    # Generate clean data
+    y_clean = gaussian_instance(x_data, **true_params)
+    
+    # Add noise using the utility function from zeroguess.functions
+    np.random.seed(42)  # Set seed for reproducibility
+    y_data = add_gaussian_noise(y_clean, sigma=0.1)
+    
+    return x_data, y_data, true_params
+
+
 class TestGaussianWorkflow:
     """End-to-end tests for the full ZeroGuess workflow with a Gaussian function."""
     
-    def test_full_workflow(self, set_random_seeds, gaussian_function, sample_data_1d):
+    def test_full_workflow(self, set_random_seeds, gaussian_instance, sample_data_1d):
         """Test the full ZeroGuess workflow from estimation to evaluate prediction quality."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
         
-        # Step 1: Define parameter ranges for Gaussian
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'width': (0.1, 2)
-        }
+        # Step 1: Use parameter ranges from the GaussianFunction instance
+        param_ranges = gaussian_instance.param_ranges
         
-        # Step 2: Define sampling points
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 50)  # Match the x_data dimension from sample_data_1d
-        }
+        # Step 2: Use default independent variables from the GaussianFunction instance
+        # but match the x_data dimension from sample_data_1d
+        independent_vars_sampling = { 'x': x_data }
         
         # Step 3: Create real estimator with a smaller network for faster tests
         estimator = NeuralNetworkEstimator(
-            function=gaussian_function, 
+            function=gaussian_instance,  # Use the GaussianFunction instance
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[16, 32, 16],  # Smaller network for faster training
@@ -85,7 +113,7 @@ class TestGaussianWorkflow:
         
         # Step 7: Evaluate prediction quality
         # Use the predicted parameters to generate curve values
-        y_predicted = gaussian_function(x_data, **predicted_params)
+        y_predicted = gaussian_instance(x_data, **predicted_params)
         
         # Calculate RMSE between predicted curve and actual data
         residuals = y_data - y_predicted
@@ -97,10 +125,10 @@ class TestGaussianWorkflow:
         
         # Step 8: Verify the predicted parameters can reproduce the original signal
         # Generate clean data with predicted parameters
-        y_clean_predicted = gaussian_function(x_data, **predicted_params)
+        y_clean_predicted = gaussian_instance(x_data, **predicted_params)
         
         # Generate clean data with true parameters
-        y_clean_true = gaussian_function(x_data, **true_params)
+        y_clean_true = gaussian_instance(x_data, **true_params)
         
         # Calculate correlation between predicted and true clean signals
         correlation = np.corrcoef(y_clean_predicted, y_clean_true)[0, 1]
@@ -108,25 +136,21 @@ class TestGaussianWorkflow:
         # Correlation should be high
         assert correlation > 0.5, f"Correlation too low: {correlation:.2f}"
     
-    def test_estimator_performance_benchmark(self, benchmark, set_random_seeds, gaussian_function, sample_data_1d):
+    def test_estimator_performance_benchmark(self, benchmark, set_random_seeds, gaussian_instance, sample_data_1d):
         """Benchmark test for measuring the performance of the neural network estimator."""
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
         
-        # Define parameter ranges and sampling points
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'width': (0.1, 2)
-        }
+        # Use parameter ranges from the GaussianFunction instance
+        param_ranges = gaussian_instance.param_ranges
         
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 50)
-        }
+        # Use default independent variables from the GaussianFunction instance
+        # but match the x_data dimension from sample_data_1d
+        independent_vars_sampling = { 'x': x_data }
         
         # Create estimator with tiny network for benchmark
         estimator = NeuralNetworkEstimator(
-            function=gaussian_function, 
+            function=gaussian_instance,  # Use the GaussianFunction instance
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[8, 16, 8],  # Very small network for benchmarking
@@ -157,7 +181,7 @@ class TestGaussianWorkflow:
         for param_name, (min_val, max_val) in param_ranges.items():
             assert min_val <= predicted_params[param_name] <= max_val, f"Parameter {param_name} outside expected range"
 
-    def test_visualization_functions(self, set_random_seeds, gaussian_function, sample_data_1d, monkeypatch):
+    def test_visualization_functions(self, set_random_seeds, gaussian_instance, sample_data_1d, monkeypatch):
         """Test the visualization functions using the end-to-end workflow components."""
         # Mock the plt.show() to avoid displaying figures during tests
         monkeypatch.setattr(plt, 'show', lambda: None)
@@ -172,28 +196,23 @@ class TestGaussianWorkflow:
         # Get sample data
         x_data, y_data, true_params = sample_data_1d
         
-        # Step 1: Define parameter ranges for Gaussian
-        param_ranges = {
-            'amplitude': (0, 10),
-            'center': (-5, 5),
-            'width': (0.1, 2)
-        }
+        # Use parameter ranges from the GaussianFunction instance
+        param_ranges = gaussian_instance.param_ranges
         
-        # Step 2: Define sampling points
-        independent_vars_sampling = {
-            'x': np.linspace(-10, 10, 50)
-        }
+        # Use default independent variables from the GaussianFunction instance
+        # but match the x_data dimension from sample_data_1d
+        independent_vars_sampling = { 'x': x_data }
         
-        # Step 3: Create a real estimator with a tiny network for testing
+        # Create a real estimator with a tiny network for testing
         estimator = NeuralNetworkEstimator(
-            function=gaussian_function, 
+            function=gaussian_instance,  # Use the GaussianFunction instance
             param_ranges=param_ranges, 
             independent_vars_sampling=independent_vars_sampling,
             hidden_layers=[8, 16, 8],  # Very small network for testing
             learning_rate=0.01
         )
         
-        # Step 4: Train the estimator with minimal data for testing
+        # Train the estimator with minimal data for testing
         training_history = estimator.train(
             n_samples=100,
             epochs=10,
@@ -204,7 +223,7 @@ class TestGaussianWorkflow:
             return_history=True  # Get training history for visualization
         )
         
-        # Step 5: Predict parameters
+        # Predict parameters
         estimated_params = estimator.predict(x_data, y_data)
         
         # Create some fitted parameters (typically from optimization, but we'll use true params with small noise)
@@ -217,7 +236,7 @@ class TestGaussianWorkflow:
         
         # Test 1: Plot fit comparison
         fig1 = plot_fit_comparison(
-            function=gaussian_function,
+            function=gaussian_instance,  # Use the GaussianFunction instance
             x_data=x_data,
             y_data=y_data,
             true_params=true_params,
@@ -272,4 +291,33 @@ class TestGaussianWorkflow:
             print(f"Saved training history visualization to: {training_history_path}")
         
         # Clean up any open figures
-        plt.close('all') 
+        plt.close('all')
+        
+    def test_generate_data_method(self, set_random_seeds, gaussian_instance):
+        """Test the generate_data method of the GaussianFunction class."""
+        # Define parameters
+        params = {
+            'amplitude': 3.0,
+            'center': 0.0,
+            'width': 1.0
+        }
+        
+        # Generate data using the generate_data method
+        indep_vars, y_data = gaussian_instance.generate_data(params)
+        
+        # Verify the independent variables
+        assert 'x' in indep_vars, "Independent variables should contain 'x'"
+        x = indep_vars['x']
+        
+        # Verify the data shape
+        assert len(x) == len(y_data), "x and y data should have the same length"
+        
+        # Verify the data values by comparing with direct function call
+        y_expected = gaussian_instance(x, **params)
+        np.testing.assert_allclose(y_data, y_expected, rtol=1e-10, atol=1e-10)
+        
+        # Test with noise by using add_gaussian_noise separately
+        y_noisy = add_gaussian_noise(y_data, sigma=0.1)
+        
+        # Verify that noise was added (y_noisy should be different from y_data)
+        assert not np.allclose(y_noisy, y_data, rtol=1e-10, atol=1e-10), "Noise should have been added" 
