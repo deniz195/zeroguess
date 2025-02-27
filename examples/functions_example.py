@@ -21,7 +21,7 @@ def main():
     """Run the example code."""
     # Create instances of the different function types
     gaussian = GaussianFunction()
-    multi_peak = MultiPeakGaussianFunction(n_peaks=2)
+    multi_peak = MultiPeakGaussianFunction()
     damped_sine = DampedSineFunction()
     linear = LinearFunction()
     
@@ -68,7 +68,7 @@ def main():
     print("\nPlot saved to gaussian_example.png")
     
     # Example 2: Working with Multi-peak Gaussian function
-    print("\n=== Multi-peak Gaussian Function Example ===")
+    print("\n=== Two-Peak Gaussian Function Example ===")
     
     # Generate data with custom parameters
     params = {
@@ -89,7 +89,7 @@ def main():
     plt.figure(figsize=(10, 6))
     plt.plot(x, y_data, 'b-', label='Clean Data')
     plt.plot(x, y_noisy, 'r.', alpha=0.5, label='Noisy Data')
-    plt.title('Multi-peak Gaussian Function Example')
+    plt.title('Two-Peak Gaussian Function Example')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.legend()

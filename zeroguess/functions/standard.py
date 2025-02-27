@@ -72,72 +72,81 @@ class MultiPeakGaussianFunction(FittingFunction):
     A multi-peak Gaussian function is a sum of multiple Gaussian functions,
     each with its own amplitude, center, and width parameters.
     
-    This implementation supports two peaks by default.
+    This implementation supports exactly 2 Gaussian peaks.
     """
     
-    def __init__(self, n_peaks: int = 2):
-        """Initialize the multi-peak Gaussian function.
-        
-        Args:
-            n_peaks: Number of Gaussian peaks to include
-        """
-        self.n_peaks = n_peaks
+    def __init__(self):
+        """Initialize the multi-peak Gaussian function with 2 peaks."""
         super().__init__()
         
     @property
     def name(self) -> str:
         """Return the name of the function."""
-        return f"multi_peak_gaussian_{self.n_peaks}"
+        return "Two-Peak Gaussian Function"
         
     @property
     def param_ranges(self) -> Dict[str, Tuple[float, float]]:
         """Return the default parameter ranges."""
-        ranges = {}
-        for i in range(1, self.n_peaks + 1):
-            ranges[f'amplitude_{i}'] = (0.5, 10.0)
-            ranges[f'center_{i}'] = (-5.0, 5.0)
-            ranges[f'width_{i}'] = (0.1, 2.0)
-        return ranges
+        return {
+            'amplitude_1': (0.1, 10.0),
+            'center_1': (-5.0, 5.0),
+            'width_1': (0.1, 2.0),
+            'amplitude_2': (0.1, 10.0),
+            'center_2': (-5.0, 5.0),
+            'width_2': (0.1, 2.0)
+        }
         
     @property
     def param_descriptions(self) -> Dict[str, str]:
         """Return descriptions of what each parameter controls."""
-        descriptions = {}
-        for i in range(1, self.n_peaks + 1):
-            descriptions[f'amplitude_{i}'] = f'Peak height of Gaussian {i}'
-            descriptions[f'center_{i}'] = f'Position of the center of peak {i}'
-            descriptions[f'width_{i}'] = f'Width of peak {i} (standard deviation)'
-        return descriptions
+        return {
+            'amplitude_1': 'Peak height of the first Gaussian peak',
+            'center_1': 'Position of the center of the first peak',
+            'width_1': 'Width of the first peak (standard deviation)',
+            'amplitude_2': 'Peak height of the second Gaussian peak',
+            'center_2': 'Position of the center of the second peak',
+            'width_2': 'Width of the second peak (standard deviation)'
+        }
         
     @property
     def default_independent_vars(self) -> Dict[str, np.ndarray]:
         """Return default sampling points for independent variables."""
         return {
-            'x': np.linspace(-10.0, 10.0, 200)
+            'x': np.linspace(-10.0, 10.0, 300)
         }
-    
-    def __call__(self, x, **params):
-        """Evaluate the multi-peak Gaussian function.
+        
+    def __call__(
+        self, 
+        x, 
+        amplitude_1, 
+        center_1, 
+        width_1, 
+        amplitude_2, 
+        center_2, 
+        width_2
+    ):
+        """Evaluate the two-peak Gaussian function.
         
         Args:
             x: Independent variable values
-            **params: Parameters for each Gaussian peak, with names in the format
-                amplitude_i, center_i, width_i where i is the peak number (1-based)
-                
+            amplitude_1: Peak height of the first Gaussian peak
+            center_1: Position of the center of the first peak
+            width_1: Width of the first peak (standard deviation)
+            amplitude_2: Peak height of the second Gaussian peak
+            center_2: Position of the center of the second peak
+            width_2: Width of the second peak (standard deviation)
+            
         Returns:
             Function values at the specified points
         """
-        result = np.zeros_like(x, dtype=float)
+        # Calculate the first Gaussian peak
+        peak_1 = amplitude_1 * np.exp(-(x - center_1) ** 2 / (2 * width_1 ** 2))
         
-        for i in range(1, self.n_peaks + 1):
-            amplitude = params.get(f'amplitude_{i}', 0.0)
-            center = params.get(f'center_{i}', 0.0)
-            width = params.get(f'width_{i}', 1.0)
-            
-            # Add the contribution of this peak
-            result += amplitude * np.exp(-(x - center) ** 2 / (2 * width ** 2))
-            
-        return result
+        # Calculate the second Gaussian peak
+        peak_2 = amplitude_2 * np.exp(-(x - center_2) ** 2 / (2 * width_2 ** 2))
+        
+        # Sum the peaks
+        return peak_1 + peak_2
 
 
 class DampedSineFunction(FittingFunction):
