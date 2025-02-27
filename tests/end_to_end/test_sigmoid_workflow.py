@@ -209,7 +209,7 @@ class TestSigmoidWorkflow:
         )
 
         # Train the estimator
-        training_metrics = estimator.train(n_samples=300, epochs=25, batch_size=32, add_noise=True, noise_level=0.2)
+        estimator.train(n_samples=300, epochs=25, batch_size=32, add_noise=True, noise_level=0.2)
         assert estimator.is_trained
 
         # Test different rate parameter scenarios

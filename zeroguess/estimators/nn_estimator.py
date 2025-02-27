@@ -136,7 +136,7 @@ class NeuralNetworkEstimator(BaseEstimator):
         """
         return get_architecture_info()
 
-    def train(
+    def train(  # noqa: C901
         self,
         n_samples: int = 1000,
         batch_size: int = 64,

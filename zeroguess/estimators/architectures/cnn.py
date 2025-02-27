@@ -232,4 +232,7 @@ class CNNArchitecture(BaseArchitecture):
         Returns:
             String description of the architecture
         """
-        return "Convolutional Neural Network: Specialized for detecting patterns in curves, particularly effective for oscillatory or multi-peak functions."
+        return (
+            "Convolutional Neural Network: Specialized for detecting patterns in curves, "
+            "particularly effective for oscillatory or multi-peak functions."
+        )

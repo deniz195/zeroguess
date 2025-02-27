@@ -295,15 +295,6 @@ class TestNNEstimator:
         assert estimator.is_trained is True
         assert estimator.network is not None
 
-        # Now create a history object manually to simulate a keyboard interrupt
-        # during training - this tests the state of the estimator after an interrupt
-        history = {
-            "train_loss": [0.5],
-            "val_loss": [0.6],
-            "interrupted": True,
-            "completed_epochs": 1,
-        }
-
         # Test that we can still use the model for prediction after interruption
         x_data = {"x": np.linspace(-10, 10, 100)}
         y_data = np.random.rand(100)

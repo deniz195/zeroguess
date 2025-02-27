@@ -83,20 +83,6 @@ def run_test(args):
         # Load the pre-trained model
         print(f"\nLoading pre-trained model from {model_file}...")
 
-        # Create a temporary estimator to get the correct class
-        temp_estimator = create_estimator(
-            function=damped_sine,
-            param_ranges={
-                "amplitude": (0.5, 5.0),
-                "frequency": (0.5, 3.0),
-                "phase": (0, 2 * np.pi),
-                "decay": (0.1, 1.0),
-            },
-            independent_vars_sampling={"x": x_sampling},
-            estimator_type="neural_network",
-            architecture="cnn",
-        )
-
         # Load the saved model using the class method
         estimator = NeuralNetworkEstimator.load(model_file)
         print("Model loaded successfully")

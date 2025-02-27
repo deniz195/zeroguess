@@ -104,7 +104,7 @@ def main(args):
                 print(f"\nLoading pre-trained model from {model_file}...")
                 estimator = estimator.__class__.load(model_file)
             except FileNotFoundError:
-                print(f"No pre-trained model found. Training a new model...")
+                print("No pre-trained model found. Training a new model...")
                 history = estimator.train(
                     n_samples=args.samples,
                     batch_size=args.batch_size,

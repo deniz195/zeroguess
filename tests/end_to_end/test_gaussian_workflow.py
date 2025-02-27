@@ -93,7 +93,7 @@ class TestGaussianWorkflow:
         )
 
         # Step 4: Train the estimator with reduced samples and epochs for testing
-        training_metrics = estimator.train(
+        estimator.train(
             n_samples=200,  # Reduced sample size for faster tests
             epochs=20,  # Fewer epochs for faster tests
             batch_size=32,

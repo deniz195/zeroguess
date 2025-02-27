@@ -3,7 +3,6 @@ Unit tests for base estimator functionality.
 """
 
 import unittest
-from abc import ABC
 
 import numpy as np
 import pytest
@@ -13,18 +12,7 @@ from zeroguess.estimators.base import BaseEstimator
 
 # Import the test fixtures
 
-# Try to import the BaseEstimator class (legacy code, can be removed if BaseEstimator is always available)
-try:
-    from zeroguess.estimators.base import BaseEstimator
-
-    HAS_ZEROGUESS = True
-except ImportError:
-    HAS_ZEROGUESS = False
-
-    # Create a mock BaseEstimator for the test to run even if zeroguess is not available
-    class BaseEstimator(ABC):
-        pass
-
+HAS_ZEROGUESS = True
 
 # Create marker to skip tests if zeroguess is not available
 requires_zeroguess = pytest.mark.skipif(not HAS_ZEROGUESS, reason="ZeroGuess is required for this test")

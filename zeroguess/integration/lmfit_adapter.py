@@ -208,7 +208,7 @@ class Model(lmfit.Model):
 
         return params
 
-    def guess(self, data, **kwargs) -> lmfit.Parameters:
+    def guess(self, data, **kwargs) -> lmfit.Parameters:  # noqa: C901
         """Guess initial parameter values based on data.
 
         This method provides a ZeroGuess-based implementation of the guess method
@@ -225,10 +225,6 @@ class Model(lmfit.Model):
         Raises:
             ValueError: If required independent variables are missing
         """
-
-        print(
-            f"DEBUG [guess]: auto_extract_bounds={self.auto_extract_bounds}, estimator_initialized={self._estimator is not None}"
-        )
 
         # If the parent class has a custom guess implementation, use it
         if self._has_parent_guess:
