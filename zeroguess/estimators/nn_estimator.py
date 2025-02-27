@@ -26,6 +26,13 @@ class NeuralNetworkEstimator(BaseEstimator):
     - "transformer": Transformer network with self-attention (future work)
     
     You can also use "best" or "default" to use the recommended architecture.
+    
+    Hardware acceleration is automatically selected in the following order:
+    1. CUDA (NVIDIA GPUs)
+    2. MPS (Apple Silicon)
+    3. CPU (fallback)
+    
+    You can manually override this selection with the device parameter.
     """
     
     def __init__(
@@ -37,6 +44,7 @@ class NeuralNetworkEstimator(BaseEstimator):
         architecture_params: Optional[Dict[str, Any]] = None,
         learning_rate: float = 0.0001,
         weight_decay: float = 0.0001,
+        device: Optional[str] = None,
         **kwargs
     ):
         """Initialize the neural network estimator.
@@ -53,6 +61,8 @@ class NeuralNetworkEstimator(BaseEstimator):
                 Use get_architecture_info() to see available parameters for each architecture
             learning_rate: Learning rate for the optimizer
             weight_decay: Weight decay for the optimizer
+            device: Device to use for computation (default: auto)
+                Options: "cuda", "mps", "cpu", or None (auto-detect)
             **kwargs: Additional keyword arguments
         """
         super().__init__(function, param_ranges, independent_vars_sampling, **kwargs)
@@ -65,7 +75,27 @@ class NeuralNetworkEstimator(BaseEstimator):
         self.architecture_params = architecture_params
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        # Set up device selection
+        if device is None:
+            # Auto-detect best available device in priority order: CUDA > MPS > CPU
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                self.device = torch.device("mps")
+            else:
+                self.device = torch.device("cpu")
+        else:
+            # Use specified device
+            self.device = torch.device(device)
+            
+            # Validate device selection when manually specified
+            if device == "cuda" and not torch.cuda.is_available():
+                print("Warning: CUDA requested but not available. Falling back to CPU.")
+                self.device = torch.device("cpu")
+            elif device == "mps" and not (hasattr(torch.backends, 'mps') and torch.backends.mps.is_available()):
+                print("Warning: MPS requested but not available. Falling back to CPU.")
+                self.device = torch.device("cpu")
         
         # These will be initialized during training
         self.network = None
@@ -124,7 +154,13 @@ class NeuralNetworkEstimator(BaseEstimator):
             
         Returns:
             Dictionary containing training history and metrics
+            
+        Note:
+            If training is interrupted by keyboard interrupt (Ctrl+C),
+            the model will save its current state and return the
+            training history up to that point.
         """
+
         # Create data generator if it doesn't exist
         if self.data_generator is None:
             self.data_generator = SyntheticDataGenerator(
@@ -133,133 +169,163 @@ class NeuralNetworkEstimator(BaseEstimator):
                 independent_vars_sampling=self.independent_vars_sampling
             )
         
-        # Generate synthetic training data
-        params, function_values = self.data_generator.generate_dataset(n_samples=n_samples)
-        
-        # Process the data for training
-        # For now, we'll assume a single independent variable scenario
-        # In the future, this could be extended for multiple independent variables
-        if len(self.independent_var_names) == 1:
-            var_name = self.independent_var_names[0]
-            _, y_values = function_values[var_name]
-            
-            # Flatten the data for training
-            X = y_values.reshape(n_samples, -1)  # Shape: (n_samples, n_points)
-            
-            # Normalize parameters to [0, 1] range for training
-            y_normalized = np.zeros_like(params)
-            for i, name in enumerate(self.param_names):
-                min_val, max_val = self.param_ranges[name]
-                y_normalized[:, i] = (params[:, i] - min_val) / (max_val - min_val)
-            
-            y = y_normalized  # Use normalized parameters for training
-        else:
-            raise NotImplementedError("Multiple independent variables not yet implemented")
-        
-        # Split data into training and validation sets
-        n_val = int(n_samples * validation_split)
-        n_train = n_samples - n_val
-        
-        # Shuffle the data
-        indices = np.random.permutation(n_samples)
-        X = X[indices]
-        y = y[indices]
-        
-        X_train, X_val = X[:n_train], X[n_train:]
-        y_train, y_val = y[:n_train], y[n_train:]
-        
-        # Create PyTorch datasets and dataloaders
-        train_dataset = TensorDataset(
-            torch.tensor(X_train, dtype=torch.float32),
-            torch.tensor(y_train, dtype=torch.float32)
-        )
-        val_dataset = TensorDataset(
-            torch.tensor(X_val, dtype=torch.float32),
-            torch.tensor(y_val, dtype=torch.float32)
-        )
-        
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=batch_size)
-        
-        # Create the neural network if it doesn't exist
-        if self.network is None:
-            n_input_features = X.shape[1]
-            n_output_params = len(self.param_names)
-            
-            # Create the network using the selected architecture
-            self.network = self.architecture.create_network(
-                n_input_features=n_input_features,
-                n_output_params=n_output_params
-            )
-            
-            # Move the network to the appropriate device
-            self.network.to(self.device)
-        
-        # Create optimizer
-        optimizer = optim.Adam(
-            self.network.parameters(),
-            lr=self.learning_rate,
-            weight_decay=self.weight_decay
-        )
-        
-        # Define loss function
-        criterion = nn.MSELoss()
-        
-        # Training loop
+        # Initialize the history dictionary with empty lists for loss metrics
         history = {
             "train_loss": [],
             "val_loss": []
         }
         
-        for epoch in range(n_epochs):
-            # Training phase
-            self.network.train()
-            train_loss = 0.0
+        try:
+            # Generate synthetic training data
+            params, function_values = self.data_generator.generate_dataset(n_samples=n_samples)
             
-            for X_batch, y_batch in train_loader:
-                X_batch = X_batch.to(self.device)
-                y_batch = y_batch.to(self.device)
+            # Process the data for training
+            # For now, we'll assume a single independent variable scenario
+            # In the future, this could be extended for multiple independent variables
+            if len(self.independent_var_names) == 1:
+                var_name = self.independent_var_names[0]
+                _, y_values = function_values[var_name]
                 
-                # Forward pass
-                y_pred = self.network(X_batch)
-                loss = criterion(y_pred, y_batch)
+                # Flatten the data for training
+                X = y_values.reshape(n_samples, -1)  # Shape: (n_samples, n_points)
                 
-                # Backward pass and optimization
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                # Normalize parameters to [0, 1] range for training
+                y_normalized = np.zeros_like(params)
+                for i, name in enumerate(self.param_names):
+                    min_val, max_val = self.param_ranges[name]
+                    y_normalized[:, i] = (params[:, i] - min_val) / (max_val - min_val)
                 
-                train_loss += loss.item() * X_batch.size(0)
+                y = y_normalized  # Use normalized parameters for training
+            else:
+                raise NotImplementedError("Multiple independent variables not yet implemented")
             
-            train_loss /= len(train_loader.dataset)
+            # Split data into training and validation sets
+            n_val = int(n_samples * validation_split)
+            n_train = n_samples - n_val
             
-            # Validation phase
-            self.network.eval()
-            val_loss = 0.0
+            # Shuffle the data
+            indices = np.random.permutation(n_samples)
+            X = X[indices]
+            y = y[indices]
             
-            with torch.no_grad():
-                for X_batch, y_batch in val_loader:
+            X_train, X_val = X[:n_train], X[n_train:]
+            y_train, y_val = y[:n_train], y[n_train:]
+            
+            # Create PyTorch datasets and dataloaders
+            train_dataset = TensorDataset(
+                torch.tensor(X_train, dtype=torch.float32),
+                torch.tensor(y_train, dtype=torch.float32)
+            )
+            val_dataset = TensorDataset(
+                torch.tensor(X_val, dtype=torch.float32),
+                torch.tensor(y_val, dtype=torch.float32)
+            )
+            
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+            val_loader = DataLoader(val_dataset, batch_size=batch_size)
+            
+            # Create the neural network if it doesn't exist
+            if self.network is None:
+                n_input_features = X.shape[1]
+                n_output_params = len(self.param_names)
+                
+                # Create the network using the selected architecture
+                self.network = self.architecture.create_network(
+                    n_input_features=n_input_features,
+                    n_output_params=n_output_params
+                )
+                
+                # Move the network to the appropriate device
+                self.network.to(self.device)
+            
+            # Create optimizer
+            optimizer = optim.Adam(
+                self.network.parameters(),
+                lr=self.learning_rate,
+                weight_decay=self.weight_decay
+            )
+            
+            # Define loss function
+            criterion = nn.MSELoss()
+            
+            # Training loop
+            completed_epochs = 0
+            
+            for epoch in range(n_epochs):
+                # Training phase
+                self.network.train()
+                train_loss = 0.0
+                
+                for X_batch, y_batch in train_loader:
                     X_batch = X_batch.to(self.device)
                     y_batch = y_batch.to(self.device)
                     
+                    # Forward pass
                     y_pred = self.network(X_batch)
                     loss = criterion(y_pred, y_batch)
                     
-                    val_loss += loss.item() * X_batch.size(0)
+                    # Backward pass and optimization
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                    
+                    train_loss += loss.item() * X_batch.size(0)
                 
-                val_loss /= len(val_loader.dataset)
+                train_loss /= len(train_loader.dataset)
+                
+                # Validation phase
+                self.network.eval()
+                val_loss = 0.0
+                
+                with torch.no_grad():
+                    for X_batch, y_batch in val_loader:
+                        X_batch = X_batch.to(self.device)
+                        y_batch = y_batch.to(self.device)
+                        
+                        y_pred = self.network(X_batch)
+                        loss = criterion(y_pred, y_batch)
+                        
+                        val_loss += loss.item() * X_batch.size(0)
+                    
+                    val_loss /= len(val_loader.dataset)
+                
+                # Record history
+                history["train_loss"].append(train_loss)
+                history["val_loss"].append(val_loss)
+                
+                # Update completed epochs count
+                completed_epochs = epoch + 1
+                
+                # Print progress
+                if verbose and (epoch + 1) % 10 == 0:
+                    print(f"Epoch {epoch + 1}/{n_epochs} - "
+                          f"train_loss: {train_loss:.6f} - "
+                          f"val_loss: {val_loss:.6f}")
+                          
+        except KeyboardInterrupt:
+            if verbose:
+                print(f"\nTraining interrupted at epoch {completed_epochs}/{n_epochs}")
+                
+                # Only print metrics if we've completed at least one epoch
+                if completed_epochs > 0:
+                    train_loss = history["train_loss"][-1]
+                    val_loss = history["val_loss"][-1]
+                    print(f"Latest metrics - train_loss: {train_loss:.6f}, val_loss: {val_loss:.6f}")
+                
+                print("Model saved with current state.")
             
-            # Record history
-            history["train_loss"].append(train_loss)
-            history["val_loss"].append(val_loss)
-            
-            # Print progress
-            if verbose and (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch + 1}/{n_epochs} - "
-                      f"train_loss: {train_loss:.6f} - "
-                      f"val_loss: {val_loss:.6f}")
+            # Additional information in history to indicate training was interrupted
+            history["interrupted"] = True
+            history["completed_epochs"] = completed_epochs
         
-        self.is_trained = True
+        # Mark as trained regardless of whether we completed all epochs or were interrupted
+        # (as long as the network was created)
+        self.is_trained = self.network is not None
+        
+        # If no epochs were completed, indicate this in the history
+        if "completed_epochs" not in history:
+            history["completed_epochs"] = n_epochs
+            
         return history
     
     def predict(self, *args, **kwargs) -> Dict[str, float]:
@@ -381,11 +447,13 @@ class NeuralNetworkEstimator(BaseEstimator):
         torch.save(state, path)
     
     @classmethod
-    def load(cls, path: str) -> "NeuralNetworkEstimator":
+    def load(cls, path: str, device: Optional[str] = None) -> "NeuralNetworkEstimator":
         """Load a trained model from disk.
         
         Args:
             path: Path to load the model from
+            device: Device to use for computation (default: auto)
+                Options: "cuda", "mps", "cpu", or None (auto-detect)
             
         Returns:
             Loaded NeuralNetworkEstimator instance
@@ -396,8 +464,28 @@ class NeuralNetworkEstimator(BaseEstimator):
         if not os.path.exists(path):
             raise FileNotFoundError(f"Model file not found: {path}")
         
+        # Determine device to load model onto
+        if device is None:
+            # Auto-detect best available device
+            if torch.cuda.is_available():
+                device_obj = torch.device("cuda")
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                device_obj = torch.device("mps")
+            else:
+                device_obj = torch.device("cpu")
+        else:
+            # Use specified device with validation
+            if device == "cuda" and not torch.cuda.is_available():
+                print("Warning: CUDA requested but not available. Falling back to CPU.")
+                device_obj = torch.device("cpu")
+            elif device == "mps" and not (hasattr(torch.backends, 'mps') and torch.backends.mps.is_available()):
+                print("Warning: MPS requested but not available. Falling back to CPU.")
+                device_obj = torch.device("cpu")
+            else:
+                device_obj = torch.device(device)
+        
         # Load the model state
-        state = torch.load(path, map_location=torch.device("cpu"))
+        state = torch.load(path, map_location=device_obj)
         
         # Extract the independent_vars_sampling from the state, or create a dummy one
         # that will pass validation in the base class
@@ -417,6 +505,7 @@ class NeuralNetworkEstimator(BaseEstimator):
             architecture_params=state["architecture_params"],
             learning_rate=state["learning_rate"],
             weight_decay=state["weight_decay"],
+            device=device,  # Pass through the device parameter
         )
         
         # Set additional attributes

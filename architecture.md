@@ -390,6 +390,34 @@ ZeroGuess supports multiple neural network architectures, each optimized for dif
 - **"Tell, Don't Ask" Principle**: All architectures follow the same interface and are responsible for their own behavior. This encapsulation ensures that architecture-specific logic remains within the architecture implementation rather than in the estimator code, promoting cleaner separation of concerns and better maintainability.
 - Each architecture is responsible for validating its own input requirements, handling its specific data transformations, and implementing appropriate forward/backward propagation logic.
 
+### Hardware Acceleration
+
+ZeroGuess automatically selects the optimal hardware acceleration for neural network training and inference based on availability. This ensures models train efficiently across different computing environments without manual configuration.
+
+#### Device Selection Strategy
+- **Automatic Selection**: During initialization, ZeroGuess determines the best available hardware in the following priority order:
+  1. CUDA (NVIDIA GPUs)
+  2. MPS (Apple Silicon)
+  3. CPU (fallback option)
+
+- **Manual Override**: For specialized use cases, the API provides options to manually specify the target hardware:
+  ```python
+  # Example of manual device selection (API to be implemented)
+  estimator = NeuralNetworkEstimator(
+      function=target_function,
+      param_ranges=param_ranges,
+      independent_vars_sampling=sampling,
+      device="cpu"  # Force CPU execution even if GPU is available
+  )
+  ```
+
+- **Supported Hardware Backends**:
+  - **CUDA**: Acceleration for NVIDIA GPUs
+  - **MPS**: Metal Performance Shaders for Apple Silicon (M1/M2/M3 chips)
+  - **CPU**: Standard CPU execution for universal compatibility
+
+The automatic hardware selection ensures optimal performance without user intervention while maintaining the flexibility to target specific hardware when needed.
+
 ### Architecture Types
 
 #### 1. Multilayer Perceptron (MLP)
