@@ -177,8 +177,7 @@ class Model(lmfit.Model):
 
             if not self.param_ranges and not self.auto_extract_bounds:
                 raise RuntimeError(
-                    "Parameter estimation cannot proceed without valid bounds."
-                    f"Use Model(param_ranges=...)."
+                    "Parameter estimation cannot proceed without valid bounds. Use Model(param_ranges=...)."
                 )
             elif not self.param_ranges:
                 try:
@@ -193,9 +192,7 @@ class Model(lmfit.Model):
                     )
 
             if self.independent_vars_sampling is None:
-                raise RuntimeError(
-                    "Parameter estimation cannot proceed without independent variables."
-                )
+                raise RuntimeError("Parameter estimation cannot proceed without independent variables.")
 
             # Create estimator
             self._estimator = zeroguess.create_estimator(
