@@ -171,9 +171,32 @@ class Model(lmfit.Model):
 
         return param_ranges
 
-    def _initialize_estimator(self):
+    def _initialize_estimator(self, n_epochs=None):
         """Initialize and train the parameter estimator."""
         try:
+
+            if not self.param_ranges and not self.auto_extract_bounds:
+                raise RuntimeError(
+                    "Parameter estimation cannot proceed without valid bounds."
+                    f"Use Model(param_ranges=...)."
+                )
+            elif not self.param_ranges:
+                try:
+                    params = super().make_params()
+                    extracted_param_ranges = self._extract_bounds_from_params(params)
+                    self.param_ranges = extracted_param_ranges
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to extract parameter bounds or train estimator: {str(e)}. "
+                        f"Parameter estimation cannot proceed without valid bounds."
+                        f"Use model.set_param_hint('param_name', min=..., max=...) to set bounds on parameters."
+                    )
+
+            if self.independent_vars_sampling is None:
+                raise RuntimeError(
+                    "Parameter estimation cannot proceed without independent variables."
+                )
+
             # Create estimator
             self._estimator = zeroguess.create_estimator(
                 function=self.func,
@@ -182,7 +205,10 @@ class Model(lmfit.Model):
             )
 
             # Train the estimator
-            self._estimator.train()
+            if n_epochs is not None:
+                self._estimator.train(n_epochs=n_epochs)
+            else:
+                self._estimator.train()
         except Exception as e:
             # If initialization or training fails, log the error and set estimator to None
             import warnings
@@ -207,6 +233,16 @@ class Model(lmfit.Model):
         params = super().make_params(**kwargs)
 
         return params
+
+    def zeroguess_train(self, n_epochs=None):
+        """Train the parameter estimator."""
+        if self._estimator is None:
+            self._initialize_estimator(n_epochs=n_epochs)
+        else:
+            if n_epochs is not None:
+                self._estimator.train(n_epochs=n_epochs)
+            else:
+                self._estimator.train()
 
     def guess(self, data, **kwargs) -> lmfit.Parameters:  # noqa: C901
         """Guess initial parameter values based on data.

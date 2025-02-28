@@ -429,10 +429,10 @@ class WaveletFunction(FittingFunction):
     def param_ranges(self) -> Dict[str, Tuple[float, float]]:
         """Return the default parameter ranges."""
         return {
-            "frequency": (0.1, 3.0),
+            "frequency": (0.05, 1.0),
             "phase": (0.0, 2.0 * np.pi),
             "position": (-5.0, 5.0),
-            "width": (0.1, 5.0),
+            "width": (0.1, 3.0),
         }
 
     @property
@@ -448,7 +448,7 @@ class WaveletFunction(FittingFunction):
     @property
     def default_independent_vars(self) -> Dict[str, np.ndarray]:
         """Return default sampling points for independent variables."""
-        return {"x": np.linspace(-5.0, 5.0, 200)}
+        return {"x": np.linspace(-10.0, 10.0, 200)}
 
     def __call__(self, x, frequency, phase, position, width):
         """Evaluate the wavelet function.
