@@ -33,9 +33,9 @@ from zeroguess.integration import lmfit_integration
 BENCHMARK_RESULTS_DIR = Path("benchmark_results")
 BENCHMARK_RESULTS_DIR.mkdir(exist_ok=True)
 
+DEFAULT_TOLERANCE = 0.10
 
-
-def evaluate_fit_quality(true_params, fitted_params, tolerance=0.10):
+def evaluate_fit_quality(true_params, fitted_params, tolerance=DEFAULT_TOLERANCE):
     """Evaluate the quality of a fit by comparing parameters.
     
     Args:
@@ -80,7 +80,7 @@ def evaluate_fit_quality(true_params, fitted_params, tolerance=0.10):
 
 
 def visualize_fit(wavelet, x_data, y_data, y_true, true_params, initial_params, fitted_params, 
-                  method_name, param_set_idx, success, relative_errors):
+                  method_name, param_set_idx, success, relative_errors, tolerance=DEFAULT_TOLERANCE):
     """Create visualization of the fit results.
     
     Args:
@@ -156,7 +156,7 @@ def visualize_fit(wavelet, x_data, y_data, y_true, true_params, initial_params, 
             fitted_str = f"{fitted_val:.4f}"
         
         # Format error with color
-        if rel_error <= 0.05:
+        if rel_error <= tolerance:
             error_str = f"{rel_error:.2%}"
             error_color = 'green'
         else:
@@ -174,7 +174,7 @@ def visualize_fit(wavelet, x_data, y_data, y_true, true_params, initial_params, 
     # Color the error cells
     for i, param_name in enumerate(param_names):
         rel_error = relative_errors[param_name]
-        if rel_error <= 0.05:
+        if rel_error <= tolerance:
             table[(i+1, 4)].set_facecolor('#d8f3dc')  # light green
         else:
             table[(i+1, 4)].set_facecolor('#ffccd5')  # light red
@@ -194,7 +194,7 @@ def visualize_fit(wavelet, x_data, y_data, y_true, true_params, initial_params, 
     plt.close()
 
 
-def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05):
+def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEFAULT_TOLERANCE):
     """Run benchmark comparing ZeroGuess with lmfit.
     
     Args:
@@ -240,7 +240,6 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05):
     np.random.seed(42)  # For reproducibility
     param_sets = [wavelet_func.get_random_params() for _ in range(n_samples)]
     
-
     ### Sweep methods for standard lmfit
     RUN_LMFIT_METHODS = False
     lmfit_methods = ['leastsq', 'least_squares', 'differential_evolution', 'brute', 'basinhopping', 
@@ -444,7 +443,7 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05):
     return results_df
 
 
-def generate_lmfit_comparison_report(results_df, output_dir):
+def generate_lmfit_comparison_report(results_df, output_dir, tolerance=DEFAULT_TOLERANCE):
     """Generate a summary report for the lmfit comparison benchmark.
     
     Args:
@@ -594,7 +593,7 @@ def generate_lmfit_comparison_report(results_df, output_dir):
         
         for param in param_names:
             error_val = row[f'avg_error_{param}']
-            error_class = "success" if error_val <= 0.05 else "failure"
+            error_class = "success" if error_val <= tolerance else "failure"
             html_content += f'<td class="{error_class}">{error_val:.1%}</td>'
         
         html_content += "</tr>"
