@@ -25,9 +25,10 @@ def create_estimator(
         param_ranges: Dictionary mapping parameter names to (min, max) tuples
         independent_vars_sampling: Dictionary mapping independent variable names
             to arrays of sampling points
-        estimator_type: Type of estimator to create (default: "neural_network")
+        estimator_type: Type of estimator to create
+            Options: "neural_network" (default), "nnae" (autoencoder)
         architecture: Neural network architecture to use (default: "best")
-                     Available options: "mlp", "cnn", or "best"
+                     Available options depend on the estimator type
         architecture_params: Architecture-specific parameters
         **kwargs: Additional arguments to pass to the estimator constructor
 
@@ -46,6 +47,22 @@ def create_estimator(
             architecture_params = {}
 
         return NeuralNetworkEstimator(
+            function=function,
+            param_ranges=param_ranges,
+            independent_vars_sampling=independent_vars_sampling,
+            architecture=architecture,
+            architecture_params=architecture_params,
+            **kwargs,
+        )
+    elif estimator_type == "nnae":
+        # Import here to avoid circular imports
+        from zeroguess.estimators.nnae_estimator import NNAEEstimator
+
+        # Handle architecture selection
+        if architecture_params is None:
+            architecture_params = {}
+
+        return NNAEEstimator(
             function=function,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
