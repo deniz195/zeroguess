@@ -44,12 +44,12 @@ def sample_data_multi_peak(multi_peak_gaussian_instance):
     """
     # Fixed parameters for reproducibility
     true_params = {
-        "amplitude_1": 5.0,
-        "center_1": -2.0,
-        "width_1": 1.0,
-        "amplitude_2": 3.0,
-        "center_2": 2.0,
-        "width_2": 0.8,
+        "amplitude1": 5.0,
+        "center1": -2.0,
+        "width1": 1.0,
+        "amplitude2": 3.0,
+        "center2": 2.0,
+        "width2": 0.8,
     }
 
     # Generate data points with higher sampling density for better peak resolution
@@ -191,30 +191,30 @@ class TestMultiPeakGaussianWorkflow:
         separation_scenarios = [
             # Well-separated peaks (easy case)
             {
-                "amplitude_1": 5.0,
-                "center_1": -3.0,
-                "width_1": 0.8,
-                "amplitude_2": 3.0,
-                "center_2": 3.0,
-                "width_2": 0.8,
+                "amplitude1": 5.0,
+                "center1": -3.0,
+                "width1": 0.8,
+                "amplitude2": 3.0,
+                "center2": 3.0,
+                "width2": 0.8,
             },
             # Moderately separated peaks
             {
-                "amplitude_1": 5.0,
-                "center_1": -1.5,
-                "width_1": 0.8,
-                "amplitude_2": 3.0,
-                "center_2": 1.5,
-                "width_2": 0.8,
+                "amplitude1": 5.0,
+                "center1": -1.5,
+                "width1": 0.8,
+                "amplitude2": 3.0,
+                "center2": 1.5,
+                "width2": 0.8,
             },
             # Closely spaced peaks
             {
-                "amplitude_1": 5.0,
-                "center_1": -1.0,
-                "width_1": 0.8,
-                "amplitude_2": 3.0,
-                "center_2": 1.0,
-                "width_2": 0.8,
+                "amplitude1": 5.0,
+                "center1": -1.0,
+                "width1": 0.8,
+                "amplitude2": 3.0,
+                "center2": 1.0,
+                "width2": 0.8,
             },
         ]
 
@@ -238,7 +238,7 @@ class TestMultiPeakGaussianWorkflow:
             quality = calculate_curve_fit_quality(multi_peak_gaussian_instance, x_data, y_data, predicted_params)
 
             # Print results for debugging
-            print(f"\nScenario {i+1} (Peak Separation: {abs(true_params['center_1'] - true_params['center_2']):.1f}):")
+            print(f"\nScenario {i+1} (Peak Separation: {abs(true_params['center1'] - true_params['center2']):.1f}):")
             for param, error in errors.items():
                 print(
                     f"  {param}: true={true_params[param]:.2f}, pred={predicted_params[param]:.2f}, error={error:.2f}"
@@ -266,7 +266,7 @@ class TestMultiPeakGaussianWorkflow:
 
             # Generate and save visualizations for each scenario
             scenario_name = (
-                f"test_multi_peak_gaussian_separation_{abs(true_params['center_1'] - true_params['center_2']):.1f}"
+                f"test_multi_peak_gaussian_separation_{abs(true_params['center1'] - true_params['center2']):.1f}"
             )
             create_and_save_visualizations(
                 function=multi_peak_gaussian_instance,
@@ -447,12 +447,12 @@ class TestMultiPeakGaussianWorkflow:
         """Test the generate_data method of the MultiPeakGaussianFunction class."""
         # Define parameters
         params = {
-            "amplitude_1": 5.0,
-            "center_1": -2.0,
-            "width_1": 1.0,
-            "amplitude_2": 3.0,
-            "center_2": 2.0,
-            "width_2": 0.8,
+            "amplitude1": 5.0,
+            "center1": -2.0,
+            "width1": 1.0,
+            "amplitude2": 3.0,
+            "center2": 2.0,
+            "width2": 0.8,
         }
 
         # Generate data using the generate_data method
