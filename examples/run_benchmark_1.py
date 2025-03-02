@@ -22,12 +22,12 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from zeroguess.functions.standard import WaveletFunction
+from zeroguess.functions.standard import MultiPeakGaussianFunction, WaveletFunction
 from zeroguess.functions.utils import add_gaussian_noise
 from zeroguess.integration import lmfit_integration
 
 # Create output directory
-BENCHMARK_RESULTS_DIR = Path("benchmark_results")
+BENCHMARK_RESULTS_DIR = Path(__file__).parent / "benchmark_results"
 BENCHMARK_RESULTS_DIR.mkdir(exist_ok=True)
 
 DEFAULT_TOLERANCE = 0.10
@@ -78,7 +78,8 @@ def evaluate_fit_quality(true_params, fitted_params, tolerance=DEFAULT_TOLERANCE
 
 
 def visualize_fit(
-    wavelet,
+    output_dir,
+    fit_func,
     x_data,
     y_data,
     y_true,
@@ -107,8 +108,8 @@ def visualize_fit(
     """
 
     # Calculate curves
-    y_initial = wavelet(x_data, **initial_params)
-    y_fitted = wavelet(x_data, **fitted_params)
+    y_initial = fit_func(x_data, **initial_params)
+    y_fitted = fit_func(x_data, **fitted_params)
 
     # Create figure
     fig = plt.figure(figsize=(12, 8))
@@ -204,7 +205,7 @@ def visualize_fit(
 
     # Adjust layout and save
     plt.tight_layout()
-    output_dir = BENCHMARK_RESULTS_DIR / "lmfit_comparison"
+    output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
     plt.savefig(output_dir / f"{method_name.replace(' ', '_').lower()}_set_{param_set_idx+1}.png", dpi=150)
     plt.close()
@@ -223,23 +224,26 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
 
     print("\n=== Running Direct Comparison with lmfit Benchmark ===\n")
 
-    # Set up output directory
-    output_dir = BENCHMARK_RESULTS_DIR / "lmfit_comparison"
-    output_dir.mkdir(exist_ok=True)
+    # Get parameter ranges from fit function
+    fit_func = MultiPeakGaussianFunction()
+    assert fit_func.__name__
 
-    # Get parameter ranges from WaveletFunction
-    wavelet_func = WaveletFunction()
-    wavelet_func.__name__ = "wavelet"
-    param_ranges = wavelet_func.param_ranges
+    # fit_func = WaveletFunction()
+    # assert fit_func.__name__
+    param_ranges = fit_func.param_ranges
+
+    # Set up output directory
+    output_dir = BENCHMARK_RESULTS_DIR / "lmfit_comparison" / fit_func.__name__
+    output_dir.mkdir(exist_ok=True, parents=True)
 
     # Set up x data
-    x_data = wavelet_func.default_independent_vars["x"]
+    x_data = fit_func.default_independent_vars["x"]
 
     # Create models with or without ZeroGuess integration
-    model_lmfit = lmfit.Model(wavelet_func)
+    model_lmfit = lmfit.Model(fit_func)
 
     model_zg = lmfit_integration.Model(
-        wavelet_func,
+        fit_func,
         independent_vars_sampling={"x": x_data},
         # param_ranges=param_ranges,
         auto_extract_bounds=True,
@@ -254,7 +258,7 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
 
     # Generate random parameter sets
     np.random.seed(42)  # For reproducibility
-    param_sets = [wavelet_func.get_random_params() for _ in range(n_samples)]
+    param_sets = [fit_func.get_random_params(canonical=True) for _ in range(n_samples)]
 
     # Sweep methods for standard lmfit
     RUN_LMFIT_METHODS = False
@@ -293,7 +297,7 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
             print(f"Processing parameter set {i+1}/{n_samples}...")
 
             # Generate noisy data
-            y_true = wavelet_func(x_data, **true_params)
+            y_true = fit_func(x_data, **true_params)
             y_data = add_gaussian_noise(y_true, sigma=noise_level, relative=False)
 
             # Test both methods
@@ -338,7 +342,8 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
 
                 # # Create visualization
                 # visualize_fit(
-                #     wavelet_func,
+                #     output_dir,
+                #     fit_func,
                 #     x_data, y_data, y_true,
                 #     true_params, initial_param_values, fitted_params,
                 #     method_name, i, param_success, relative_errors
@@ -389,7 +394,7 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
         print(f"Processing parameter set {i+1}/{n_samples}...")
 
         # Generate noisy data
-        y_true = wavelet_func(x_data, **true_params)
+        y_true = fit_func(x_data, **true_params)
         y_data = add_gaussian_noise(y_true, sigma=noise_level, relative=False)
 
         # Test all methods
@@ -442,6 +447,9 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
                 fit_nfev = 0
                 fitted_params = initial_param_values.copy()
 
+            # Make parameters canonical
+            fitted_params = fit_func.get_canonical_params(fitted_params)
+
             # Record fitting time
             fitting_time = time.time() - start_time
 
@@ -450,7 +458,8 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
 
             # Create visualization
             visualize_fit(
-                wavelet_func,
+                output_dir,
+                fit_func,
                 x_data,
                 y_data,
                 y_true,
