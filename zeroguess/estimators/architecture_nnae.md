@@ -82,17 +82,19 @@ The NNAE architecture employs a specialized tri-component loss function:
    - L₁ = MSE(moments(y_input), moments_predicted)
    - Where moments_predicted = decoder(encoder(y_input))
 
-2. **Parameter Validation Loss** (L₂): Measures the difference between input function points and function points computed using the estimated parameters.
-   - L₂ = MSE(y_input, f(x, θ))
-   - Where θ = encoder(y_input) and f is the original fit function
+2. **Parameter Validation Loss** (L₂): Measures the difference between the moments predicted by the decoder and the moments calculated from function values computed using the estimated parameters.
+   - L₂ = MSE(moments_predicted, moments(f(x, θ_predicted)))
+   - Where θ_predicted = encoder(y_input), f is the original fit function, and moments_predicted = decoder(θ_predicted)
+   - This validates that the decoder's predicted moments match the actual moments of the function when using the estimated parameters
 
 3. **Parameter Accuracy Loss** (L₃): Directly measures the accuracy of parameter estimation (used during training with synthetic data where true parameters are known).
    - L₃ = MSE(θ_true, θ_predicted)
    - Where θ_predicted = encoder(y_input)
 
-4. **Combined Loss**: L = α·L₁·L₂ + β·L₃
+4. **Combined Loss**: L = α·L₁·L₃ + β·L₂
    - This formula balances both reconstruction quality and parameter accuracy
-   - The multiplication of L₁ and L₂ creates a coupling effect that emphasizes both aspects simultaneously
+   - The multiplication of L₁ and L₃ creates a coupling effect that emphasizes both moment reconstruction and parameter accuracy simultaneously
+   - The parameter validation loss (L₂) is weighted separately with coefficient β
    - Where α and β are weighting coefficients that balance the components
    - Default values: α = 0.3, β = 0.7 (prioritizing parameter validation loss)
 
@@ -106,9 +108,9 @@ The NNAE architecture employs a specialized tri-component loss function:
 
 2. Loss Calculation:
    - Calculate moment reconstruction loss between input moments and decoder output
-   - Calculate parameter validation loss between input and fit function output
+   - Calculate parameter validation loss between decoder moments and moments from function generated with estimated parameters
    - Calculate parameter accuracy loss between true and predicted parameters
-   - Combine losses using the formula α·L₁·L₂ + β·L₃
+   - Combine losses using the formula α·L₁·L₃ + β·L₂
 
 3. Backward Pass:
    - Gradients flow through all components based on the active training step

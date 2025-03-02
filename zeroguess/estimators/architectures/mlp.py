@@ -19,7 +19,7 @@ class MLPNetwork(nn.Module):
         n_output_params: int,
         hidden_layers: List[int] = [128, 256, 128, 64],
         activation: str = "relu",
-        dropout_rate: float = 0.1,
+        dropout_rate: float = 0.02,
         use_batch_norm: bool = True,
         use_residual: bool = False,
     ):
@@ -57,12 +57,12 @@ class MLPNetwork(nn.Module):
             # Add linear layer
             layers.append(nn.Linear(prev_size, size))
 
+            # Add activation
+            layers.append(act_fn)
+
             # Add batch normalization if requested
             if use_batch_norm:
                 layers.append(nn.BatchNorm1d(size))
-
-            # Add activation
-            layers.append(act_fn)
 
             # Add dropout for regularization
             if dropout_rate > 0:
@@ -73,6 +73,9 @@ class MLPNetwork(nn.Module):
 
         # Add output layer
         layers.append(nn.Linear(prev_size, n_output_params))
+
+        # Add sigmoid activation to ensure output is between 0 and 1
+        layers.append(nn.Sigmoid())
 
         # Create the sequential model
         self.model = nn.Sequential(*layers)
@@ -135,7 +138,7 @@ class MLPArchitecture(BaseArchitecture):
         return {
             "hidden_layers": [128, 256, 256, 128, 64],
             "activation": "relu",
-            "dropout_rate": 0.1,
+            "dropout_rate": 0.02,
             "use_batch_norm": True,
             "use_residual": False,
         }

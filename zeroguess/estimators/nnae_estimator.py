@@ -42,8 +42,8 @@ class NNAEEstimator(BaseEstimator):
             param_ranges: Dictionary of parameter ranges {param_name: (min, max)}
             independent_vars: Dictionary of independent variables {var_name: values}
             independent_vars_sampling: Dictionary of independent variables for sampling {var_name: values}
-            encoder_layers: List of layer sizes for the encoder (default: [128, 64, 32])
-            decoder_layers: List of layer sizes for the decoder (default: [32, 64, 128])
+            encoder_layers: List of layer sizes for the encoder (default: [128, 256, 256, 128, 64])
+            decoder_layers: List of layer sizes for the decoder (default: [64, 128, 256, 256, 128])
             learning_rate: Learning rate for optimizers
             alpha: Weight for the moment loss component (default: 0.5)
             beta: Weight for the parameter validation loss component (default: 0.5)
@@ -70,9 +70,9 @@ class NNAEEstimator(BaseEstimator):
         
         # Set default encoder and decoder layers if not provided
         if encoder_layers is None:
-            encoder_layers = [128, 64, 32]
+            encoder_layers = [128, 256, 256, 128, 64]
         if decoder_layers is None:
-            decoder_layers = [32, 64, 128]
+            decoder_layers = [64, 128, 256, 256, 128]
             
         self.encoder_layers = encoder_layers
         self.decoder_layers = decoder_layers
@@ -384,7 +384,9 @@ class NNAEEstimator(BaseEstimator):
         if encoder_lr is None:
             encoder_lr = self.learning_rate
         optimizer = torch.optim.Adam(encoder.parameters(), lr=encoder_lr)
-        
+        # print(f"Encoder optimizer: {optimizer}")
+        # print(f"Encoder network: {encoder}")
+
         # Loss function (mean squared error)
         loss_fn = nn.MSELoss()
         
@@ -414,6 +416,11 @@ class NNAEEstimator(BaseEstimator):
                 # Backward pass
                 optimizer.zero_grad()
                 loss.backward()
+                
+                # Apply gradient clipping to prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(encoder.parameters(), max_norm=1.0)
+                
+                # Update weights
                 optimizer.step()
                 
                 # Update metrics
@@ -422,6 +429,9 @@ class NNAEEstimator(BaseEstimator):
             # Calculate average training loss
             train_loss /= len(encoder_train_loader.dataset)
             history['train_loss'].append(train_loss)
+            
+            # Log more frequently during initial epochs
+            log_interval = 5 if epoch < 20 else 10
             
             # Validation phase
             if encoder_val_loader:
@@ -448,13 +458,13 @@ class NNAEEstimator(BaseEstimator):
                 history['val_loss'].append(val_loss)
                 
                 # Log progress
-                if verbose and (epoch + 1) % 10 == 0:
+                if verbose and (epoch + 1) % log_interval == 0:
                     print(f"Encoder Epoch {epoch + 1}/{n_epochs} - "
                           f"Loss: {train_loss:.4f} - "
                           f"Val Loss: {val_loss:.4f}")
             else:
                 # Log progress without validation
-                if verbose and (epoch + 1) % 10 == 0:
+                if verbose and (epoch + 1) % log_interval == 0:
                     print(f"Encoder Epoch {epoch + 1}/{n_epochs} - "
                           f"Loss: {train_loss:.4f}")
         
@@ -516,6 +526,11 @@ class NNAEEstimator(BaseEstimator):
                 # Backward pass
                 optimizer.zero_grad()
                 loss.backward()
+                
+                # Apply gradient clipping to prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(decoder.parameters(), max_norm=1.0)
+                
+                # Update weights
                 optimizer.step()
                 
                 # Update metrics
@@ -524,6 +539,9 @@ class NNAEEstimator(BaseEstimator):
             # Calculate average training loss
             train_loss /= len(decoder_train_loader.dataset)
             history['train_loss'].append(train_loss)
+            
+            # Log more frequently during initial epochs
+            log_interval = 5 if epoch < 20 else 10
             
             # Validation phase
             if decoder_val_loader:
@@ -553,13 +571,13 @@ class NNAEEstimator(BaseEstimator):
                 history['val_loss'].append(val_loss)
                 
                 # Log progress
-                if verbose and (epoch + 1) % 10 == 0:
+                if verbose and (epoch + 1) % log_interval == 0:
                     print(f"Decoder Epoch {epoch + 1}/{n_epochs} - "
                           f"Loss: {train_loss:.4f} - "
                           f"Val Loss: {val_loss:.4f}")
             else:
                 # Log progress without validation
-                if verbose and (epoch + 1) % 10 == 0:
+                if verbose and (epoch + 1) % log_interval == 0:
                     print(f"Decoder Epoch {epoch + 1}/{n_epochs} - "
                           f"Loss: {train_loss:.4f}")
         
@@ -590,7 +608,9 @@ class NNAEEstimator(BaseEstimator):
         loss_fn = _NNAELoss(
             fit_function=self.function,
             indep_vars=self.independent_vars_sampling,
-            param_ranges=self.param_ranges
+            param_ranges=self.param_ranges,
+            alpha=self.alpha,
+            beta=self.beta
         )
         
         # Create moment calculator for input data
@@ -636,6 +656,11 @@ class NNAEEstimator(BaseEstimator):
                 # Backward pass
                 optimizer.zero_grad()
                 loss.backward()
+                
+                # Apply gradient clipping to prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=1.0)
+                
+                # Update weights
                 optimizer.step()
                 
                 # Update metrics
@@ -657,6 +682,9 @@ class NNAEEstimator(BaseEstimator):
             history['train_moment_loss'].append(train_moment_loss)
             history['train_param_valid_loss'].append(train_param_valid_loss)
             history['train_param_accuracy_loss'].append(train_param_accuracy_loss)
+            
+            # Log more frequently during initial epochs
+            log_interval = 5 if epoch < 20 else 10
             
             # Validation phase
             if val_loader:
@@ -704,7 +732,7 @@ class NNAEEstimator(BaseEstimator):
                 history['val_param_accuracy_loss'].append(val_param_accuracy_loss)
                 
                 # Log progress
-                if verbose and (epoch + 1) % 10 == 0:
+                if verbose and (epoch + 1) % log_interval == 0:
                     print(
                         f"Epoch {epoch + 1}/{n_epochs} - "
                         f"Loss: {train_loss:.4f} - "
@@ -718,7 +746,7 @@ class NNAEEstimator(BaseEstimator):
                     )
             else:
                 # Log progress without validation
-                if verbose and (epoch + 1) % 10 == 0:
+                if verbose and (epoch + 1) % log_interval == 0:
                     print(
                         f"Epoch {epoch + 1}/{n_epochs} - "
                         f"Loss: {train_loss:.4f} - "
@@ -903,7 +931,7 @@ class NNAEEstimator(BaseEstimator):
 
 
 class MomentCalculator(nn.Module):
-    """Utility to calculate the first N central moments of a function."""
+    """Utility to calculate the first N central moments of a function using log-scale."""
     
     def __init__(self, n_moments=10):
         """Initialize the moment calculator.
@@ -913,15 +941,16 @@ class MomentCalculator(nn.Module):
         """
         super().__init__()
         self.n_moments = n_moments
+        self.epsilon = 1e-10  # Small value to prevent division by zero and log(0)
     
     def calculate_moments(self, y: torch.Tensor) -> torch.Tensor:
-        """Calculate the first n_moments central moments of the function.
+        """Calculate the first n_moments central moments of the function in log-scale.
         
         Args:
             y: Function values [batch_size, function_length]
             
         Returns:
-            Tensor of shape [batch_size, n_moments] containing the moments
+            Tensor of shape [batch_size, n_moments] containing the log-scale moments
         """
         batch_size = y.shape[0]
         moments = torch.zeros((batch_size, self.n_moments), device=y.device)
@@ -932,27 +961,43 @@ class MomentCalculator(nn.Module):
             
             # Mean (first moment)
             mean = torch.mean(y_sample)
-            moments[i, 0] = mean
+            std = torch.std(y_sample) + self.epsilon
+            
+            # Store log-scaled mean with sign preservation
+            # log(|x| + ε) * sign(x)
+            mean_sign = torch.sign(mean)
+            log_abs_mean = torch.log(torch.abs(mean) + self.epsilon)
+            moments[i, 0] = log_abs_mean * mean_sign
             
             # Central moments (2 to n_moments)
             for j in range(1, self.n_moments):
-                # For j=1: variance (second central moment)
-                # For j=2: third central moment (related to skewness)
-                # For j=3: fourth central moment (related to kurtosis)
-                # etc.
+                # Calculate raw central moment
                 central_moment = torch.mean((y_sample - mean) ** (j + 1))
-                moments[i, j] = central_moment
+                
+                # Normalize by appropriate power of standard deviation
+                normalized_moment = central_moment / (std ** (j + 1) + self.epsilon)
+                
+                # Apply log-scale with sign preservation
+                moment_sign = torch.sign(normalized_moment)
+                log_abs_moment = torch.log(torch.abs(normalized_moment) + self.epsilon)
+                
+                # Store the log-scale moment
+                moments[i, j] = log_abs_moment * moment_sign
+                
+                # Apply additional normalization to keep values in a reasonable range
+                # Clip to prevent extreme values
+                moments[i, j] = torch.clamp(moments[i, j], -10.0, 10.0)
         
         return moments
     
     def forward(self, y: torch.Tensor) -> torch.Tensor:
-        """Forward pass to calculate moments (same as calculate_moments).
+        """Forward pass to calculate log-scale moments.
         
         Args:
             y: Function values [batch_size, function_length]
             
         Returns:
-            Tensor of shape [batch_size, n_moments] containing the moments
+            Tensor of shape [batch_size, n_moments] containing the log-scale moments
         """
         return self.calculate_moments(y)
 
@@ -1144,7 +1189,7 @@ class _NNAELoss:
     2. L₂: Parameter validation loss - validates parameter outputs using the fit function
     3. L₃: Parameter accuracy loss - MSE between predicted and true parameters
     
-    The combined loss is calculated as α·L₁·L₂ + β·L₃
+    The combined loss is calculated as α·L₁·L₃ + β·L₂
     """
     
     def __init__(self, fit_function, indep_vars, param_ranges, alpha=1.0, beta=0.5):
@@ -1155,7 +1200,7 @@ class _NNAELoss:
             fit_function: The function to fit parameters to
             indep_vars: Independent variables for the fit function
             param_ranges: Dictionary of parameter ranges {param_name: (min, max)}
-            alpha: Weight for the moment loss component
+            alpha: Weight for the moment loss and parameter accuracy components
             beta: Weight for the parameter validation loss component
         """
         self.fit_function = fit_function
@@ -1164,52 +1209,55 @@ class _NNAELoss:
         self.alpha = alpha
         self.beta = beta
         self.mse = nn.MSELoss()
-        
+
     def __call__(self, params, moments, true_params, input_moments):
         """
-        Compute the total loss.
+        Compute the NNAE loss.
         
         Args:
             params: Predicted parameters from the encoder
             moments: Predicted moments from the decoder
-            true_params: True parameters (for parameter accuracy loss)
-            input_moments: Target moments calculated from the input data
+            true_params: Ground truth parameters (for training)
+            input_moments: Input moments calculated from input y values
             
         Returns:
-            total_loss: The combined loss value
-            moment_loss: The moment reconstruction loss (L₁)
-            param_valid_loss: The parameter validation loss (L₂)
-            param_accuracy_loss: The parameter accuracy loss (L₃)
+            Tuple of (total_loss, moment_loss, param_valid_loss, param_accuracy_loss)
         """
-        # L₁: Moment loss - MSE between predicted and target moments
+        # L₁: Moment Reconstruction Loss
         moment_loss = self.mse(moments, input_moments)
         
-        # L₂: Parameter validation loss - validates parameter outputs using the fit function
-        param_valid_loss = self._compute_parameter_validation_loss(params)
+        # L₂: Parameter Validation Loss
+        param_valid_loss = self._compute_parameter_validation_loss(params, moments)
         
-        # L₃: Parameter accuracy loss - MSE between predicted and true parameters
+        # L₃: Parameter Accuracy Loss
         param_accuracy_loss = self.mse(params, true_params)
         
-        # Combined loss: α·L₁·L₂ + β·L₃
-        total_loss = self.alpha * moment_loss * param_valid_loss + self.beta * param_accuracy_loss
+        # Combined loss: α·L₁·L₃ + β·L₂
+        total_loss = self.alpha * moment_loss * param_accuracy_loss + self.beta * param_valid_loss
         
         return total_loss, moment_loss, param_valid_loss, param_accuracy_loss
         
-    def _compute_parameter_validation_loss(self, params):
+    def _compute_parameter_validation_loss(self, params, moments):
         """
-        Compute parameter validation loss by checking if parameters produce valid outputs.
+        Compute parameter validation loss (L₂) by comparing decoder moments with
+        moments calculated from function values generated using the predicted parameters.
         
-        This tests if the parameters predicted by the encoder produce valid outputs
-        when used with the fit function.
+        This validates that the decoder's predicted moments match the actual moments
+        of the function when using the estimated parameters.
         
         Args:
             params: Predicted parameters from the encoder (normalized to [0,1])
+            moments: Moments predicted by the decoder
             
         Returns:
-            loss: Parameter validation loss
+            loss: Parameter validation loss (MSE between predicted moments and moments 
+                  calculated from function values using predicted parameters)
         """
         batch_size = params.shape[0]
-        loss = torch.tensor(0.0, device=params.device)
+        device = params.device
+        
+        # Initialize an array to store the function moments for each sample in the batch
+        computed_moments = torch.zeros_like(moments)
         
         # Unnormalize parameters
         unnormalized_params = {}
@@ -1218,18 +1266,31 @@ class _NNAELoss:
             param_values = params[:, i].detach().cpu().numpy() * (max_val - min_val) + min_val
             unnormalized_params[param_name] = param_values
         
-        try:
-            for i in range(batch_size):
+        # Create moment calculator
+        moment_calculator = MomentCalculator(n_moments=moments.shape[1]).to(device)
+        
+        # Loop through each sample in the batch
+        for i in range(batch_size):
+            try:
+                # Extract parameters for this sample
                 sample_params = {k: v[i] for k, v in unnormalized_params.items()}
                 
-                # Check if parameters produce valid outputs
-                result = self.fit_function(self.indep_vars, **sample_params)
+                # Calculate function values using these parameters
+                x_values = next(iter(self.indep_vars.values()))  # Get the first independent variable's values
+                y_values = self.fit_function(x_values, **sample_params)
                 
-                # If result contains NaN or infinity, add penalty to loss
-                if not np.all(np.isfinite(result)):
-                    loss += torch.tensor(1.0, device=params.device)
-        except Exception as e:
-            # If an exception occurs, add penalty to loss
-            loss += torch.tensor(float(batch_size), device=params.device)
+                # Convert to tensor and move to the correct device
+                y_tensor = torch.tensor(y_values, dtype=torch.float32, device=device).unsqueeze(0)
+                
+                # Calculate moments from these function values
+                computed_moments[i] = moment_calculator(y_tensor)
+                
+            except Exception:
+                # If there's an error, set computed moments to zeros
+                # This will naturally create a high loss for invalid parameters
+                pass
         
-        return loss / batch_size 
+        # Calculate MSE between predicted moments and computed moments
+        loss = self.mse(moments, computed_moments)
+        
+        return loss 

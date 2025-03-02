@@ -48,8 +48,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         independent_vars_sampling: Dict[str, np.ndarray],
         architecture: str = "best",
         architecture_params: Optional[Dict[str, Any]] = None,
-        learning_rate: float = 0.0001,
-        weight_decay: float = 0.0001,
+        learning_rate: float = 0.001,
+        weight_decay: float = 0.00001,
         device: Optional[str] = None,
         **kwargs,
     ):
@@ -243,9 +243,13 @@ class NeuralNetworkEstimator(BaseEstimator):
                 lr=self.learning_rate,
                 weight_decay=self.weight_decay,
             )
+            # print(f"Encoder optimizer: {optimizer}")
+            # print(f"Network: {self.network}")
 
             # Define loss function
             criterion = nn.MSELoss()
+
+            print(f"Starting training on {self.architecture_name} architecture with {n_epochs} epochs, {n_samples} samples, {batch_size} batch size on {self.device} device")
 
             # Training loop
             completed_epochs = 0

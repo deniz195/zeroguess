@@ -371,7 +371,7 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
     # Run comparison with ZeroGuess
 
     print("Training ZeroGuess estimator...")
-    model_zg.zeroguess_train(n_epochs=500)
+    model_zg.zeroguess_train(n_epochs=500, n_samples=5000, device="cpu")
     lmfit_method = "least_squares"  # baseline 25.0%
     # lmfit_method = 'basinhopping' # baseline 85.0%
     # lmfit_method = 'ampgo' # baseline 90.0%
@@ -552,23 +552,23 @@ def generate_lmfit_comparison_report(results_df, output_dir, tolerance=DEFAULT_T
     plt.close()
 
     # Create HTML report
-    html_content = """
+    html_content = f"""  
     <!DOCTYPE html>
     <html>
     <head>
         <title>ZeroGuess Benchmark: Direct Comparison with lmfit</title>
         <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; }}
-            h1, h2 {{ color: #333; }}
-            table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-            th {{ background-color: #f2f2f2; }}
-            tr:nth-child(even) {{ background-color: #f9f9f9; }}
-            .success {{ color: green; }}
-            .failure {{ color: red; }}
-            .summary-container {{ display: flex; flex-wrap: wrap; }}
-            .summary-section {{ flex: 1; min-width: 300px; margin-right: 20px; }}
-            img {{ max-width: 100%; height: auto; margin-top: 20px; }}
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1, h2 { color: #333; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .success { color: green; }
+            .failure { color: red; }
+            .summary-container { display: flex; flex-wrap: wrap; }
+            .summary-section { flex: 1; min-width: 300px; margin-right: 20px; }
+            img { max-width: 100%; height: auto; margin-top: 20px; }
         </style>
     </head>
     <body>

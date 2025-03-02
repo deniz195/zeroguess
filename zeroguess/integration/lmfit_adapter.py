@@ -171,7 +171,7 @@ class Model(lmfit.Model):
 
         return param_ranges
 
-    def _initialize_estimator(self, n_epochs=None):
+    def _initialize_estimator(self, device=None, **train_kwargs):
         """Initialize and train the parameter estimator."""
         try:
 
@@ -199,13 +199,11 @@ class Model(lmfit.Model):
                 function=self.func,
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
+                device=device,
             )
 
             # Train the estimator
-            if n_epochs is not None:
-                self._estimator.train(n_epochs=n_epochs)
-            else:
-                self._estimator.train()
+            self._estimator.train(**train_kwargs)
         except Exception as e:
             # If initialization or training fails, log the error and set estimator to None
             import warnings
@@ -231,15 +229,12 @@ class Model(lmfit.Model):
 
         return params
 
-    def zeroguess_train(self, n_epochs=None):
+    def zeroguess_train(self, device=None, **train_kwargs):
         """Train the parameter estimator."""
         if self._estimator is None:
-            self._initialize_estimator(n_epochs=n_epochs)
+            self._initialize_estimator(device=device, **train_kwargs)
         else:
-            if n_epochs is not None:
-                self._estimator.train(n_epochs=n_epochs)
-            else:
-                self._estimator.train()
+            self._estimator.train(**train_kwargs)
 
     def guess(self, data, **kwargs) -> lmfit.Parameters:  # noqa: C901
         """Guess initial parameter values based on data.

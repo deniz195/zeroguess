@@ -464,5 +464,5 @@ class WaveletFunction(FittingFunction):
             Function values at the specified points
         """
         envelope = np.exp(-((x - position) ** 2) / (2 * width**2))
-        wave = np.sin(2 * np.pi * frequency * x + phase)
+        wave = np.sin(2 * np.pi * frequency * (x - position) + phase)
         return envelope * wave

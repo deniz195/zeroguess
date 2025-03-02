@@ -35,15 +35,16 @@ from zeroguess.utils.visualization import (
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epochs=1000):
+def example_nnae_estimator(true_params, x_data, y_data, x_sampling, n_epochs, n_samples):
     """Example of using the NNAE estimator.
 
     Args:
         true_params: Dictionary of true parameter values to use
         x_data: Independent variable values for fitting
         y_data: Dependent variable values (noisy data) for fitting
-        x_sampling: Optional pre-defined sampling points for training
+        x_sampling: pre-defined sampling points for training
         n_epochs: Number of training epochs
+        n_samples: Number of training samples
     """
     print("\n=========================================================")
     print("Running example: NNAE Estimator (Wavelet)")
@@ -81,8 +82,11 @@ def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epoch
 
     # Train the NNAE estimator
     nnae_training_results = nnae_estimator.train(
-        n_samples=1000,
-        n_epochs=n_epochs,
+        n_samples=n_samples,
+        encoder_epochs=n_epochs,
+        decoder_epochs=10,
+        end_to_end_epochs=10,
+        # n_epochs=n_epochs,
         batch_size=32,
         validation_split=0.2,
         verbose=True,
@@ -93,7 +97,7 @@ def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epoch
     nnae_estimated_params = nnae_estimator.predict(x=x_data, y=y_data)
     print("NNAE estimated parameters:")
     for param, value in nnae_estimated_params.items():
-        print(f"  {param}: {value:.6f}")
+        print(f"  {param}: {value:.6f} (true: {true_params[param]:.6f})")
 
     # For comparison, create and train standard neural network estimator
     print("\nCreating and training standard neural network estimator for comparison...")
@@ -109,7 +113,7 @@ def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epoch
 
     # Train the standard neural network estimator
     nn_training_results = nn_estimator.train(
-        n_samples=1000,
+        n_samples=n_samples,
         n_epochs=n_epochs,
         batch_size=32,
         validation_split=0.2,
@@ -121,7 +125,7 @@ def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epoch
     nn_estimated_params = nn_estimator.predict(x_data, y_data)
     print("Standard NN estimated parameters:")
     for param, value in nn_estimated_params.items():
-        print(f"  {param}: {value:.6f}")
+        print(f"  {param}: {value:.6f} (true: {true_params[param]:.6f})")
 
     # Use NNAE estimated parameters for curve fitting
     print("\nPerforming curve fitting with NNAE estimated parameters...")
@@ -150,7 +154,7 @@ def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epoch
     }
     print("Fitted parameters (using NNAE estimates as initial guess):")
     for param, value in fitted_params.items():
-        print(f"  {param}: {value:.6f}")
+        print(f"  {param}: {value:.6f} (true: {true_params[param]:.6f})")
 
     # Plot NNAE training history
     plt.figure(figsize=(10, 6))
@@ -276,12 +280,18 @@ if __name__ == "__main__":
         default=1000,
         help="Number of training epochs (default: 1000)",
     )
+    parser.add_argument(
+        "--samples",
+        type=int,
+        default=1000,
+        help="Number of training samples (default: 1000)",
+    )
     args = parser.parse_args()
 
     # Set random seed for reproducibility unless --random flag is used
     if not args.random:
-        np.random.seed(123)
-        print("Using fixed random seed (123) for reproducible results")
+        np.random.seed(1235678)
+        print("Using fixed random seed (1235678) for reproducible results")
     else:
         print("Using truly random parameters for each run")
 
@@ -304,4 +314,4 @@ if __name__ == "__main__":
     print("\nGenerated noisy data for testing")
 
     # Run NNAE example
-    example_nnae_estimator(true_params, x_data, y_data, x_sampling, n_epochs=args.epochs) 
+    example_nnae_estimator(true_params, x_data, y_data, x_sampling, n_epochs=args.epochs, n_samples=args.samples) 
