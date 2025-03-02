@@ -90,9 +90,9 @@ The NNAE architecture employs a specialized tri-component loss function:
    - L₃ = MSE(θ_true, θ_predicted)
    - Where θ_predicted = encoder(y_input)
 
-4. **Combined Loss**: L = α·L₁·L₃ + β·L₂
+4. **Combined Loss**: L = α·L₁·L₂ + β·L₃
    - This formula balances both reconstruction quality and parameter accuracy
-   - The multiplication of L₁ and L₃ creates a coupling effect that emphasizes both aspects simultaneously
+   - The multiplication of L₁ and L₂ creates a coupling effect that emphasizes both aspects simultaneously
    - Where α and β are weighting coefficients that balance the components
    - Default values: α = 0.3, β = 0.7 (prioritizing parameter validation loss)
 
@@ -108,7 +108,7 @@ The NNAE architecture employs a specialized tri-component loss function:
    - Calculate moment reconstruction loss between input moments and decoder output
    - Calculate parameter validation loss between input and fit function output
    - Calculate parameter accuracy loss between true and predicted parameters
-   - Combine losses using the formula α·L₁·L₃ + β·L₂
+   - Combine losses using the formula α·L₁·L₂ + β·L₃
 
 3. Backward Pass:
    - Gradients flow through all components based on the active training step

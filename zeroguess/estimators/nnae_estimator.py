@@ -163,7 +163,7 @@ class NNAEEstimator(BaseEstimator):
             }
         }
     
-    def train(self, n_samples=10000, batch_size=64, epochs=50, n_epochs=None, validation_split=0.2, 
+    def train(self, n_samples=10000, batch_size=64, n_epochs=50, validation_split=0.2, 
               encoder_epochs=None, decoder_epochs=None, end_to_end_epochs=None,
               encoder_lr=None, decoder_lr=None, end_to_end_lr=None, verbose=True):
         """
@@ -177,12 +177,11 @@ class NNAEEstimator(BaseEstimator):
         Args:
             n_samples: Number of synthetic data samples to generate
             batch_size: Batch size for training
-            epochs: Default number of epochs for all training phases
-            n_epochs: Alias for epochs (for backward compatibility)
+            n_epochs: Default number of epochs for all training phases
             validation_split: Fraction of data to use for validation
-            encoder_epochs: Number of epochs for encoder training (default: epochs)
-            decoder_epochs: Number of epochs for decoder training (default: epochs)
-            end_to_end_epochs: Number of epochs for end-to-end training (default: epochs)
+            encoder_epochs: Number of epochs for encoder training (default: n_epochs // 3)
+            decoder_epochs: Number of epochs for decoder training (default: n_epochs // 3)
+            end_to_end_epochs: Number of epochs for end-to-end training (default: n_epochs // 3)
             encoder_lr: Learning rate for encoder training (default: self.learning_rate)
             decoder_lr: Learning rate for decoder training (default: self.learning_rate)
             end_to_end_lr: Learning rate for end-to-end training (default: self.learning_rate)
@@ -191,17 +190,13 @@ class NNAEEstimator(BaseEstimator):
         Returns:
             Dictionary containing training history
         """
-        # For backward compatibility, use n_epochs if provided
-        if n_epochs is not None:
-            epochs = n_epochs
-            
         # Set default epochs if not provided
         if encoder_epochs is None:
-            encoder_epochs = epochs
+            encoder_epochs = n_epochs // 3
         if decoder_epochs is None:
-            decoder_epochs = epochs
+            decoder_epochs = n_epochs // 3
         if end_to_end_epochs is None:
-            end_to_end_epochs = epochs
+            end_to_end_epochs = n_epochs // 3
             
         # Set default learning rates if not provided
         if encoder_lr is None:
@@ -1149,7 +1144,7 @@ class _NNAELoss:
     2. L₂: Parameter validation loss - validates parameter outputs using the fit function
     3. L₃: Parameter accuracy loss - MSE between predicted and true parameters
     
-    The combined loss is calculated as α·L₁·L₃ + β·L₂
+    The combined loss is calculated as α·L₁·L₂ + β·L₃
     """
     
     def __init__(self, fit_function, indep_vars, param_ranges, alpha=1.0, beta=0.5):
@@ -1195,8 +1190,8 @@ class _NNAELoss:
         # L₃: Parameter accuracy loss - MSE between predicted and true parameters
         param_accuracy_loss = self.mse(params, true_params)
         
-        # Combined loss: α·L₁·L₃ + β·L₂
-        total_loss = self.alpha * moment_loss * param_accuracy_loss + self.beta * param_valid_loss
+        # Combined loss: α·L₁·L₂ + β·L₃
+        total_loss = self.alpha * moment_loss * param_valid_loss + self.beta * param_accuracy_loss
         
         return total_loss, moment_loss, param_valid_loss, param_accuracy_loss
         
