@@ -67,10 +67,10 @@ def example_nnae_estimator(true_params, x_data, y_data, x_sampling=None, n_epoch
         estimator_type="nnae",  # Specify NNAE estimator
         architecture="mlp",     # Only MLP is supported for NNAE currently
         architecture_params={
-                    # "encoder_layers": [128, 256, 256, 128, 64],
-                    # "decoder_layers": [64, 128, 256, 256, 128],
-            "encoder_layers": [1024, 1024, 512, 256, 128, 64],
-            "decoder_layers": [64, 128, 256, 512, 1024, 1024],
+            "encoder_layers": [128, 256, 256, 128, 64],
+            "decoder_layers": [64, 128, 256, 256, 128],
+            # "encoder_layers": [1024, 1024, 512, 256, 128, 64],
+            # "decoder_layers": [64, 128, 256, 512, 1024, 1024],
             "activation": "relu",
             "dropout_rate": 0.1,
         },
