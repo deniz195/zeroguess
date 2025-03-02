@@ -249,7 +249,11 @@ class NeuralNetworkEstimator(BaseEstimator):
             # Define loss function
             criterion = nn.MSELoss()
 
-            print(f"Starting training on {self.architecture_name} architecture with {n_epochs} epochs, {n_samples} samples, {batch_size} batch size on {self.device} device")
+            print(
+                f"Starting training on {self.architecture_name} architecture "
+                f"with {n_epochs} epochs, {n_samples} samples, {batch_size} batch size "
+                f"on {self.device} device"
+            )
 
             # Training loop
             completed_epochs = 0
