@@ -19,7 +19,7 @@ from pathlib import Path
 
 # Define project directories
 PROJECT_ROOT = Path(__file__).parent.parent
-PYTHON_DIRS = ["zeroguess", "tests", "examples"]
+PYTHON_DIRS = ["zeroguess", "tests", "examples", "scripts"]
 PYTHON_DIRS_STR = " ".join(PYTHON_DIRS)
 
 
@@ -37,70 +37,72 @@ def run_command(command, description):
 def format_code(check_only=False):
     """Run code formatters."""
     success = True
-    
+
     # Run autoflake to remove unused imports
     if not check_only:
-        cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autoflake --in-place --remove-all-unused-imports --remove-unused-variables"
+        autoflake_flags = "--in-place --remove-all-unused-imports --remove-unused-variables"
+        cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autoflake {autoflake_flags}"
         success = run_command(cmd, "Removing unused imports with autoflake") and success
-    
+
     # Run isort
     check_flag = "--check-only --diff" if check_only else ""
     cmd = f"isort {check_flag} {PYTHON_DIRS_STR}"
     action = "Checking" if check_only else "Formatting"
     success = run_command(cmd, f"{action} imports with isort") and success
-    
+
     # Run autopep8 for PEP 8 fixes
     if not check_only:
         cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120"
         success = run_command(cmd, "Fixing PEP 8 issues with autopep8") and success
-    
+
     # Run black
     check_flag = "--check --diff" if check_only else ""
     cmd = f"black {check_flag} --line-length=120 {PYTHON_DIRS_STR}"
     success = run_command(cmd, f"{action} code with black") and success
-    
+
     return success
 
 
 def lint_code():
     """Run code linters."""
     success = True
-    
+
     # Run flake8
     cmd = f"flake8 {PYTHON_DIRS_STR}"
     success = run_command(cmd, "Linting code with flake8") and success
-    
+
     # # Run mypy
     # cmd = f"mypy zeroguess"
     # success = run_command(cmd, "Type checking with mypy") and success
-    
+
     # # Run vulture
     # cmd = f"vulture {PYTHON_DIRS_STR} --min-confidence=80"
     # success = run_command(cmd, "Checking for unused code with vulture") and success
-    
+
     return success
 
 
 def fix_flake8_issues():
     """Fix common flake8 issues automatically."""
     success = True
-    
+
     # Remove unused imports
-    cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autoflake --in-place --remove-all-unused-imports --remove-unused-variables"
+    autoflake_flags = "--in-place --remove-all-unused-imports --remove-unused-variables"
+    cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autoflake {autoflake_flags}"
     success = run_command(cmd, "Removing unused imports with autoflake") and success
-    
+
     # Sort imports
     cmd = f"isort {PYTHON_DIRS_STR}"
     success = run_command(cmd, "Sorting imports with isort") and success
-    
+
     # Fix PEP 8 issues
     cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120"
     success = run_command(cmd, "Fixing PEP 8 issues with autopep8") and success
-    
+
     # Format code
     cmd = f"black --line-length=120 {PYTHON_DIRS_STR}"
     success = run_command(cmd, "Formatting code with black") and success
-    
+
     return success
 
 
@@ -120,9 +122,9 @@ def main():
         help="Command to run (format, lint, check, all, pre-commit, or fix)",
     )
     args = parser.parse_args()
-    
+
     success = True
-    
+
     if args.command == "format":
         success = format_code(check_only=False)
     elif args.command == "lint":
@@ -135,14 +137,14 @@ def main():
         success = fix_flake8_issues()
     else:  # all
         success = format_code(check_only=False) and lint_code()
-    
+
     if success:
         print("\n\033[1;32mAll code quality checks passed!\033[0m")
     else:
         print("\n\033[1;31mSome code quality checks failed. Please fix the issues and try again.\033[0m")
-    
+
     return 0 if success else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())
