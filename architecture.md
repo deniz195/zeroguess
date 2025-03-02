@@ -511,7 +511,7 @@ The architecture includes several well-defined extension points:
 Since the library will run locally on a user's machine, deployment is simplified:
 
 1. **Dependencies**: 
-   - Python 3.10+
+   - Python 3.10+ (target 3.10.7)
    - PyTorch as the primary ML framework
    - SciPy and/or lmfit as fitting libraries
    - Minimal additional dependencies
