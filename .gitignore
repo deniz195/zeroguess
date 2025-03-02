@@ -90,7 +90,6 @@ trained_models/
 examples/*.png
 examples/*.pdf
 .training_cache/
-data/
 outputs/
 # Test visualization outputs
 tests/output/visualizations/

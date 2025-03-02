@@ -2,6 +2,73 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "zeroguess"
+version = "0.1.0"
+description = "Machine Learning for Curve Fitting Parameter Estimation"
+readme = "README.md"
+authors = [
+    {name = "Deniz Bozyigit", email = "deniz195@gmail.com"}
+]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+    "numpy>=1.20.0",
+    "scipy>=1.7.0",
+    "torch>=1.10.0",
+    "matplotlib>=3.5.0",
+    "tqdm>=4.62.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/deniz195/zeroguess"
+"Bug Tracker" = "https://github.com/deniz195/zeroguess/issues"
+
+[project.optional-dependencies]
+lmfit = ["lmfit>=1.0.0"]
+dev = [
+    # Testing
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-benchmark>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    
+    # Code formatting
+    "black>=23.3.0",
+    "isort>=5.12.0",
+    
+    # Linting
+    "flake8>=6.0.0",
+    "flake8-bugbear>=23.3.23",
+    "flake8-pyproject>=1.2.0",
+    "mypy>=1.3.0",
+    "vulture>=2.7",
+    
+    # Security
+    "bandit>=1.7.5",
+    "safety>=2.3.5",
+    
+    # Development tools
+    "pre-commit>=3.3.2",
+    "pip-tools>=6.13.0",
+    
+    # Documentation
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.2.0",
+]
+
+[tool.setuptools]
+packages = ["zeroguess", "zeroguess.data", "zeroguess.estimators", "zeroguess.functions", "zeroguess.utils"]
+
 [tool.flake8]
 max-line-length = 120
 extend-ignore = ["E203"]
@@ -69,4 +136,23 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "pytest.*"
-ignore_missing_imports = true 
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+''' 
