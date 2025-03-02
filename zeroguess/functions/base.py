@@ -128,7 +128,15 @@ class FittingFunction(ABC):
         """
         return f"{self.__class__.__name__}(name={self.name})"
 
-    def get_random_params(self) -> Dict[str, float]:
+    def get_canonical_params(self, params: Dict[str, float]) -> Dict[str, float]:
+        """Get the canonical parameters for the function.
+
+        Returns:
+            Dictionary of canonical parameter values.
+        """
+        return params
+
+    def get_random_params(self, canonical: bool = True) -> Dict[str, float]:
         """Generate random parameters within the defined ranges.
 
         Returns:
@@ -137,4 +145,8 @@ class FittingFunction(ABC):
         params = {}
         for param_name, (min_val, max_val) in self.param_ranges.items():
             params[param_name] = min_val + (max_val - min_val) * np.random.random()
-        return params
+        
+        if canonical:
+            return self.get_canonical_params(params)
+        else:
+            return params

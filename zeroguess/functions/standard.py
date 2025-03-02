@@ -110,6 +110,25 @@ class MultiPeakGaussianFunction(FittingFunction):
         """Return default sampling points for independent variables."""
         return {"x": np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)}
 
+    def get_canonical_params(self, params: Dict[str, float]) -> Dict[str, float]:
+        """Get the canonical parameters for the function.
+
+        Returns:
+            Dictionary of canonical parameter values.
+        """
+        # Sort the parameters by center value
+        if params["center1"] > params["center2"]:
+            params = {
+                "amplitude1": params["amplitude2"],
+                "center1": params["center2"],
+                "width1": params["width2"],
+                "amplitude2": params["amplitude1"],
+                "center2": params["center1"],
+                "width2": params["width1"],
+            }
+            
+        return params
+
     def __call__(self, x, amplitude1, center1, width1, amplitude2, center2, width2):
         """Evaluate the two-peak Gaussian function.
 
