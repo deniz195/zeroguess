@@ -11,6 +11,11 @@ name: ZeroGuess Security Checks
 #     # Run weekly security checks
 #     - cron: '0 0 * * 0'
 
+on:
+  push:
+    branches:
+      - 'deactivate-security-checks'
+
 jobs:
   security:
     runs-on: ubuntu-latest
