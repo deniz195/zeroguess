@@ -8,11 +8,7 @@ import numpy as np
 import torch
 
 from zeroguess import create_estimator
-from zeroguess.estimators.architectures import (
-    get_architecture,
-    get_architecture_info,
-    list_architectures,
-)
+from zeroguess.estimators.architectures import get_architecture, get_architecture_info, list_architectures
 from zeroguess.estimators.architectures.cnn import CNNArchitecture
 from zeroguess.estimators.architectures.mlp import MLPArchitecture
 

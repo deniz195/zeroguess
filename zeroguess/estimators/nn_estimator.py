@@ -12,11 +12,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
 from zeroguess.data.generators import SyntheticDataGenerator
-from zeroguess.estimators.architectures import (
-    get_architecture,
-    get_architecture_info,
-    list_architectures,
-)
+from zeroguess.estimators.architectures import get_architecture, get_architecture_info, list_architectures
 from zeroguess.estimators.base import BaseEstimator
 
 

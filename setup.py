@@ -50,6 +50,7 @@ setup(
             # Linting
             "flake8>=6.0.0",
             "flake8-bugbear>=23.3.23",
+            "flake8-pyproject>=1.2.0",
             # "flake8-docstrings>=1.7.0",
             # "flake8-import-order>=0.18.2",
             # "pep8-naming>=0.13.3",

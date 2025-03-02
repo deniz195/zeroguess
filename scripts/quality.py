@@ -52,7 +52,7 @@ def format_code(check_only=False):
 
     # Run autopep8 for PEP 8 fixes
     if not check_only:
-        cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120"
+        cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8"
         success = run_command(cmd, "Fixing PEP 8 issues with autopep8") and success
 
     # Run black
@@ -96,7 +96,7 @@ def fix_flake8_issues():
     success = run_command(cmd, "Sorting imports with isort") and success
 
     # Fix PEP 8 issues
-    cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8 --in-place --aggressive --max-line-length=120"
+    cmd = f"find {PYTHON_DIRS_STR} -name '*.py' | xargs autopep8"
     success = run_command(cmd, "Fixing PEP 8 issues with autopep8") and success
 
     # Format code

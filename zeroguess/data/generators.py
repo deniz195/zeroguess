@@ -1,6 +1,7 @@
 """
 Synthetic data generation for training parameter estimators.
 """
+
 import inspect
 from typing import Callable, Dict, Tuple
 

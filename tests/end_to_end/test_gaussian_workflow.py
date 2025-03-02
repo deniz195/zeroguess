@@ -13,16 +13,10 @@ from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 
 # Import the functions module components
 from zeroguess.functions import GaussianFunction, add_gaussian_noise
-from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
-    plot_training_history,
-)
+from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison, plot_training_history
 
 # Import test utilities
-from ..test_utils import (
-    calculate_parameter_error,
-)
+from ..test_utils import calculate_parameter_error
 
 # Define the output directory for visualization files
 VISUALIZATION_OUTPUT_DIR = os.path.join("tests", "output", "visualizations")

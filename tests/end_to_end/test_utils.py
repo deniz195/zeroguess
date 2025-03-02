@@ -7,10 +7,7 @@ import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
-)
+from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison
 
 # Define the output directory for visualization files
 VISUALIZATION_OUTPUT_DIR = os.path.join("tests", "output", "visualizations")

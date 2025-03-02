@@ -11,15 +11,10 @@ from zeroguess.estimators.nn_estimator import NeuralNetworkEstimator
 
 # Import the functions module components
 from zeroguess.functions import MultimodalFunction, add_gaussian_noise
-from zeroguess.utils.visualization import (
-    plot_training_history,
-)
+from zeroguess.utils.visualization import plot_training_history
 
 # Import test utilities
-from ..test_utils import (
-    calculate_curve_fit_quality,
-    calculate_parameter_error,
-)
+from ..test_utils import calculate_curve_fit_quality, calculate_parameter_error
 
 # Import end-to-end test utilities
 from .test_utils import (

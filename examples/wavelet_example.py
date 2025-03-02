@@ -26,11 +26,7 @@ import numpy as np
 
 import zeroguess
 from zeroguess.integration import scipy_integration
-from zeroguess.utils.visualization import (
-    plot_fit_comparison,
-    plot_parameter_comparison,
-    plot_training_history,
-)
+from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison, plot_training_history
 
 # Check if lmfit is installed
 try:
