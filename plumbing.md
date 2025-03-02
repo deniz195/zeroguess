@@ -12,9 +12,9 @@ This file describes the ZeroGuess project's coding and linting standards, CI/CD 
 ### Linting
 - **Flake8**: We use Flake8 for linting with the following plugins:
   - flake8-bugbear: For detecting potential bugs
-  - flake8-docstrings: For docstring style checking
-  - flake8-import-order: For import order checking
-  - pep8-naming: For PEP 8 naming convention checking
+  - flake8-docstrings: For docstring style checking (disabled)
+  - flake8-import-order: For import order checking (disabled)
+  - pep8-naming: For PEP 8 naming convention checking (disabled)
 
 ### Type Checking
 - **mypy**: We use mypy for static type checking with strict mode enabled.
