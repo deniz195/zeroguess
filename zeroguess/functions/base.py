@@ -111,6 +111,15 @@ class FittingFunction(ABC):
             y = self(**indep_vars, **params)
             return indep_vars.copy(), y
 
+    @property
+    def __name__(self) -> str:
+        """Return the name of the function.
+
+        Returns:
+            The function's name as a string.
+        """
+        return self.name
+
     def __repr__(self) -> str:
         """Return a string representation of the function.
 

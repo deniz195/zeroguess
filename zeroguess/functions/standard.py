@@ -79,30 +79,30 @@ class MultiPeakGaussianFunction(FittingFunction):
     @property
     def name(self) -> str:
         """Return the name of the function."""
-        return "Two-Peak Gaussian Function"
+        return "double_gaussian"
 
     @property
     def param_ranges(self) -> Dict[str, Tuple[float, float]]:
         """Return the default parameter ranges."""
         return {
-            "amplitude_1": (0.1, 10.0),
-            "center_1": (-5.0, 5.0),
-            "width_1": (0.1, 2.0),
-            "amplitude_2": (0.1, 10.0),
-            "center_2": (-5.0, 5.0),
-            "width_2": (0.1, 2.0),
+            "amplitude1": (0.1, 10.0),
+            "center1": (-5.0, 5.0),
+            "width1": (0.1, 2.0),
+            "amplitude2": (0.1, 10.0),
+            "center2": (-5.0, 5.0),
+            "width2": (0.1, 2.0),
         }
 
     @property
     def param_descriptions(self) -> Dict[str, str]:
         """Return descriptions of what each parameter controls."""
         return {
-            "amplitude_1": "Peak height of the first Gaussian peak",
-            "center_1": "Position of the center of the first peak",
-            "width_1": "Width of the first peak (standard deviation)",
-            "amplitude_2": "Peak height of the second Gaussian peak",
-            "center_2": "Position of the center of the second peak",
-            "width_2": "Width of the second peak (standard deviation)",
+            "amplitude1": "Peak height of the first Gaussian peak",
+            "center1": "Position of the center of the first peak",
+            "width1": "Width of the first peak (standard deviation)",
+            "amplitude2": "Peak height of the second Gaussian peak",
+            "center2": "Position of the center of the second peak",
+            "width2": "Width of the second peak (standard deviation)",
         }
 
     @property
@@ -110,29 +110,29 @@ class MultiPeakGaussianFunction(FittingFunction):
         """Return default sampling points for independent variables."""
         return {"x": np.linspace(-10.0, 10.0, DEFAULT_N_INDEPENDENT_POINTS)}
 
-    def __call__(self, x, amplitude_1, center_1, width_1, amplitude_2, center_2, width_2):
+    def __call__(self, x, amplitude1, center1, width1, amplitude2, center2, width2):
         """Evaluate the two-peak Gaussian function.
 
         Args:
             x: Independent variable values
-            amplitude_1: Peak height of the first Gaussian peak
-            center_1: Position of the center of the first peak
-            width_1: Width of the first peak (standard deviation)
-            amplitude_2: Peak height of the second Gaussian peak
-            center_2: Position of the center of the second peak
-            width_2: Width of the second peak (standard deviation)
+            amplitude1: Peak height of the first Gaussian peak
+            center1: Position of the center of the first peak
+            width1: Width of the first peak (standard deviation)
+            amplitude2: Peak height of the second Gaussian peak
+            center2: Position of the center of the second peak
+            width2: Width of the second peak (standard deviation)
 
         Returns:
             Function values at the specified points
         """
         # Calculate the first Gaussian peak
-        peak_1 = amplitude_1 * np.exp(-((x - center_1) ** 2) / (2 * width_1**2))
+        peak1 = amplitude1 * np.exp(-((x - center1) ** 2) / (2 * width1**2))
 
         # Calculate the second Gaussian peak
-        peak_2 = amplitude_2 * np.exp(-((x - center_2) ** 2) / (2 * width_2**2))
+        peak2 = amplitude2 * np.exp(-((x - center2) ** 2) / (2 * width2**2))
 
         # Sum the peaks
-        return peak_1 + peak_2
+        return peak1 + peak2
 
 
 class MultimodalFunction(FittingFunction):
