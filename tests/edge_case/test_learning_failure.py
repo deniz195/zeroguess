@@ -54,6 +54,7 @@ class FailingEstimator:
                     warnings.warn(
                         "Training may not have converged. Loss is not decreasing sufficiently.",
                         MockConvergenceWarning,
+                        stacklevel=2,
                     )
                     break
                 else:  # silent failure

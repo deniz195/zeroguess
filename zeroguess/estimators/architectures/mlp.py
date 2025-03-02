@@ -2,7 +2,7 @@
 Multilayer Perceptron (MLP) architecture for ZeroGuess.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
@@ -17,7 +17,7 @@ class MLPNetwork(nn.Module):
         self,
         n_input_features: int,
         n_output_params: int,
-        hidden_layers: List[int] = [128, 256, 128, 64],
+        hidden_layers: Optional[List[int]] = None,
         activation: str = "relu",
         dropout_rate: float = 0.02,
         use_batch_norm: bool = True,
@@ -36,6 +36,10 @@ class MLPNetwork(nn.Module):
         """
         super().__init__()
 
+        # Default hidden layers
+        if hidden_layers is None:
+            hidden_layers = [128, 256, 128, 64]
+
         # Select activation function
         if activation == "relu":
             act_fn = nn.ReLU()
@@ -53,7 +57,7 @@ class MLPNetwork(nn.Module):
         prev_size = n_input_features
 
         # Add hidden layers
-        for i, size in enumerate(hidden_layers):
+        for _, size in enumerate(hidden_layers):
             # Add linear layer
             layers.append(nn.Linear(prev_size, size))
 

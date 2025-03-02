@@ -21,7 +21,7 @@ try:
     HAS_LMFIT = True
 except ImportError:
     HAS_LMFIT = False
-    warnings.warn("lmfit package is not installed. The lmfit tests will be skipped.")
+    warnings.warn("lmfit package is not installed. The lmfit tests will be skipped.", stacklevel=2)
 
 # Import the real ZeroGuess lmfit integration
 try:
@@ -30,7 +30,7 @@ try:
     HAS_ZEROGUESS = True
 except ImportError:
     HAS_ZEROGUESS = False
-    warnings.warn("ZeroGuess is not available. The tests will be skipped.")
+    warnings.warn("ZeroGuess is not available. The tests will be skipped.", stacklevel=2)
 
 # Create marker to skip tests if lmfit is not available
 requires_lmfit = pytest.mark.skipif(not HAS_LMFIT, reason="lmfit is required for this test")
@@ -136,7 +136,7 @@ class TestLmfitIntegration:
 
         # Check that some parameters are invalid (-inf)
         has_invalid_params = False
-        for param_name, param in guessed_params.items():
+        for _, param in guessed_params.items():
             if not np.isfinite(param.value) or param.value == float("-inf"):
                 has_invalid_params = True
                 break

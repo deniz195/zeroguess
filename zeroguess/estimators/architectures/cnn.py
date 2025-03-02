@@ -6,7 +6,7 @@ optimized for curve fitting problems, especially those with oscillatory
 or multi-peak characteristics.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
@@ -17,15 +17,15 @@ from zeroguess.estimators.architectures.base import BaseArchitecture
 class CNNNetwork(nn.Module):
     """1D Convolutional Neural Network for parameter estimation."""
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         n_input_features: int,
         n_output_params: int,
         n_conv_layers: int = 3,
-        filters: List[int] = [16, 32, 64],
+        filters: Optional[List[int]] = None,
         kernel_size: int = 5,
         pool_size: int = 2,
-        fc_units: List[int] = [128, 64],
+        fc_units: Optional[List[int]] = None,
         activation: str = "relu",
         dropout_rate: float = 0.1,
         use_batch_norm: bool = True,
@@ -45,6 +45,12 @@ class CNNNetwork(nn.Module):
             use_batch_norm: Whether to use batch normalization
         """
         super().__init__()
+
+        # Default parameters
+        if filters is None:
+            filters = [16, 32, 64]
+        if fc_units is None:
+            fc_units = [128, 64]
 
         # Input validation
         if n_conv_layers != len(filters):

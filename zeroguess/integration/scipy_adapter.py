@@ -77,7 +77,8 @@ def curve_fit(
         import warnings
 
         warnings.warn(
-            "Initial parameter guess (p0) already provided. " "ZeroGuess's parameter estimation will be ignored."
+            "Initial parameter guess (p0) already provided. " "ZeroGuess's parameter estimation will be ignored.",
+            stacklevel=2,
         )
     else:
         kwargs["p0"] = p0

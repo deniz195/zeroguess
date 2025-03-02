@@ -1138,7 +1138,7 @@ class _ResidualDecoder(nn.Module):
         main = nn.functional.relu(main)
 
         # Process through hidden layers with residual connections
-        for i, (layer, bn, dropout, res_proj) in enumerate(
+        for _, (layer, bn, dropout, res_proj) in enumerate(
             zip(self.layers, self.batch_norms, self.dropouts, self.residual_projections)
         ):
             # Skip connection from input parameters

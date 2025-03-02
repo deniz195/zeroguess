@@ -67,7 +67,7 @@ class TestDataGeneration:
         assert set(param_sets.keys()) == set(param_ranges.keys())
 
         # Check that the correct number of samples is generated
-        for param_name, values in param_sets.items():
+        for _, values in param_sets.items():
             assert len(values) == num_samples
 
         # Check that values are within the specified ranges
@@ -105,6 +105,6 @@ class TestDataGeneration:
         # This is a more detailed test that would depend on the actual implementation
         # For now, we'll just check that outputs are not None or empty
         for output in outputs:
-            for var_name, values in output.items():
+            for _, values in output.items():
                 assert values is not None
                 assert len(values) > 0

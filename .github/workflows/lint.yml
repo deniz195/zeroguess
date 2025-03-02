@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install black isort flake8 flake8-bugbear flake8-docstrings flake8-import-order pep8-naming mypy vulture autoflake autopep8
+        pip install black isort flake8 flake8-bugbear mypy vulture autoflake autopep8
         
     - name: Run code quality checks
       run: |

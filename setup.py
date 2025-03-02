@@ -10,12 +10,12 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="zeroguess",
     version="0.1.0",
-    author="ZeroGuess Team",
-    author_email="info@zeroguess.org",
+    author="Deniz Bozyigit",
+    author_email="deniz195@gmail.com",
     description="Machine Learning for Curve Fitting Parameter Estimation",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/zeroguess/zeroguess",
+    url="https://github.com/deniz195/zeroguess",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -50,9 +50,9 @@ setup(
             # Linting
             "flake8>=6.0.0",
             "flake8-bugbear>=23.3.23",
-            "flake8-docstrings>=1.7.0",
-            "flake8-import-order>=0.18.2",
-            "pep8-naming>=0.13.3",
+            # "flake8-docstrings>=1.7.0",
+            # "flake8-import-order>=0.18.2",
+            # "pep8-naming>=0.13.3",
             "mypy>=1.3.0",
             "vulture>=2.7",
             

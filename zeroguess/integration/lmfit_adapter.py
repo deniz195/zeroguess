@@ -210,7 +210,8 @@ class Model(lmfit.Model):
 
             warnings.warn(
                 f"Failed to initialize or train parameter estimator: {str(e)}. "
-                f"Parameter estimation will be disabled."
+                f"Parameter estimation will be disabled.",
+                stacklevel=2,
             )
             self._estimator = None
 
