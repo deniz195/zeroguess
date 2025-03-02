@@ -28,4 +28,5 @@ jobs:
         
     - name: Run code quality checks
       run: |
+        flake8 --help
         python scripts/quality.py check 
