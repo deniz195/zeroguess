@@ -779,6 +779,7 @@ Version numbers are stored in `zeroguess/__init__.py` as `__version__`.
 
 3. **Version Bump**:
    - Update version in `zeroguess/__init__.py`
+   - Update version in `pyproject.toml`
    - Commit the version bump: `git commit -am "Bump version to X.Y.Z"`
    - Create a tag: `git tag vX.Y.Z`
    - Push changes and tag: `git push && git push --tags`
@@ -842,6 +843,6 @@ Version numbers are stored in `zeroguess/__init__.py` as `__version__`.
 
 ### Automation
 
-The release process can be partially automated using GitHub Actions. A workflow file at `.github/workflows/publish.yml` can handle the building and publishing steps:
+The release process can be partially automated using GitHub Actions. A workflow file at `.github/workflows/release.yml` can handle the building and publishing steps:
 
 With this workflow, publishing to PyPI is triggered automatically when a new GitHub release is created.
