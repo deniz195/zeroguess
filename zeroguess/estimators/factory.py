@@ -55,21 +55,7 @@ def create_estimator(
             **kwargs,
         )
     elif estimator_type == "nnae":
-        # Import here to avoid circular imports
-        from zeroguess.estimators.nnae_estimator import NNAEEstimator
-
-        # Handle architecture selection
-        if architecture_params is None:
-            architecture_params = {}
-
-        return NNAEEstimator(
-            function=function,
-            param_ranges=param_ranges,
-            independent_vars_sampling=independent_vars_sampling,
-            architecture=architecture,
-            architecture_params=architecture_params,
-            **kwargs,
-        )
+        raise ValueError('Estimator type "nnae" is not supported yet. Use "neural_network" instead.')
     else:
         raise ValueError(f"Unknown estimator type: {estimator_type}")
 
