@@ -22,8 +22,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from zeroguess.functions.standard import DoubleSigmoidFunction, DoubleGaussianFunction, WaveletFunction
-from zeroguess.functions.utils import add_gaussian_noise
+from zeroguess.functions import DoubleGaussianFunction, DoubleSigmoidFunction, WaveletFunction, add_gaussian_noise
 from zeroguess.integration import lmfit_integration
 
 # Create output directory
@@ -211,7 +210,9 @@ def visualize_fit(
     plt.close()
 
 
-def run_lmfit_comparison_benchmark(function_name, n_samples=50, noise_level=0.05, tolerance=DEFAULT_TOLERANCE):  # noqa: C901
+def run_lmfit_comparison_benchmark(  # noqa: C901
+    function_name, n_samples=50, noise_level=0.05, tolerance=DEFAULT_TOLERANCE
+):
     """Run benchmark comparing ZeroGuess with lmfit.
 
     Args:

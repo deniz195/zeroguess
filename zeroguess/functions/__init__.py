@@ -1,45 +1,32 @@
 """
-Fitting function collection for ZeroGuess.
+Functions module for ZeroGuess.
 
-This submodule provides a collection of pre-defined fitting functions commonly
-used in curve fitting applications, each encapsulated in a class that provides
-the function implementation, default parameter ranges, and default independent
-variable sampling points.
-
-Each function class also provides parameter descriptions to help users understand
-what each parameter controls.
+This module provides implementations of common fitting functions
+used in curve fitting applications.
 """
 
-# Import the base class
 from zeroguess.functions.base import FittingFunction
+from zeroguess.functions.damped_sine import DampedSineFunction
+from zeroguess.functions.double_gaussian import DoubleGaussianFunction
+from zeroguess.functions.double_sigmoid import DoubleSigmoidFunction
+from zeroguess.functions.gaussian import GaussianFunction
+from zeroguess.functions.linear import LinearFunction
+from zeroguess.functions.multimodal import MultimodalFunction
+from zeroguess.functions.sigmoid import SigmoidFunction
 
-# Import standard functions
-from zeroguess.functions.standard import (
-    DampedSineFunction,
-    DoubleSigmoidFunction,
-    GaussianFunction,
-    LinearFunction,
-    MultimodalFunction,
-    DoubleGaussianFunction,
-    SigmoidFunction,
-)
+# Import utilities
+from zeroguess.functions.utils import add_gaussian_noise
+from zeroguess.functions.wavelet import WaveletFunction
 
-# Import utility functions
-from zeroguess.functions.utils import add_gaussian_noise, signal_to_noise_ratio
-
-# Define what's available to import with 'from zeroguess.functions import *'
 __all__ = [
-    # Base class
     "FittingFunction",
-    # Standard functions
     "GaussianFunction",
     "DoubleGaussianFunction",
+    "MultimodalFunction",
     "DampedSineFunction",
     "LinearFunction",
-    "MultimodalFunction",
     "SigmoidFunction",
     "DoubleSigmoidFunction",
-    # Utility functions
+    "WaveletFunction",
     "add_gaussian_noise",
-    "signal_to_noise_ratio",
 ]

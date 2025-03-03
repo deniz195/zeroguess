@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 
 from zeroguess.functions import (
     DampedSineFunction,
+    DoubleGaussianFunction,
     DoubleSigmoidFunction,
     GaussianFunction,
     LinearFunction,
     MultimodalFunction,
-    DoubleGaussianFunction,
     SigmoidFunction,
     add_gaussian_noise,
 )

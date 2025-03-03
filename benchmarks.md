@@ -22,7 +22,7 @@ All benchmarks follow a consistent methodology:
 This benchmark directly compares ZeroGuess's parameter estimation capabilities against lmfit's built-in estimation methods.
 
 **Configuration:**
-- **Function**: Wavelet function from `zeroguess.functions.standard`
+- **Function**: Wavelet function from `zeroguess.functions`
 - **Sample Size**: 10 different random parameter sets
 - **Methods Compared**: 
   - lmfit's default parameter estimation
@@ -39,7 +39,7 @@ This benchmark directly compares ZeroGuess's parameter estimation capabilities a
 This benchmark evaluates ZeroGuess's performance across different types of fitting functions with varying complexity.
 
 **Configuration:**
-- **Functions**: All functions in `zeroguess.functions.standard` (Gaussian, Multi-peak Gaussian, Multimodal, Damped Sine, Linear, Sigmoid, Double Sigmoid, Wavelet)
+- **Functions**: All functions in `zeroguess.functions` (Gaussian, Multi-peak Gaussian, Multimodal, Damped Sine, Linear, Sigmoid, Double Sigmoid, Wavelet)
 - **Sample Size**: 100 different random parameter sets per function
 - **Success Criteria**: Converged parameters within 5% of true parameters
 

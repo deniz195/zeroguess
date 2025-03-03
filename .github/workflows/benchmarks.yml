@@ -43,7 +43,7 @@ jobs:
         python run_benchmark_1.py --function double_sigmoid
 
     - name: Archive benchmark results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-results
         path: examples/benchmark_results
@@ -77,7 +77,7 @@ jobs:
         
     - name: Add benchmark summary as job output
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-summary
         path: benchmark_summary.md 

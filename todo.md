@@ -1,7 +1,7 @@
 # Todos
 
 ## Refactor
-- Split standard.py into multiple files
+- Split standard.py into multiple files  **ongoing**
 
 ## Benchmarks
 - Finish benchmarks **ongoing**

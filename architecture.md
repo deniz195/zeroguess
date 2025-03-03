@@ -684,7 +684,7 @@ params = {'amplitude': 2.0, 'center': 0.5, 'width': 1.5}
 indep_vars, dependent_var = gaussian.generate_data(params)
 
 # Add noise to the data
-from zeroguess.functions.utils import add_gaussian_noise
+from zeroguess.functions import add_gaussian_noise
 noisy_dependent_var = add_gaussian_noise(dependent_var, sigma=0.05)
 ```
 
