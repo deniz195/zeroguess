@@ -1,4 +1,4 @@
-# Todos
+# Todos Open
 
 ## Refactor
 - Split standard.py into multiple files  **done**
@@ -9,9 +9,10 @@
 - Make benchmarks accessible on github
 
 ## Readability
-- Revamp Readme
+- Revamp Readme for quickstart
 
 ## Tests
+- Fix tests locally **done**
 - Fix unpickling test failing in pipeline
 
 ## PyPi
@@ -22,3 +23,5 @@
 ## Plumbing
 - Add code coverage **ongoing**
 - Add documentation
+
+
