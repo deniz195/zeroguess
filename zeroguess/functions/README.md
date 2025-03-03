@@ -7,7 +7,7 @@ This submodule provides a collection of standard fitting functions and utilities
 The submodule includes the following standard functions:
 
 - **GaussianFunction**: A standard Gaussian/normal distribution function.
-- **MultiPeakGaussianFunction**: A multi-peak Gaussian function that combines multiple Gaussian peaks.
+- **DoubleGaussianFunction**: A multi-peak Gaussian function that combines multiple Gaussian peaks.
 - **DampedSineFunction**: A damped sine wave function.
 - **LinearFunction**: A simple linear function.
 - **MultimodalFunction**: A multimodal function with local minima, defined as a combination of sine and cosine waves.

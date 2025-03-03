@@ -63,7 +63,7 @@ class GaussianFunction(FittingFunction):
         return amplitude * np.exp(-((x - center) ** 2) / (2 * width**2))
 
 
-class MultiPeakGaussianFunction(FittingFunction):
+class DoubleGaussianFunction(FittingFunction):
     """Multi-peak Gaussian function implementation.
 
     A multi-peak Gaussian function is a sum of multiple Gaussian functions,
@@ -382,12 +382,12 @@ class DoubleSigmoidFunction(FittingFunction):
     def param_ranges(self) -> Dict[str, Tuple[float, float]]:
         """Return the default parameter ranges."""
         return {
-            "amp1": (0.0, 5.0),
+            "amp1": (0.3, 5.0),
             "center1": (-5.0, 0.0),
-            "rate1": (0.1, 3.0),
-            "amp2": (0.0, 5.0),
+            "rate1": (0.4, 3.0),
+            "amp2": (0.3, 5.0),
             "center2": (0.0, 5.0),
-            "rate2": (0.1, 3.0),
+            "rate2": (0.4, 3.0),
         }
 
     @property

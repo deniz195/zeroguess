@@ -1,0 +1,83 @@
+name: ZeroGuess Benchmarks
+
+on:
+  workflow_dispatch:  # Allow manual triggering
+  push:
+    branches: [ main ]
+    paths:
+      - 'zeroguess/**'
+      - 'examples/run_benchmark_*.py'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'zeroguess/**'
+      - 'examples/run_benchmark_*.py'
+  # schedule:
+  #   - cron: '0 0 * * 0'  # Run weekly on Sundays at midnight UTC
+
+jobs:
+  benchmark:
+    name: Run ZeroGuess Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10.7'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pytest matplotlib pandas lmfit
+        
+    - name: Run benchmarks
+      run: |
+        cd examples
+        python run_benchmark_1.py --function wavelet
+        python run_benchmark_1.py --function double_gaussian
+        python run_benchmark_1.py --function double_sigmoid
+
+    - name: Archive benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: examples/benchmark_results
+        retention-days: 90
+        
+    - name: Generate benchmark summary
+      if: always()
+      run: |
+        echo "## Benchmark Results Summary" > benchmark_summary.md
+        echo "" >> benchmark_summary.md
+        
+        # Extract success rates from HTML reports
+        for report in examples/benchmark_results/lmfit_comparison/*/report.html; do
+          function_name=$(basename $(dirname $report))
+          echo "### $function_name" >> benchmark_summary.md
+          echo "" >> benchmark_summary.md
+          
+          # Extract ZeroGuess success rate (this is a simplified approach)
+          zeroguess_rate=$(grep -A 5 "ZeroGuess + lmfit" $report | grep -o '[0-9]\+\.[0-9]\+%' | head -1)
+          if [ ! -z "$zeroguess_rate" ]; then
+            echo "- ZeroGuess parameter estimation success rate: $zeroguess_rate" >> benchmark_summary.md
+          else
+            echo "- ZeroGuess results not found" >> benchmark_summary.md
+          fi
+          
+          echo "" >> benchmark_summary.md
+        done
+        
+        # Add links to detailed reports
+        echo "Detailed reports available in job artifacts." >> benchmark_summary.md
+        
+    - name: Add benchmark summary as job output
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-summary
+        path: benchmark_summary.md 

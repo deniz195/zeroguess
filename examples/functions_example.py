@@ -14,7 +14,7 @@ from zeroguess.functions import (
     GaussianFunction,
     LinearFunction,
     MultimodalFunction,
-    MultiPeakGaussianFunction,
+    DoubleGaussianFunction,
     SigmoidFunction,
     add_gaussian_noise,
 )
@@ -24,7 +24,7 @@ def main():
     """Run the example code."""
     # Create instances of the different function types
     gaussian = GaussianFunction()
-    multi_peak = MultiPeakGaussianFunction()
+    multi_peak = DoubleGaussianFunction()
     damped_sine = DampedSineFunction()
     linear = LinearFunction()
     multimodal = MultimodalFunction()

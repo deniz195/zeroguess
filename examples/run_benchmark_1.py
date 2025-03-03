@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from zeroguess.functions.standard import DoubleSigmoidFunction, MultiPeakGaussianFunction, WaveletFunction
+from zeroguess.functions.standard import DoubleSigmoidFunction, DoubleGaussianFunction, WaveletFunction
 from zeroguess.functions.utils import add_gaussian_noise
 from zeroguess.integration import lmfit_integration
 
@@ -211,7 +211,7 @@ def visualize_fit(
     plt.close()
 
 
-def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEFAULT_TOLERANCE):  # noqa: C901
+def run_lmfit_comparison_benchmark(function_name, n_samples=50, noise_level=0.05, tolerance=DEFAULT_TOLERANCE):  # noqa: C901
     """Run benchmark comparing ZeroGuess with lmfit.
 
     Args:
@@ -222,16 +222,18 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
         results_df: DataFrame with benchmark results
     """
 
-    print("\n=== Running Direct Comparison with lmfit Benchmark ===\n")
+    print(f"\n=== Running Direct Comparison with lmfit Benchmark for {function_name} ===\n")
 
     # Get parameter ranges from fit function
-    fit_func = MultiPeakGaussianFunction()
-    assert fit_func.__name__
+    if function_name == "double_gaussian":
+        fit_func = DoubleGaussianFunction()
+    elif function_name == "wavelet":
+        fit_func = WaveletFunction()
+    elif function_name == "double_sigmoid":
+        fit_func = DoubleSigmoidFunction()
+    else:
+        raise ValueError(f"Invalid function name: {function_name}")
 
-    fit_func = WaveletFunction()
-    assert fit_func.__name__
-
-    fit_func = DoubleSigmoidFunction()
     assert fit_func.__name__
     param_ranges = fit_func.param_ranges
 
@@ -499,12 +501,12 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
     results_df.to_csv(output_dir / "results.csv", index=False)
 
     # Generate summary report
-    generate_lmfit_comparison_report(results_df, output_dir)
+    generate_lmfit_comparison_report(results_df, output_dir, fit_func.__name__)
 
     return results_df
 
 
-def generate_lmfit_comparison_report(results_df, output_dir, tolerance=DEFAULT_TOLERANCE):  # noqa: C901
+def generate_lmfit_comparison_report(results_df, output_dir, function_name, tolerance=DEFAULT_TOLERANCE):  # noqa: C901
     """Generate a summary report for the lmfit comparison benchmark.
 
     Args:
@@ -567,7 +569,7 @@ def generate_lmfit_comparison_report(results_df, output_dir, tolerance=DEFAULT_T
     <!DOCTYPE html>
     <html>
     <head>
-        <title>ZeroGuess Benchmark: Direct Comparison with lmfit</title>
+        <title>ZeroGuess Benchmark: Direct Comparison with lmfit for {function_name}</title>
         <style>
             body {{ font-family: Arial, sans-serif; margin: 20px; }}
             h1, h2 {{ color: #333; }}
@@ -713,10 +715,16 @@ def main():
         nargs="?",
         help="Benchmark to run",
     )
+    parser.add_argument(
+        "--function",
+        choices=["double_sigmoid", "double_gaussian", "wavelet"],
+        default="wavelet",
+        help="Function to use for the benchmark",
+    )
     args = parser.parse_args()
 
     if args.benchmark == "lmfit_comparison" or args.benchmark == "all":
-        run_lmfit_comparison_benchmark()
+        run_lmfit_comparison_benchmark(args.function)
 
     if args.benchmark == "function_types" or args.benchmark == "all":
         print("\nFunction types benchmark not implemented yet.")

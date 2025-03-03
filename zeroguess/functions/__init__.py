@@ -20,7 +20,7 @@ from zeroguess.functions.standard import (
     GaussianFunction,
     LinearFunction,
     MultimodalFunction,
-    MultiPeakGaussianFunction,
+    DoubleGaussianFunction,
     SigmoidFunction,
 )
 
@@ -33,7 +33,7 @@ __all__ = [
     "FittingFunction",
     # Standard functions
     "GaussianFunction",
-    "MultiPeakGaussianFunction",
+    "DoubleGaussianFunction",
     "DampedSineFunction",
     "LinearFunction",
     "MultimodalFunction",
