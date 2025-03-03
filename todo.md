@@ -1,16 +1,17 @@
 # Todos Open
 
 ## Readability
-- Revamp Readme for quickstart
 - Make benchmarks accessible on github
+- Revamp Readme for quickstart
 
 ## Tests
-- Fix unpickling test failing in pipeline
+- Fix unpickling test failing in pipeline **ongoing**
 
 ## Plumbing
 - Add documentation
 
 ## Refactor
+- Check and debug why MPS is slower than CPU
 
 
 # Done

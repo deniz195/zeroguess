@@ -51,32 +51,28 @@ jobs:
     - name: Generate benchmark summary
       if: always()
       run: |
-        echo "## Benchmark Results Summary" > benchmark_summary.md
-        echo "" >> benchmark_summary.md
+        # Create a benchmark directory structure
+        mkdir -p benchmark_site/latest
+        mkdir -p benchmark_site/history/$(date +%Y-%m-%d)
         
-        # Extract success rates from HTML reports
-        for report in examples/benchmark_results/lmfit_comparison/*/report.html; do
-          function_name=$(basename $(dirname $report))
-          echo "### $function_name" >> benchmark_summary.md
-          echo "" >> benchmark_summary.md
-          
-          # Extract ZeroGuess success rate (this is a simplified approach)
-          zeroguess_rate=$(grep -A 5 "ZeroGuess + lmfit" $report | grep -o '[0-9]\+\.[0-9]\+%' | head -1)
-          if [ ! -z "$zeroguess_rate" ]; then
-            echo "- ZeroGuess parameter estimation success rate: $zeroguess_rate" >> benchmark_summary.md
-          else
-            echo "- ZeroGuess results not found" >> benchmark_summary.md
-          fi
-          
-          echo "" >> benchmark_summary.md
+        # Copy results to the site directories
+        cp -r examples/benchmark_results/* benchmark_site/latest/
+        cp -r examples/benchmark_results/* benchmark_site/history/$(date +%Y-%m-%d)/
+        
+        # Create an index file
+        echo "# ZeroGuess Benchmark Results" > benchmark_site/index.md
+        echo "## Latest Results ($(date +%Y-%m-%d))" >> benchmark_site/index.md
+        echo "- [Wavelet Function Report](latest/lmfit_comparison/wavelet/report.html)" >> benchmark_site/index.md
+        echo "- [Double Gaussian Function Report](latest/lmfit_comparison/double_gaussian/report.html)" >> benchmark_site/index.md
+        echo "## Historical Results" >> benchmark_site/index.md
+        for dir in benchmark_site/history/*; do
+          date=$(basename $dir)
+          echo "- [$date](history/$date/)" >> benchmark_site/index.md
         done
         
-        # Add links to detailed reports
-        echo "Detailed reports available in job artifacts." >> benchmark_summary.md
-        
-    - name: Add benchmark summary as job output
-      if: always()
-      uses: actions/upload-artifact@v4
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        name: benchmark-summary
-        path: benchmark_summary.md 
+        folder: benchmark_site
+        branch: gh-pages
+        clean: false  # Don't remove old files 
