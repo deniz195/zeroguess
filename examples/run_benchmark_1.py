@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from zeroguess.functions.standard import MultiPeakGaussianFunction, WaveletFunction
+from zeroguess.functions.standard import MultiPeakGaussianFunction, WaveletFunction, DoubleSigmoidFunction
 from zeroguess.functions.utils import add_gaussian_noise
 from zeroguess.integration import lmfit_integration
 
@@ -228,8 +228,11 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
     fit_func = MultiPeakGaussianFunction()
     assert fit_func.__name__
 
-    # fit_func = WaveletFunction()
-    # assert fit_func.__name__
+    fit_func = WaveletFunction()
+    assert fit_func.__name__
+
+    fit_func = DoubleSigmoidFunction()
+    assert fit_func.__name__
     param_ranges = fit_func.param_ranges
 
     # Set up output directory
@@ -246,7 +249,6 @@ def run_lmfit_comparison_benchmark(n_samples=50, noise_level=0.05, tolerance=DEF
         fit_func,
         independent_vars_sampling={"x": x_data},
         # param_ranges=param_ranges,
-        auto_extract_bounds=True,
     )
 
     # Set parameter bounds

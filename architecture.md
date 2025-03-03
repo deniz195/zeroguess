@@ -317,6 +317,11 @@ model = lmfit_integration.Model(
     }
 )
 
+# Set parameter bounds (will be automatically used for parameter estimation)
+model.set_param_hint('amplitude', min=0, max=10)
+model.set_param_hint('center', min=-5, max=5)
+model.set_param_hint('width', min=0.1, max=2)
+
 # Standard lmfit workflow continues
 result = model.fit(y_data, x=x_data)
 ```
@@ -338,20 +343,15 @@ model = lmfit_integration.Model(
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for training
     },
-    auto_extract_bounds=True  # Extract bounds from params automatically
 )
 
 # Set parameter bounds (will be automatically used for parameter estimation)
-params = model.make_params()
-params['amplitude'].min = 0
-params['amplitude'].max = 10
-params['center'].min = -5
-params['center'].max = 5
-params['width'].min = 0.1
-params['width'].max = 2
+model.set_param_hint('amplitude', min=0, max=10)
+model.set_param_hint('center', min=-5, max=5)
+model.set_param_hint('width', min=0.1, max=2)
 
 # Standard lmfit workflow continues
-result = model.fit(y_data, params=params, x=x_data)
+result = model.fit(y_data, x=x_data)
 ```
 
 ## lmfit Integration Enhancement

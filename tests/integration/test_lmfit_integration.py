@@ -106,7 +106,6 @@ class TestLmfitIntegration:
             independent_vars_sampling={
                 "x": x_sampling,
             },
-            auto_extract_bounds=True,
         )
 
         # Set parameter bounds
@@ -148,13 +147,12 @@ class TestLmfitIntegration:
         """Test that the guess() method successfully estimates parameters."""
         x_data, y_data = noisy_data
 
-        # Create model with ZeroGuess integration using auto_extract_bounds
+        # Create model with ZeroGuess integration
         model = lmfit_integration.Model(
             wavelet_function,
             independent_vars_sampling={
                 "x": x_sampling,
             },
-            auto_extract_bounds=True,
         )
 
         # Set parameter bounds
@@ -229,7 +227,6 @@ class TestLmfitIntegration:
             independent_vars_sampling={
                 "x": x_sampling,
             },
-            auto_extract_bounds=True,
         )
 
         # Set parameter bounds
@@ -271,35 +268,20 @@ class TestLmfitIntegration:
         # Check that the fit quality is good
         assert result.redchi < 0.1, "Reduced chi-square should be small for a good fit"
 
-    def test_model_creation_with_auto_extract_bounds(self, wavelet_function, x_sampling):
-        """Test that model creation with auto_extract_bounds works correctly."""
-        # Create model with auto_extract_bounds
+    def test_model_creation_without_param_ranges(self, wavelet_function, x_sampling):
+        """Test that model creation without param_ranges works correctly."""
+        # Create model without param_ranges
         model = lmfit_integration.Model(
             wavelet_function,
             independent_vars_sampling={
                 "x": x_sampling,
             },
-            auto_extract_bounds=True,
         )
 
-        # Verify that the model has auto_extract_bounds enabled
-        assert model.auto_extract_bounds, "auto_extract_bounds should be True"
-
-        # Make parameters and set bounds
-        params = model.make_params()
-        for param_name, param in params.items():
-            if param_name == "frequency":
-                param.min = 0.1
-                param.max = 5.0
-            elif param_name == "phase":
-                param.min = 0
-                param.max = 2 * np.pi
-            elif param_name == "position":
-                param.min = -5
-                param.max = 5
-            elif param_name == "width":
-                param.min = 0.1
-                param.max = 5
+        model.set_param_hint("frequency", min=0.1, max=5.0)
+        model.set_param_hint("phase", min=0, max=2 * np.pi)
+        model.set_param_hint("position", min=-5, max=5)
+        model.set_param_hint("width", min=0.1, max=5)
 
         # Verify that all parameters have bounds set
         for param_name, param in params.items():

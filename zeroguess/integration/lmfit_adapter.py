@@ -56,20 +56,15 @@ class Model(lmfit.Model):
             independent_vars_sampling={
                 'x': x_sampling
             },
-            auto_extract_bounds=True  # Extract bounds from params automatically
         )
 
         # Set parameter bounds (will be automatically used for parameter estimation)
-        params = model.make_params()
-        params['amplitude'].min = 0
-        params['amplitude'].max = 10
-        params['center'].min = -5
-        params['center'].max = 5
-        params['width'].min = 0.1
-        params['width'].max = 2
+        model.set_param_hint('amplitude', min=0, max=10)
+        model.set_param_hint('center', min=-5, max=5)
+        model.set_param_hint('width', min=0.1, max=2)
 
         # Fit data with automatic parameter estimation
-        result = model.fit(y_data, params=params, x=x_data)
+        result = model.fit(y_data, x=x_data)
         ```
     """
 
@@ -81,24 +76,19 @@ class Model(lmfit.Model):
         independent_vars: Optional[List[str]] = None,
         prefix: str = "",
         name: Optional[str] = None,
-        auto_extract_bounds: bool = False,
         **kwargs,
     ):
         """Initialize the enhanced Model with parameter estimation capability.
 
         Args:
             func: The model function to be wrapped
-            param_ranges: Dictionary mapping parameter names to (min, max) tuples.
-                If not provided and auto_extract_bounds is True, bounds will be
-                extracted from params during fit.
+            param_ranges: Dictionary mapping parameter names to (min, max) tuples. If
+                not provided, bounds will be extracted from params during fit.
             independent_vars_sampling: Dictionary mapping independent variable names
                 to arrays of sampling points for training
             independent_vars: Names of independent variables (passed to lmfit.Model)
             prefix: Prefix for parameter names (passed to lmfit.Model)
             name: Name for the model (passed to lmfit.Model)
-            auto_extract_bounds: If True, automatically extract parameter bounds from
-                the params object provided to fit(). This eliminates the need to specify
-                param_ranges separately when bounds are already set on the parameters.
             **kwargs: Additional keyword arguments passed to lmfit.Model
         """
         # Initialize the parent lmfit.Model
@@ -107,7 +97,6 @@ class Model(lmfit.Model):
         # Store ZeroGuess-specific parameters
         self.param_ranges = param_ranges
         self.independent_vars_sampling = independent_vars_sampling
-        self.auto_extract_bounds = auto_extract_bounds
         self._estimator = None
 
         # Check if this model has a guess method from the parent class
@@ -159,8 +148,9 @@ class Model(lmfit.Model):
             # Check if both min and max are defined for this parameter
             if param.min is None or param.max is None:
                 raise ValueError(
-                    f"Parameter '{param_name}' must have both min and max bounds defined "
-                    f"when using auto_extract_bounds=True"
+                    f"Parameter '{param_name}' must have both min and max bounds defined. "
+                    f"Use model.set_param_hint('param_name', min=..., max=...) to set bounds on parameters. "
+                    f"If you want to automatically extract bounds from params, use Model(param_ranges=None)."
                 )
 
             # Ensure bounds are in a valid range (min < max)
@@ -175,11 +165,7 @@ class Model(lmfit.Model):
         """Initialize and train the parameter estimator."""
         try:
 
-            if not self.param_ranges and not self.auto_extract_bounds:
-                raise RuntimeError(
-                    "Parameter estimation cannot proceed without valid bounds. Use Model(param_ranges=...)."
-                )
-            elif not self.param_ranges:
+            if not self.param_ranges:
                 try:
                     params = super().make_params()
                     extracted_param_ranges = self._extract_bounds_from_params(params)
@@ -214,21 +200,6 @@ class Model(lmfit.Model):
                 stacklevel=2,
             )
             self._estimator = None
-
-    def make_params(self, **kwargs) -> lmfit.Parameters:
-        """Create and return Parameters suitable for Model.
-
-        This extends the parent method to initialize the estimator if
-        auto_extract_bounds is enabled, ensuring the estimator is ready
-        when guess() is called.
-
-        Returns:
-            lmfit Parameters object
-        """
-        # Get parameters from parent class
-        params = super().make_params(**kwargs)
-
-        return params
 
     def zeroguess_train(self, device=None, **train_kwargs):
         """Train the parameter estimator."""
@@ -274,15 +245,9 @@ class Model(lmfit.Model):
         # latest parameters with bounds, not create new ones
         params = super().make_params()
 
-        # Handle the case where auto_extract_bounds is enabled but estimator not initialized
-        if self.auto_extract_bounds and self._estimator is None and self.independent_vars_sampling is not None:
+        # Handle the case where estimator not initialized
+        if self._estimator is None:
             try:
-                # Extract bounds from params
-                extracted_param_ranges = self._extract_bounds_from_params(params)
-
-                # Store extracted bounds
-                self.param_ranges = extracted_param_ranges
-
                 # Initialize and train estimator
                 self._initialize_estimator()
             except Exception as e:

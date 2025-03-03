@@ -313,11 +313,9 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
         independent_vars_sampling={
             "x": x_sampling,
         },
-        auto_extract_bounds=True,  # Enable automatic extraction of bounds from params
     )
 
-    # Set parameter bounds to help convergence
-    # These bounds will also be used for parameter estimation due to auto_extract_bounds=True
+    # Set parameter bounds to enable zeroguess
     model.set_param_hint("frequency", min=0.1, max=5.0)
     model.set_param_hint("phase", min=0, max=2 * np.pi)
     model.set_param_hint("position", min=-5, max=5)
