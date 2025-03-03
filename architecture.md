@@ -310,10 +310,12 @@ model = lmfit_integration.Model(
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for training
     },
-    architecture='mlp',  # Optional: Select MLP architecture
-    architecture_params={  # Optional: Architecture-specific parameters
-        'hidden_layers': [64, 128, 64],
-        'activation': 'relu'
+    estimator_settings={
+        'architecture': 'mlp',  # Optional: Select MLP architecture
+        'architecture_params': {  # Optional: Architecture-specific parameters
+            'hidden_layers': [64, 128, 64],
+            'activation': 'relu'
+        }
     }
 )
 

@@ -34,6 +34,31 @@ class Model(lmfit.Model):
         # Create model with automatic parameter estimation
         model = lmfit_integration.Model(
             gaussian,
+            independent_vars_sampling={
+                'x': x_sampling
+            },
+            estimator_settings={
+                'architecture': 'mlp',  # Optional: Select MLP architecture
+                'architecture_params': {  # Optional: Architecture-specific parameters
+                    'activation': 'relu'
+                }
+            }
+        )
+
+        # Set parameter bounds (will be automatically used for parameter estimation)
+        model.set_param_hint('amplitude', min=0, max=10)
+        model.set_param_hint('center', min=-5, max=5)
+        model.set_param_hint('width', min=0.1, max=2)
+
+        # Fit data with automatic parameter estimation
+        result = model.fit(y_data, x=x_data)
+        ```
+
+    Alternative with param_ranges specified directly:
+        ```python
+        # Create model with automatic parameter estimation using explicit param_ranges
+        model = lmfit_integration.Model(
+            gaussian,
             param_ranges={
                 'amplitude': (0, 10),
                 'center': (-5, 5),
@@ -41,27 +66,14 @@ class Model(lmfit.Model):
             },
             independent_vars_sampling={
                 'x': x_sampling
+            },
+            estimator_settings={
+                'architecture': 'mlp',
+                'architecture_params': {
+                    'activation': 'relu'
+                }
             }
         )
-
-        # Fit data with automatic parameter estimation
-        result = model.fit(y_data, x=x_data)
-        ```
-
-    Alternative with auto-extraction of parameter bounds:
-        ```python
-        # Create model with automatic parameter estimation
-        model = lmfit_integration.Model(
-            gaussian,
-            independent_vars_sampling={
-                'x': x_sampling
-            },
-        )
-
-        # Set parameter bounds (will be automatically used for parameter estimation)
-        model.set_param_hint('amplitude', min=0, max=10)
-        model.set_param_hint('center', min=-5, max=5)
-        model.set_param_hint('width', min=0.1, max=2)
 
         # Fit data with automatic parameter estimation
         result = model.fit(y_data, x=x_data)
@@ -73,9 +85,7 @@ class Model(lmfit.Model):
         fit_func: Callable,
         param_ranges: Optional[Dict[str, Tuple[float, float]]] = None,
         independent_vars_sampling: Optional[Dict[str, np.ndarray]] = None,
-        estimator_type: str = None,
-        architecture: str = None,
-        architecture_params: Dict[str, Any] = None,
+        estimator_settings: Dict[str, Any] = None,
         **kwargs,
     ):
         """Initialize the enhanced Model with parameter estimation capability.
@@ -83,9 +93,13 @@ class Model(lmfit.Model):
         Args:
             fit_func: The model function to be wrapped
             param_ranges: Dictionary mapping parameter names to (min, max) tuples. If
-                not provided, bounds will be extracted from params during fit.
+                not provided, bounds will be extracted from parameter hints.
             independent_vars_sampling: Dictionary mapping independent variable names
                 to arrays of sampling points for training
+            estimator_settings: Dictionary containing settings for the estimator, such as:
+                - architecture: Name of the neural network architecture to use (e.g., 'mlp', 'cnn')
+                - architecture_params: Dictionary of architecture-specific parameters
+                - Other estimator settings
             **kwargs: Additional keyword arguments passed to lmfit.Model
         """
         # Initialize the parent lmfit.Model
@@ -96,13 +110,7 @@ class Model(lmfit.Model):
         self.independent_vars_sampling = independent_vars_sampling
         self._estimator = None
 
-        self.estimator_settings = {}
-        if estimator_type is not None:
-            self.estimator_settings["estimator_type"] = estimator_type
-        if architecture is not None:
-            self.estimator_settings["architecture"] = architecture
-        if architecture_params is not None:
-            self.estimator_settings["architecture_params"] = architecture_params
+        self.estimator_settings = estimator_settings if estimator_settings is not None else {}
 
         # Check if this model has a guess method from the parent class
         self._has_parent_guess = self._has_custom_guess_method()
@@ -208,7 +216,14 @@ class Model(lmfit.Model):
             self._estimator = None
 
     def zeroguess_train(self, device=None, **train_kwargs):
-        """Train the parameter estimator."""
+        """Train the parameter estimator.
+
+        This method explicitly trains or retrains the parameter estimator.
+
+        Args:
+            device: Device to use for training (e.g., 'cpu', 'cuda')
+            **train_kwargs: Additional keyword arguments for training
+        """
         if self._estimator is None:
             self._initialize_estimator(device=device, **train_kwargs)
         else:
@@ -230,6 +245,7 @@ class Model(lmfit.Model):
 
         Raises:
             ValueError: If required independent variables are missing
+            RuntimeError: If parameter estimation fails or if bounds cannot be extracted
         """
 
         # If the parent class has a custom guess implementation, use it
