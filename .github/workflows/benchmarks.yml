@@ -2,16 +2,16 @@ name: ZeroGuess Benchmarks
 
 on:
   workflow_dispatch:  # Allow manual triggering
-  push:
-    branches: [ main ]
-    paths:
-      - 'zeroguess/**'
-      - 'examples/run_benchmark_*.py'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'zeroguess/**'
-      - 'examples/run_benchmark_*.py'
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'zeroguess/**'
+  #     - 'examples/run_benchmark_*.py'
+  # pull_request:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'zeroguess/**'
+  #     - 'examples/run_benchmark_*.py'
   # schedule:
   #   - cron: '0 0 * * 0'  # Run weekly on Sundays at midnight UTC
 
