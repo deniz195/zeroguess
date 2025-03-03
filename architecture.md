@@ -749,3 +749,99 @@ class CustomFunction(FittingFunction):
 ```
 
 This architecture provides a clean, user-friendly way to work with common fitting functions while maintaining flexibility and extensibility.
+
+## Release Process
+
+This section outlines the process for releasing new versions of ZeroGuess to PyPI.
+
+### Versioning Strategy
+
+ZeroGuess follows [Semantic Versioning (SemVer)](https://semver.org/):
+
+- **MAJOR** version increments for incompatible API changes
+- **MINOR** version increments for backwards-compatible functionality additions
+- **PATCH** version increments for backwards-compatible bug fixes
+
+Version numbers are stored in `zeroguess/__init__.py` as `__version__`.
+
+### Release Preparation
+
+1. **Update Documentation**:
+   - Ensure all new features and changes are documented
+   - Update README.md with any new examples if applicable
+   - Update CHANGELOG.md with a detailed list of changes
+
+2. **Run Quality Checks**:
+   - Ensure all tests pass: `pytest tests/`
+   - Check code coverage: `pytest --cov=zeroguess tests/`
+   - Run benchmarks to ensure performance hasn't regressed: `python examples/run_benchmark_1.py all`
+   - Run code quality checks: `./scripts/quality.py`
+
+3. **Version Bump**:
+   - Update version in `zeroguess/__init__.py`
+   - Commit the version bump: `git commit -am "Bump version to X.Y.Z"`
+   - Create a tag: `git tag vX.Y.Z`
+   - Push changes and tag: `git push && git push --tags`
+
+### Building and Publishing
+
+1. **Clean Build Environment**:
+   ```bash
+   # Remove any previous builds
+   rm -rf build/ dist/ *.egg-info/
+   ```
+
+2. **Build the Package**:
+   ```bash
+   # Install build tools if needed
+   pip install --upgrade build twine
+
+   # Build both wheel and source distribution
+   python -m build
+   ```
+
+3. **Test the Package**:
+   ```bash
+   # Validate the package
+   twine check dist/*
+   
+   # Test in a clean environment
+   pip install --force-reinstall dist/*.whl
+   python -c "import zeroguess; print(zeroguess.__version__)"
+   ```
+
+4. **Publish to Test PyPI** (Optional):
+   ```bash
+   # Upload to Test PyPI first
+   twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+   
+   # Verify installation from Test PyPI
+   pip install --index-url https://test.pypi.org/simple/ zeroguess
+   ```
+
+5. **Publish to PyPI**:
+   ```bash
+   # Upload to PyPI
+   twine upload dist/*
+   ```
+
+### Post-Release Activities
+
+1. **Create GitHub Release**:
+   - Go to the repository's releases page on GitHub
+   - Create a new release using the tag
+   - Copy the relevant section from CHANGELOG.md as the release description
+
+2. **Announce Release**:
+   - Post announcement in relevant channels (GitHub Discussions, social media, etc.)
+   - Update documentation site if separate from repository
+
+3. **Development Continuation**:
+   - Update version in `zeroguess/__init__.py` to next development version (e.g., "X.Y+1.0-dev")
+   - Create milestone for next version if applicable
+
+### Automation
+
+The release process can be partially automated using GitHub Actions. A workflow file at `.github/workflows/publish.yml` can handle the building and publishing steps:
+
+With this workflow, publishing to PyPI is triggered automatically when a new GitHub release is created.
