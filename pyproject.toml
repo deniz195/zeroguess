@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeroguess"
-version = "0.1.0"
+version = "0.7.1"
 description = "Machine Learning for Curve Fitting Parameter Estimation"
 readme = "README.md"
 authors = [
@@ -56,6 +56,7 @@ dev = [
     # Security
     "bandit>=1.7.5",
     "safety>=2.3.5",
+    "dotenv>=1.0.1",
     
     # Development tools
     "pre-commit>=3.3.2",
