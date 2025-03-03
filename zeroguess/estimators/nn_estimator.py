@@ -489,7 +489,7 @@ class NeuralNetworkEstimator(BaseEstimator):
                 device_obj = torch.device(device)
 
         # Load the model state
-        state = torch.load(path, map_location=device_obj)
+        state = torch.load(path, map_location=device_obj, weights_only=False)
 
         # Extract the independent_vars_sampling from the state, or create a dummy one
         # that will pass validation in the base class

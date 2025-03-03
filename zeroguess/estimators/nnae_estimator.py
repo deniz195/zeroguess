@@ -846,7 +846,7 @@ class NNAEEstimator(BaseEstimator):
             Loaded NNAEEstimator instance
         """
         # Load state dict
-        state_dict = torch.load(path, map_location=torch.device("cpu"))
+        state_dict = torch.load(path, map_location=torch.device("cpu"), weights_only=False)
 
         # Convert independent vars sampling back to numpy arrays
         independent_vars_sampling = {k: np.array(v) for k, v in state_dict["independent_vars_sampling"].items()}

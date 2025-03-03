@@ -5,7 +5,6 @@
 - Make benchmarks accessible on github
 
 ## Tests
-- Fix tests locally **done**
 - Fix unpickling test failing in pipeline
 
 ## Plumbing
@@ -16,6 +15,7 @@
 
 # Done
 
+- Fix tests locally **done**
 - Finish benchmarks **done**
 - Github action for benchmarks **done**
 - Split standard.py into multiple files  **done**
