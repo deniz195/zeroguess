@@ -15,6 +15,10 @@ on:
   # schedule:
   #   - cron: '0 0 * * 0'  # Run weekly on Sundays at midnight UTC
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   benchmark:
     name: Run ZeroGuess Benchmarks
