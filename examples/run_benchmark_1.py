@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from zeroguess.functions.standard import MultiPeakGaussianFunction, WaveletFunction, DoubleSigmoidFunction
+from zeroguess.functions.standard import DoubleSigmoidFunction, MultiPeakGaussianFunction, WaveletFunction
 from zeroguess.functions.utils import add_gaussian_noise
 from zeroguess.integration import lmfit_integration
 

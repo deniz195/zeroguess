@@ -145,7 +145,7 @@ class FittingFunction(ABC):
         params = {}
         for param_name, (min_val, max_val) in self.param_ranges.items():
             params[param_name] = min_val + (max_val - min_val) * np.random.random()
-        
+
         if canonical:
             return self.get_canonical_params(params)
         else:

@@ -282,6 +282,7 @@ class TestLmfitIntegration:
         model.set_param_hint("phase", min=0, max=2 * np.pi)
         model.set_param_hint("position", min=-5, max=5)
         model.set_param_hint("width", min=0.1, max=5)
+        params = model.make_params()
 
         # Verify that all parameters have bounds set
         for param_name, param in params.items():

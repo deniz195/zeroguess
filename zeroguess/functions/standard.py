@@ -126,7 +126,7 @@ class MultiPeakGaussianFunction(FittingFunction):
                 "center2": params["center1"],
                 "width2": params["width1"],
             }
-            
+
         return params
 
     def __call__(self, x, amplitude1, center1, width1, amplitude2, center2, width2):
