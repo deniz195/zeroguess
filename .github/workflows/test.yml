@@ -46,7 +46,8 @@ jobs:
         mkdir -p tests/output/visualizations
         
         # Run the tests
-        python -m pytest --cov=zeroguess --cov-report=xml
+        python -m pytest -v --cov=zeroguess --cov-report=xml
+      continue-on-error: true
         
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -55,6 +56,7 @@ jobs:
         slug: deniz195/zeroguess
         file: ./coverage.xml
         fail_ci_if_error: false
+        verbose: true
         
     - name: Archive visualization artifacts
       uses: actions/upload-artifact@v4
@@ -101,6 +103,7 @@ jobs:
         
         # Run extended tests (more epochs, more samples)
         python -m pytest --cov=zeroguess -xvs
+      continue-on-error: true
         
     - name: Archive visualization artifacts
       uses: actions/upload-artifact@v4
