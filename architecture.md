@@ -397,10 +397,12 @@ ZeroGuess supports multiple neural network architectures, each optimized for dif
 ZeroGuess automatically selects the optimal hardware acceleration for neural network training and inference based on availability. This ensures models train efficiently across different computing environments without manual configuration.
 
 #### Device Selection Strategy
-- **Automatic Selection**: During initialization, ZeroGuess determines the best available hardware in the following priority order:
-  1. CUDA (NVIDIA GPUs)
-  2. MPS (Apple Silicon)
-  3. CPU (fallback option)
+- **Supported Hardware Backends**:
+  - **CUDA**: Acceleration for NVIDIA GPUs
+  - **MPS**: Metal Performance Shaders for Apple Silicon (M1/M2/M3 chips)
+  - **CPU**: Standard CPU execution for universal compatibility
+
+- **Default Selection**: During initialization, ZeroGuess will default to CPU execution. This is due to the small size of the neural networks in ZeroGuess, which will make CUDA and MPS slower than CPU execution.
 
 - **Manual Override**: For specialized use cases, the API provides options to manually specify the target hardware:
   ```python
@@ -409,16 +411,9 @@ ZeroGuess automatically selects the optimal hardware acceleration for neural net
       function=target_function,
       param_ranges=param_ranges,
       independent_vars_sampling=sampling,
-      device="cpu"  # Force CPU execution even if GPU is available
+      device="mps"  # Use MPS execution
   )
   ```
-
-- **Supported Hardware Backends**:
-  - **CUDA**: Acceleration for NVIDIA GPUs
-  - **MPS**: Metal Performance Shaders for Apple Silicon (M1/M2/M3 chips)
-  - **CPU**: Standard CPU execution for universal compatibility
-
-The automatic hardware selection ensures optimal performance without user intervention while maintaining the flexibility to target specific hardware when needed.
 
 ### Architecture Types
 

@@ -63,8 +63,9 @@ class NeuralNetworkEstimator(BaseEstimator):
                 Use get_architecture_info() to see available parameters for each architecture
             learning_rate: Learning rate for the optimizer
             weight_decay: Weight decay for the optimizer
-            device: Device to use for computation (default: auto)
-                Options: "cuda", "mps", "cpu", or None (auto-detect)
+            device: Device to use for computation (default: "cpu")
+                Options: "cuda", "mps", "cpu". CPU is used by default as GPUs often don't
+                improve performance for the small networks used in ZeroGuess.
             **kwargs: Additional keyword arguments
         """
         super().__init__(function, param_ranges, independent_vars_sampling, **kwargs)
@@ -78,17 +79,12 @@ class NeuralNetworkEstimator(BaseEstimator):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
 
-        # Set up device selection
+        # Set up device selection - default to CPU
         if device is None:
-            # Auto-detect best available device in priority order: CUDA > MPS > CPU
-            if torch.cuda.is_available():
-                self.device = torch.device("cuda")
-            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                self.device = torch.device("mps")
-            else:
-                self.device = torch.device("cpu")
+            # Default to CPU instead of auto-detecting for better performance on small networks
+            self.device = torch.device("cpu")
         else:
-            # Use specified device
+            # Use specified device with validation
             self.device = torch.device(device)
 
             # Validate device selection when manually specified
@@ -458,8 +454,9 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         Args:
             path: Path to load the model from
-            device: Device to use for computation (default: auto)
-                Options: "cuda", "mps", "cpu", or None (auto-detect)
+            device: Device to use for computation (default: "cpu")
+                Options: "cuda", "mps", "cpu". CPU is used by default as GPUs often don't
+                improve performance for the small networks used in ZeroGuess.
 
         Returns:
             Loaded NeuralNetworkEstimator instance
@@ -472,13 +469,8 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         # Determine device to load model onto
         if device is None:
-            # Auto-detect best available device
-            if torch.cuda.is_available():
-                device_obj = torch.device("cuda")
-            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device_obj = torch.device("mps")
-            else:
-                device_obj = torch.device("cpu")
+            # Default to CPU instead of auto-detecting for better performance with small networks
+            device_obj = torch.device("cpu")
         else:
             # Use specified device with validation
             if device == "cuda" and not torch.cuda.is_available():
