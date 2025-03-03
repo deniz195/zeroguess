@@ -16,12 +16,13 @@
 - Fix unpickling test failing in pipeline
 
 ## PyPi
-- Add release github action
-- Publish PyPi package
-- Update architecture.md with pypi info and relase process
+- Add release github action **ongoing**
+- Local build process **done**
+- Publish PyPi package **ongoing**
+- Update architecture.md with pypi info and relase process **done**
 
 ## Plumbing
-- Add code coverage **ongoing**
+- Add code coverage **done**
 - Add documentation
 
 
