@@ -1,21 +1,21 @@
 # Todos Open
 
 ## Readability
-- Make benchmarks accessible on github via github pages
+- Make benchmarks accessible on github via github pages  **ongoing**
 - Revamp Readme for quickstart
-
-## Tests
-- Fix unpickling test failing in pipeline **ongoing**
-
-## Plumbing
-- Add documentation
 
 ## Refactor
 - Check and debug why MPS is slower than CPU
 
+## Tests
+- Make all tests pass in pipeline
+
+## Plumbing
+- Add documentation
 
 # Done
 
+- Fix unpickling test failing in pipeline **done**
 - Fix tests locally **done**
 - Finish benchmarks **done**
 - Github action for benchmarks **done**
