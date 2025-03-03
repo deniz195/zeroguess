@@ -1,0 +1,251 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>ZeroGuess Benchmark: Direct Comparison with lmfit for double_gaussian</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1, h2 { color: #333; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .success { color: green; }
+            .failure { color: red; }
+            .summary-container { display: flex; flex-wrap: wrap; }
+            .summary-section { flex: 1; min-width: 300px; margin-right: 20px; }
+            img { max-width: 100%; height: auto; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <h1>ZeroGuess Benchmark: Direct Comparison with lmfit</h1>
+
+        <h2>Summary</h2>
+        <div class="summary-container">
+            <div class="summary-section">
+                <h3>Success Rates</h3>
+                <table>
+                    <tr>
+                        <th>Method</th>
+                        <th>Fit Success</th>
+                        <th>Parameter Success</th>
+                    </tr>
+    
+                    <tr>
+                        <td>Standard lmfit (least_squares)</td>
+                        <td class="success">100.0%</td>
+                        <td class="failure">48.0%</td>
+                    </tr>
+        
+                    <tr>
+                        <td>ZeroGuess + lmfit (least_squares)</td>
+                        <td class="success">100.0%</td>
+                        <td class="success">64.0%</td>
+                    </tr>
+        
+                    <tr>
+                        <td>Standard lmfit (dual_annealing)</td>
+                        <td class="success">100.0%</td>
+                        <td class="success">72.0%</td>
+                    </tr>
+        
+                    <tr>
+                        <td>True + lmfit (dual_annealing)</td>
+                        <td class="success">100.0%</td>
+                        <td class="success">74.0%</td>
+                    </tr>
+        
+                    <tr>
+                        <td>ZeroGuess + lmfit (dual_annealing)</td>
+                        <td class="success">100.0%</td>
+                        <td class="success">74.0%</td>
+                    </tr>
+        
+                    <tr>
+                        <td>True + lmfit (least_squares)</td>
+                        <td class="success">100.0%</td>
+                        <td class="success">74.0%</td>
+                    </tr>
+        
+                </table>
+            </div>
+
+            <div class="summary-section">
+                <h3>Performance Metrics</h3>
+                <table>
+                    <tr>
+                        <th>Method</th>
+                        <th>Estimation Time (s)</th>
+                        <th>Fitting Time (s)</th>
+                        <th>Function Evaluations</th>
+                    </tr>
+    
+                    <tr>
+                        <td>Standard lmfit (least_squares)</td>
+                        <td>0.0005</td>
+                        <td>0.0215</td>
+                        <td>181.5</td>
+                    </tr>
+        
+                    <tr>
+                        <td>ZeroGuess + lmfit (least_squares)</td>
+                        <td>0.0012</td>
+                        <td>0.0153</td>
+                        <td>90.8</td>
+                    </tr>
+        
+                    <tr>
+                        <td>Standard lmfit (dual_annealing)</td>
+                        <td>0.0005</td>
+                        <td>1.1632</td>
+                        <td>12451.5</td>
+                    </tr>
+        
+                    <tr>
+                        <td>True + lmfit (dual_annealing)</td>
+                        <td>0.0005</td>
+                        <td>1.1536</td>
+                        <td>12408.7</td>
+                    </tr>
+        
+                    <tr>
+                        <td>ZeroGuess + lmfit (dual_annealing)</td>
+                        <td>0.0012</td>
+                        <td>1.1351</td>
+                        <td>12410.5</td>
+                    </tr>
+        
+                    <tr>
+                        <td>True + lmfit (least_squares)</td>
+                        <td>0.0005</td>
+                        <td>0.0075</td>
+                        <td>49.2</td>
+                    </tr>
+        
+                </table>
+            </div>
+        </div>
+
+        <h3>Parameter Error Summary</h3>
+        <table>
+            <tr>
+                <th>Method</th>
+    <th>amplitude1</th><th>center1</th><th>width1</th><th>amplitude2</th><th>center2</th><th>width2</th></tr>
+            <tr>
+                <td>Standard lmfit (least_squares)</td>
+        <td class="failure">29.2%</td><td class="failure">21.7%</td><td class="failure">28.7%</td><td class="failure">126.3%</td><td class="failure">29.4%</td><td class="failure">25.6%</td></tr>
+            <tr>
+                <td>ZeroGuess + lmfit (least_squares)</td>
+        <td class="failure">16.0%</td><td class="failure">10.5%</td><td class="success">7.4%</td><td class="failure">24.8%</td><td class="failure">13.3%</td><td class="success">6.7%</td></tr>
+            <tr>
+                <td>Standard lmfit (dual_annealing)</td>
+        <td class="success">9.4%</td><td class="success">9.2%</td><td class="success">3.8%</td><td class="failure">102.3%</td><td class="failure">18.9%</td><td class="success">3.7%</td></tr>
+            <tr>
+                <td>True + lmfit (dual_annealing)</td>
+        <td class="success">7.4%</td><td class="failure">10.4%</td><td class="success">3.7%</td><td class="success">7.5%</td><td class="success">7.4%</td><td class="success">2.2%</td></tr>
+            <tr>
+                <td>ZeroGuess + lmfit (dual_annealing)</td>
+        <td class="success">8.6%</td><td class="failure">13.4%</td><td class="success">4.0%</td><td class="success">9.4%</td><td class="failure">13.6%</td><td class="success">3.9%</td></tr>
+            <tr>
+                <td>True + lmfit (least_squares)</td>
+        <td class="success">7.8%</td><td class="success">5.0%</td><td class="success">3.3%</td><td class="success">7.9%</td><td class="success">7.5%</td><td class="success">2.2%</td></tr>
+        </table>
+
+        <h2>Visualization</h2>
+        <img src="summary.png" alt="Summary Chart">
+
+        <h2>Sample Fits</h2>
+    
+        <h3>Standard lmfit (least_squares)</h3>
+        <div style="display: flex; flex-wrap: wrap;">
+        
+            <div style="margin: 10px;">
+                <img src="standard_lmfit_(least_squares)_set_1.png" alt="Standard lmfit (least_squares) - Set 1" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="standard_lmfit_(least_squares)_set_2.png" alt="Standard lmfit (least_squares) - Set 2" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="standard_lmfit_(least_squares)_set_3.png" alt="Standard lmfit (least_squares) - Set 3" style="max-width: 400px;">
+            </div>
+            </div>
+        <h3>ZeroGuess + lmfit (least_squares)</h3>
+        <div style="display: flex; flex-wrap: wrap;">
+        
+            <div style="margin: 10px;">
+                <img src="zeroguess_+_lmfit_(least_squares)_set_1.png" alt="ZeroGuess + lmfit (least_squares) - Set 1" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="zeroguess_+_lmfit_(least_squares)_set_2.png" alt="ZeroGuess + lmfit (least_squares) - Set 2" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="zeroguess_+_lmfit_(least_squares)_set_3.png" alt="ZeroGuess + lmfit (least_squares) - Set 3" style="max-width: 400px;">
+            </div>
+            </div>
+        <h3>True + lmfit (least_squares)</h3>
+        <div style="display: flex; flex-wrap: wrap;">
+        
+            <div style="margin: 10px;">
+                <img src="true_+_lmfit_(least_squares)_set_1.png" alt="True + lmfit (least_squares) - Set 1" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="true_+_lmfit_(least_squares)_set_2.png" alt="True + lmfit (least_squares) - Set 2" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="true_+_lmfit_(least_squares)_set_3.png" alt="True + lmfit (least_squares) - Set 3" style="max-width: 400px;">
+            </div>
+            </div>
+        <h3>Standard lmfit (dual_annealing)</h3>
+        <div style="display: flex; flex-wrap: wrap;">
+        
+            <div style="margin: 10px;">
+                <img src="standard_lmfit_(dual_annealing)_set_1.png" alt="Standard lmfit (dual_annealing) - Set 1" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="standard_lmfit_(dual_annealing)_set_2.png" alt="Standard lmfit (dual_annealing) - Set 2" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="standard_lmfit_(dual_annealing)_set_3.png" alt="Standard lmfit (dual_annealing) - Set 3" style="max-width: 400px;">
+            </div>
+            </div>
+        <h3>ZeroGuess + lmfit (dual_annealing)</h3>
+        <div style="display: flex; flex-wrap: wrap;">
+        
+            <div style="margin: 10px;">
+                <img src="zeroguess_+_lmfit_(dual_annealing)_set_1.png" alt="ZeroGuess + lmfit (dual_annealing) - Set 1" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="zeroguess_+_lmfit_(dual_annealing)_set_2.png" alt="ZeroGuess + lmfit (dual_annealing) - Set 2" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="zeroguess_+_lmfit_(dual_annealing)_set_3.png" alt="ZeroGuess + lmfit (dual_annealing) - Set 3" style="max-width: 400px;">
+            </div>
+            </div>
+        <h3>True + lmfit (dual_annealing)</h3>
+        <div style="display: flex; flex-wrap: wrap;">
+        
+            <div style="margin: 10px;">
+                <img src="true_+_lmfit_(dual_annealing)_set_1.png" alt="True + lmfit (dual_annealing) - Set 1" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="true_+_lmfit_(dual_annealing)_set_2.png" alt="True + lmfit (dual_annealing) - Set 2" style="max-width: 400px;">
+            </div>
+            
+            <div style="margin: 10px;">
+                <img src="true_+_lmfit_(dual_annealing)_set_3.png" alt="True + lmfit (dual_annealing) - Set 3" style="max-width: 400px;">
+            </div>
+            </div>
+    </body>
+    </html>
+    
