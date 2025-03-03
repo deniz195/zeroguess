@@ -1,15 +1,19 @@
 # Todos
 
 ## Refactor
-- Split standard.py into multiple files  **ongoing**
+- Split standard.py into multiple files  **done**
 
 ## Benchmarks
-- Finish benchmarks **ongoing**
-- Github action for benchmarks
+- Finish benchmarks **done**
+- Github action for benchmarks **ongoing**
 - Make benchmarks accessible on github
+
 
 ## Readability
 - Revamp Readme
+
+## Tests
+- Fix unpickling test failing in pipeline
 
 ## PyPi
 - Add release github action

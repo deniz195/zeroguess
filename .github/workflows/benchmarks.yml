@@ -40,7 +40,6 @@ jobs:
         cd examples
         python run_benchmark_1.py --function wavelet
         python run_benchmark_1.py --function double_gaussian
-        python run_benchmark_1.py --function double_sigmoid
 
     - name: Archive benchmark results
       uses: actions/upload-artifact@v4

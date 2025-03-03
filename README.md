@@ -1,5 +1,10 @@
 # ZeroGuess: Machine Learning for Curve Fitting Parameter Estimation
 
+[![Build Status](https://github.com/deniz195/zeroguess/actions/workflows/test.yml/badge.svg)](https://github.com/deniz195/zeroguess/actions/workflows/test.yml)
+[![Coverage Status](https://codecov.io/gh/deniz195/zeroguess/branch/main/graph/badge.svg)](https://codecov.io/gh/deniz195/zeroguess)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Versions](https://img.shields.io/pypi/pyversions/zeroguess.svg)](https://pypi.org/project/zeroguess/)
+
 ZeroGuess is a Python library that simplifies the estimation of starting parameters for curve fitting by leveraging machine learning. It supports SciPy and lmfit, two widely used curve fitting libraries in the scientific Python ecosystem.
 
 ## Problem Statement
