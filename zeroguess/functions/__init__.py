@@ -15,7 +15,7 @@ from zeroguess.functions.multimodal import MultimodalFunction
 from zeroguess.functions.sigmoid import SigmoidFunction
 
 # Import utilities
-from zeroguess.functions.utils import add_gaussian_noise
+from zeroguess.functions.utils import add_gaussian_noise, signal_to_noise_ratio
 from zeroguess.functions.wavelet import WaveletFunction
 
 __all__ = [
@@ -29,4 +29,5 @@ __all__ = [
     "DoubleSigmoidFunction",
     "WaveletFunction",
     "add_gaussian_noise",
+    "signal_to_noise_ratio",
 ]

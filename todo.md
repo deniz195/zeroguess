@@ -8,7 +8,6 @@
 - Github action for benchmarks **ongoing**
 - Make benchmarks accessible on github
 
-
 ## Readability
 - Revamp Readme
 
@@ -21,5 +20,5 @@
 - Update architecture.md with pypi info and relase process
 
 ## Plumbing
-- Add code coverage
+- Add code coverage **ongoing**
 - Add documentation
