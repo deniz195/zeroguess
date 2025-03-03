@@ -160,6 +160,8 @@ class NeuralNetworkEstimator(BaseEstimator):
             training history up to that point.
         """
 
+        assert "epochs" not in kwargs, "epochs is not a valid keyword argument, use n_epochs instead"
+
         # Create data generator if it doesn't exist
         if self.data_generator is None:
             self.data_generator = SyntheticDataGenerator(

@@ -172,12 +172,13 @@ class TestMultiPeakGaussianWorkflow:
             function=multi_peak_gaussian_instance,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
+            device="cpu",
         )
 
         # Train the estimator with increased samples
         training_history = estimator.train(
             n_samples=2000,
-            epochs=100,
+            n_epochs=300,
             batch_size=32,
             # add_noise=True,
             # noise_level=0.1,
