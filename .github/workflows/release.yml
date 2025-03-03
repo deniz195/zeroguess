@@ -40,8 +40,8 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.TESTPYPI_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-        skip_existing: true
+        repository-url: https://test.pypi.org/legacy/
+        skip-existing: true
         verbose: true
         
     - name: Verify Test PyPI installation
@@ -68,4 +68,4 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_TOKEN }}
-        skip_existing: true 
+        skip-existing: true 
