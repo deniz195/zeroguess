@@ -60,7 +60,7 @@ if HAS_TORCH:
 
             self.is_trained = False
 
-        def train(self, epochs=10, batch_size=32, learning_rate=0.001):
+        def train(self, n_epochs=10, batch_size=32, learning_rate=0.001):
             """Train the model on synthetic data."""
             # In a real implementation, this would generate data and train the model
             # For testing, we'll just mark it as trained
@@ -130,7 +130,7 @@ class TestNNEstimator:
         estimator = MockNNEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Train the model
-        training_metrics = estimator.train(epochs=5, batch_size=16, learning_rate=0.01)
+        training_metrics = estimator.train(n_epochs=5, batch_size=16, learning_rate=0.01)
 
         # Check that training completed
         assert estimator.is_trained

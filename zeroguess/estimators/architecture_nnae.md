@@ -209,9 +209,9 @@ estimator.train(
     n_samples=1000, 
     batch_size=32, 
     n_epochs=300,
-    encoder_epochs=100,   # Custom epochs for encoder training
-    decoder_epochs=100,   # Custom epochs for decoder training
-    end_to_end_epochs=100 # Custom epochs for end-to-end training
+    encoder_n_epochs=100,   # Custom epochs for encoder training
+    decoder_n_epochs=100,   # Custom epochs for decoder training
+    end_to_end_n_epochs=100 # Custom epochs for end-to-end training
 )
 
 # Use for parameter estimation

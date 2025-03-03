@@ -37,10 +37,10 @@ class FailingEstimator:
 
         self.is_trained = False
 
-    def train(self, epochs=10, batch_size=32, learning_rate=0.001):
+    def train(self, n_epochs=10, batch_size=32, learning_rate=0.001):
         """Train the estimator, but fail to converge."""
         # Simulate training iterations
-        for epoch in range(epochs):
+        for epoch in range(n_epochs):
             # Simulate a training loss that doesn't improve
             loss = 1.0 - epoch * 0.01  # Very slow improvement
 
@@ -196,10 +196,10 @@ class TestLearningFailure:
             return_value={"loss": 0.1, "val_loss": 0.2, "converged": True},
         ) as mock_train:
             # Simulate a retry with different parameters
-            retry_result = estimator.train(epochs=100, batch_size=64, learning_rate=0.0001)
+            retry_result = estimator.train(n_epochs=100, batch_size=64, learning_rate=0.0001)
 
             # Verify that train was called with the new parameters
-            mock_train.assert_called_once_with(epochs=100, batch_size=64, learning_rate=0.0001)
+            mock_train.assert_called_once_with(n_epochs=100, batch_size=64, learning_rate=0.0001)
 
             # Verify that the retry succeeded
             assert retry_result.get("converged", False)

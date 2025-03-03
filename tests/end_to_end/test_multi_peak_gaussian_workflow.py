@@ -98,7 +98,7 @@ class TestMultiPeakGaussianWorkflow:
         # Step 4: Train the estimator with increased samples for the more complex function
         training_history = estimator.train(
             n_samples=400,  # More samples for complex function
-            epochs=30,  # More epochs for better convergence
+            n_epochs=30,  # More epochs for better convergence
             batch_size=32,
             add_noise=True,
             noise_level=0.15,  # Match the noise level in sample data
@@ -330,7 +330,7 @@ class TestMultiPeakGaussianWorkflow:
         # Step 4: Train the estimator with minimal data for testing
         training_history = estimator.train(
             n_samples=200,
-            epochs=15,
+            n_epochs=15,
             batch_size=32,
             add_noise=True,
             noise_level=0.15,
@@ -412,7 +412,7 @@ class TestMultiPeakGaussianWorkflow:
             # Train with minimal epochs and samples for benchmarking
             estimator.train(
                 n_samples=50,  # Very small dataset for benchmarking
-                epochs=5,  # Minimal epochs for benchmarking
+                n_epochs=5,  # Minimal epochs for benchmarking
                 batch_size=16,
                 add_noise=True,
                 noise_level=0.15,

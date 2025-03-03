@@ -1,7 +1,7 @@
 # Todos Open
 
 ## Readability
-- Make benchmarks accessible on github
+- Make benchmarks accessible on github via github pages
 - Revamp Readme for quickstart
 
 ## Tests

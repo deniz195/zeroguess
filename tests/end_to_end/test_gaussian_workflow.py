@@ -89,7 +89,7 @@ class TestGaussianWorkflow:
         # Step 4: Train the estimator with reduced samples and epochs for testing
         estimator.train(
             n_samples=200,  # Reduced sample size for faster tests
-            epochs=20,  # Fewer epochs for faster tests
+            n_epochs=20,  # Fewer epochs for faster tests
             batch_size=32,
             add_noise=True,
             noise_level=0.1,
@@ -160,7 +160,7 @@ class TestGaussianWorkflow:
             # Train with minimal epochs and samples for benchmarking
             estimator.train(
                 n_samples=50,  # Very small dataset for benchmarking
-                epochs=5,  # Minimal epochs for benchmarking
+                n_epochs=5,  # Minimal epochs for benchmarking
                 batch_size=16,
                 add_noise=True,
                 noise_level=0.1,
@@ -213,7 +213,7 @@ class TestGaussianWorkflow:
         # Train the estimator with minimal data for testing
         training_history = estimator.train(
             n_samples=100,
-            epochs=10,
+            n_epochs=10,
             batch_size=16,
             add_noise=True,
             noise_level=0.1,

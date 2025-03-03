@@ -91,7 +91,7 @@ class TestMultimodalWorkflow:
         # Step 4: Train the estimator with increased samples for the complex function
         training_history = estimator.train(
             n_samples=500,  # More samples for complex function
-            epochs=40,  # More epochs for better convergence
+            n_epochs=40,  # More epochs for better convergence
             batch_size=32,
             add_noise=True,
             noise_level=0.2,  # Match the noise level in sample data
@@ -172,7 +172,7 @@ class TestMultimodalWorkflow:
         # Train the estimator with increased samples
         training_history = estimator.train(
             n_samples=500,
-            epochs=40,
+            n_epochs=40,
             batch_size=32,
             add_noise=True,
             noise_level=0.2,
@@ -302,7 +302,7 @@ class TestMultimodalWorkflow:
         # Step 4: Train the estimator with minimal data for testing
         training_history = estimator.train(
             n_samples=200,
-            epochs=20,
+            n_epochs=20,
             batch_size=32,
             add_noise=True,
             noise_level=0.2,
@@ -384,7 +384,7 @@ class TestMultimodalWorkflow:
             # Train with minimal epochs and samples for benchmarking
             estimator.train(
                 n_samples=50,  # Very small dataset for benchmarking
-                epochs=5,  # Minimal epochs for benchmarking
+                n_epochs=5,  # Minimal epochs for benchmarking
                 batch_size=16,
                 add_noise=True,
                 noise_level=0.2,

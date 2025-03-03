@@ -142,7 +142,7 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
 
     training_results = estimator.train(
         n_samples=1000,
-        epochs=3000,
+        n_epochs=3000,
         batch_size=32,
         add_noise=True,
         noise_level=0.05,

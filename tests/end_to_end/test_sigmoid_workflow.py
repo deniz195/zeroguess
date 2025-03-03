@@ -121,7 +121,7 @@ class TestSigmoidWorkflow:
         # Step 4: Train the estimator
         training_history = estimator.train(
             n_samples=300,
-            epochs=25,
+            n_epochs=25,
             batch_size=32,
             add_noise=True,
             noise_level=0.2,  # Match the noise level in sample data
@@ -200,7 +200,7 @@ class TestSigmoidWorkflow:
         )
 
         # Train the estimator
-        estimator.train(n_samples=300, epochs=25, batch_size=32, add_noise=True, noise_level=0.2)
+        estimator.train(n_samples=300, n_epochs=25, batch_size=32, add_noise=True, noise_level=0.2)
         assert estimator.is_trained
 
         # Test different rate parameter scenarios
@@ -299,7 +299,7 @@ class TestSigmoidWorkflow:
         # Train the estimator with more samples for complex function
         training_history = estimator.train(
             n_samples=400,
-            epochs=30,
+            n_epochs=30,
             batch_size=32,
             add_noise=True,
             noise_level=0.15,
@@ -383,7 +383,7 @@ class TestSigmoidWorkflow:
         # Step 4: Train the estimator with minimal data for testing
         training_history = estimator.train(
             n_samples=200,
-            epochs=15,
+            n_epochs=15,
             batch_size=32,
             add_noise=True,
             noise_level=0.2,
@@ -463,7 +463,7 @@ class TestSigmoidWorkflow:
             # Train with minimal epochs and samples for benchmarking
             estimator.train(
                 n_samples=50,  # Very small dataset for benchmarking
-                epochs=5,  # Minimal epochs for benchmarking
+                n_epochs=5,  # Minimal epochs for benchmarking
                 batch_size=16,
                 add_noise=True,
                 noise_level=0.2,
