@@ -47,7 +47,7 @@ jobs:
         
         # Run the tests
         python -m pytest -v --cov=zeroguess --cov-report=xml
-      continue-on-error: true
+      continue-on-error: false
         
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
