@@ -2,7 +2,7 @@
 Integration with lmfit's Model class.
 """
 
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -70,34 +70,39 @@ class Model(lmfit.Model):
 
     def __init__(
         self,
-        func: Callable,
+        fit_func: Callable,
         param_ranges: Optional[Dict[str, Tuple[float, float]]] = None,
         independent_vars_sampling: Optional[Dict[str, np.ndarray]] = None,
-        independent_vars: Optional[List[str]] = None,
-        prefix: str = "",
-        name: Optional[str] = None,
+        estimator_type: str = None,
+        architecture: str = None,
+        architecture_params: Dict[str, Any] = None,
         **kwargs,
     ):
         """Initialize the enhanced Model with parameter estimation capability.
 
         Args:
-            func: The model function to be wrapped
+            fit_func: The model function to be wrapped
             param_ranges: Dictionary mapping parameter names to (min, max) tuples. If
                 not provided, bounds will be extracted from params during fit.
             independent_vars_sampling: Dictionary mapping independent variable names
                 to arrays of sampling points for training
-            independent_vars: Names of independent variables (passed to lmfit.Model)
-            prefix: Prefix for parameter names (passed to lmfit.Model)
-            name: Name for the model (passed to lmfit.Model)
             **kwargs: Additional keyword arguments passed to lmfit.Model
         """
         # Initialize the parent lmfit.Model
-        super().__init__(func, independent_vars=independent_vars, prefix=prefix, name=name, **kwargs)
+        super().__init__(fit_func, **kwargs)
 
         # Store ZeroGuess-specific parameters
         self.param_ranges = param_ranges
         self.independent_vars_sampling = independent_vars_sampling
         self._estimator = None
+
+        self.estimator_settings = {}
+        if estimator_type is not None:
+            self.estimator_settings["estimator_type"] = estimator_type
+        if architecture is not None:
+            self.estimator_settings["architecture"] = architecture
+        if architecture_params is not None:
+            self.estimator_settings["architecture_params"] = architecture_params
 
         # Check if this model has a guess method from the parent class
         self._has_parent_guess = self._has_custom_guess_method()
@@ -186,6 +191,7 @@ class Model(lmfit.Model):
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
                 device=device,
+                **self.estimator_settings,
             )
 
             # Train the estimator
