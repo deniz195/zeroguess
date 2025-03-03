@@ -6,7 +6,7 @@ ZeroGuess is a Python library that simplifies the estimation of starting paramet
 for curve fitting by leveraging machine learning.
 """
 
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 
 from zeroguess.estimators.base import BaseEstimator
 

@@ -256,13 +256,13 @@ def check_version_consistency():
                 f"package has version {package_version}"
             )
             print("Please update the versions to match before building.")
-            sys.exit(1)
+            return False
 
         print("Version consistency check passed!")
         return True
     except Exception as e:
         print(f"Error checking versions: {e}")
-        sys.exit(1)
+        return False
 
 
 def main():
@@ -276,10 +276,25 @@ def main():
         action="store_true",
         help="Skip version consistency check between pyproject.toml and __init__.py",
     )
+    parser.add_argument(
+        "--only-version-check",
+        action="store_true",
+        help="Only perform version consistency check and exit",
+    )
 
     args = parser.parse_args()
 
-    # Check version consistency before proceeding
+    # Handle version check options
+    if args.skip_version_check and args.only_version_check:
+        print("ERROR: Cannot use both --skip-version-check and --only-version-check together")
+        sys.exit(1)
+
+    # If only performing version check
+    if args.only_version_check:
+        success = check_version_consistency()
+        sys.exit(0 if success else 1)
+
+    # Normal execution - check version consistency first if not skipped
     if not args.skip_version_check:
         check_version_consistency()
 
