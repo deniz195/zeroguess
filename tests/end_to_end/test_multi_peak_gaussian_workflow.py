@@ -175,11 +175,11 @@ class TestMultiPeakGaussianWorkflow:
 
         # Train the estimator with increased samples
         training_history = estimator.train(
-            n_samples=2000,
+            n_samples=3000,
             n_epochs=300,
             batch_size=32,
-            # add_noise=True,
-            # noise_level=0.1,
+            add_noise=True,
+            noise_level=0.1,
             return_history=True,  # Return history for visualization
         )
         assert estimator.is_trained

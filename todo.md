@@ -2,15 +2,15 @@
 
 ## Readability
 - Revamp Readme for quickstart
+- Add function name to benchmark results
 
 ## Tests
-- Make all tests pass in pipeline
+- Make all tests pass in pipeline & locally
 
 ## Plumbing
 - Add documentation
 
 # Done
-
 - Make benchmarks accessible on github via github pages  **done**
 - Check and debug why MPS is slower than CPU **done**
 - Fix unpickling test failing in pipeline **done**
