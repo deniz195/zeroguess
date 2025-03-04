@@ -197,12 +197,7 @@ class TestNNEstimator:
         estimator_auto = NeuralNetworkEstimator(gaussian_function, param_ranges, independent_vars_sampling)
 
         # Check if device is selected correctly based on what's available
-        if torch.cuda.is_available():
-            assert estimator_auto.device.type == "cuda"
-        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            assert estimator_auto.device.type == "mps"
-        else:
-            assert estimator_auto.device.type == "cpu"
+        assert estimator_auto.device.type == "cpu"
 
         # Test CPU explicit selection
         estimator_cpu = NeuralNetworkEstimator(gaussian_function, param_ranges, independent_vars_sampling, device="cpu")
@@ -261,12 +256,7 @@ class TestNNEstimator:
         loaded_auto = NeuralNetworkEstimator.load(str(model_path))
 
         # Check if device is selected correctly based on what's available
-        if torch.cuda.is_available():
-            assert loaded_auto.device.type == "cuda"
-        elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            assert loaded_auto.device.type == "mps"
-        else:
-            assert loaded_auto.device.type == "cpu"
+        assert loaded_auto.device.type == "cpu"
 
         # Test CPU explicit selection
         loaded_cpu = NeuralNetworkEstimator.load(str(model_path), device="cpu")

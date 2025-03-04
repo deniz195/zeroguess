@@ -91,17 +91,15 @@ class TestMultiPeakGaussianWorkflow:
             function=multi_peak_gaussian_instance,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
-            hidden_layers=[32, 64, 32],  # Larger network for more complex function
-            learning_rate=0.005,  # Slightly lower learning rate for stability
         )
 
         # Step 4: Train the estimator with increased samples for the more complex function
         training_history = estimator.train(
-            n_samples=400,  # More samples for complex function
-            n_epochs=30,  # More epochs for better convergence
+            n_samples=5000,  # More samples for complex function
+            n_epochs=100,  # More epochs for better convergence
             batch_size=32,
-            add_noise=True,
-            noise_level=0.15,  # Match the noise level in sample data
+            # add_noise=True,
+            # noise_level=0.15,  # Match the noise level in sample data
             return_history=True,  # Return history for visualization
         )
         assert estimator.is_trained

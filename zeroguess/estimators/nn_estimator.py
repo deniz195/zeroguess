@@ -130,9 +130,9 @@ class NeuralNetworkEstimator(BaseEstimator):
 
     def train(  # noqa: C901
         self,
-        n_samples: int = 1000,
-        batch_size: int = 64,
-        n_epochs: int = 100,
+        n_samples: int = 3000,
+        batch_size: int = 32,
+        n_epochs: int = 200,
         validation_split: float = 0.2,
         verbose: bool = True,
         **kwargs,
