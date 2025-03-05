@@ -3,9 +3,11 @@ Synthetic data generation for training parameter estimators.
 """
 
 import inspect
-from typing import Callable, Dict, Tuple, Optional
+from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
+
+from zeroguess.functions.utils import add_gaussian_noise
 
 
 class SyntheticDataGenerator:
@@ -79,25 +81,25 @@ class SyntheticDataGenerator:
             for i in range(n_samples):
                 # Convert the i-th parameter set to a dictionary
                 param_dict = {name: params[i, j] for j, name in enumerate(self.param_names)}
-                
+
                 # Apply the canonical transformation
                 canonical_params = self.make_canonical(param_dict)
-                
+
                 # Update the parameter array with transformed values
                 for j, name in enumerate(self.param_names):
                     params[i, j] = canonical_params[name]
 
         return params
 
-    def evaluate_function(self, params: np.ndarray) -> Dict[str, np.ndarray]:
+    def evaluate_function(self, params: np.ndarray) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
         """Evaluate the function for each set of parameters.
 
         Args:
             params: Array of shape (n_samples, n_parameters) containing parameter values
 
         Returns:
-            Dictionary mapping combinations of independent variable values to arrays of
-            function values of shape (n_samples, n_points)
+            Dictionary mapping independent variable names to tuples of (x_values, y_values),
+            where y_values has shape (n_samples, n_points)
         """
         n_samples = params.shape[0]
         results = {}
@@ -123,7 +125,7 @@ class SyntheticDataGenerator:
 
     def generate_dataset(
         self, n_samples: int, add_noise: bool = False, noise_level: float = 0.05
-    ) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
+    ) -> Tuple[np.ndarray, Dict[str, Tuple[np.ndarray, np.ndarray]]]:
         """Generate a complete dataset of parameters and function values.
 
         Args:
@@ -134,20 +136,21 @@ class SyntheticDataGenerator:
         Returns:
             Tuple containing:
             - Array of parameter values of shape (n_samples, n_parameters)
-            - Dictionary mapping independent variable names to arrays of function values
+            - Dictionary mapping independent variable names to tuples of (x_values, y_values)
         """
         params = self.generate_random_parameters(n_samples)
         y_data = self.evaluate_function(params)
 
         # Add noise if requested
         if add_noise:
-            # Calculate the data range to scale the noise appropriately
-            data_range = np.max(y_data) - np.min(y_data)
+            # For each independent variable
+            for var_name in y_data:
+                x_values, y_values = y_data[var_name]
 
-            # Generate the entire noise matrix at once
-            noise = np.random.normal(0, noise_level * data_range, size=y_data.shape)
+                # Add noise using the utility function
+                noisy_y_values = add_gaussian_noise(data=y_values, sigma=noise_level, relative=True, seed=None)
 
-            # Add noise to the data
-            y_data = y_data + noise
+                # Update the data with noisy values
+                y_data[var_name] = (x_values, noisy_y_values)
 
         return params, y_data

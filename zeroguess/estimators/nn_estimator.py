@@ -52,6 +52,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         n_epochs: int = 200,
         validation_split: float = 0.2,
         verbose: bool = True,
+        add_noise: bool = False,
+        noise_level: float = 0.05,
         device: Optional[str] = None,
         **kwargs,
     ):
@@ -91,6 +93,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         self.n_epochs = n_epochs
         self.validation_split = validation_split
         self.verbose = verbose
+        self.add_noise = add_noise
+        self.noise_level = noise_level
 
         # Set up device selection - default to CPU
         if device is None:
@@ -148,6 +152,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         n_epochs: Optional[int] = None,
         validation_split: Optional[float] = None,
         verbose: Optional[bool] = None,
+        add_noise: Optional[bool] = None,
+        noise_level: Optional[float] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Train the neural network on synthetic data.
@@ -177,6 +183,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         n_epochs = n_epochs or self.n_epochs
         validation_split = validation_split or self.validation_split
         verbose = verbose or self.verbose
+        add_noise = add_noise or self.add_noise
+        noise_level = noise_level or self.noise_level
 
         # Create data generator if it doesn't exist
         if self.data_generator is None:
@@ -192,7 +200,9 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         try:
             # Generate synthetic training data
-            params, function_values = self.data_generator.generate_dataset(n_samples=n_samples)
+            params, function_values = self.data_generator.generate_dataset(
+                n_samples=n_samples, add_noise=add_noise, noise_level=noise_level
+            )
 
             # Process the data for training
             # For now, we'll assume a single independent variable scenario

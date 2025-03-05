@@ -251,10 +251,11 @@ def run_lmfit_comparison_benchmark(  # noqa: C901
     model_zg = lmfit_integration.Model(
         fit_func,
         independent_vars_sampling={"x": x_data},
-        # param_ranges=param_ranges,
         estimator_settings={
-            'make_canonical': fit_func.get_canonical_params
-        }
+            "make_canonical": fit_func.get_canonical_params,
+            "add_noise": True,
+            "noise_level": noise_level,
+        },
     )
 
     # Set parameter bounds

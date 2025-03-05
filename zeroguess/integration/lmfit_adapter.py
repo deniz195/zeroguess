@@ -2,6 +2,7 @@
 Integration with lmfit's Model class.
 """
 
+import warnings
 from typing import Any, Callable, Dict, Optional, Tuple
 
 import numpy as np
@@ -174,7 +175,7 @@ class Model(lmfit.Model):
 
         return param_ranges
 
-    def _initialize_estimator(self, device=None, **train_kwargs):
+    def _initialize_estimator(self, **train_kwargs):
         """Initialize and train the parameter estimator."""
         try:
 
@@ -198,15 +199,15 @@ class Model(lmfit.Model):
                 function=self.func,
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
-                device=device,
                 **self.estimator_settings,
             )
 
             # Train the estimator
             self._estimator.train(**train_kwargs)
+
         except Exception as e:
+            raise e
             # If initialization or training fails, log the error and set estimator to None
-            import warnings
 
             warnings.warn(
                 f"Failed to initialize or train parameter estimator: {str(e)}. "
@@ -273,6 +274,7 @@ class Model(lmfit.Model):
                 # Initialize and train estimator
                 self._initialize_estimator()
             except Exception as e:
+                raise e
                 # Raise an exception instead of warning
                 raise RuntimeError(
                     f"Failed to extract parameter bounds or train estimator: {str(e)}. "
