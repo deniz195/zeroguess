@@ -129,7 +129,3 @@ MIT
 ## Performance Benchmarks
 
 ZeroGuess is benchmarked regularly to ensure optimal performance. View the latest [benchmark results](https://deniz195.github.io/zeroguess/).
-
-Key metrics from our latest benchmark:
-- Wavelet function: 95% success rate vs. 75% with traditional methods
-- Double Gaussian function: 92% success rate vs. 68% with traditional methods
