@@ -109,21 +109,11 @@ class TestLmfitIntegration:
         )
 
         # Set parameter bounds
-        params = model.make_params()
-        for param_name, param in params.items():
-            if param_name == "frequency":
-                param.min = 0.1
-                param.max = 5.0
-            elif param_name == "phase":
-                param.min = 0
-                param.max = 2 * np.pi
-            elif param_name == "position":
-                param.min = -5
-                param.max = 5
-            elif param_name == "width":
-                param.min = 0.1
-                param.max = 5
-
+        model.set_param_hint("frequency", min=0.1, max=np.inf) # set infinity boundary
+        model.set_param_hint("phase", min=0, max=2 * np.pi)
+        model.set_param_hint("position", min=-5, max=5)
+        model.set_param_hint("width", min=0.1, max=5)
+        
         # Get parameters from guess()
         with warnings.catch_warnings(record=True) as w:
             guessed_params = model.guess(y_data, x=x_data)

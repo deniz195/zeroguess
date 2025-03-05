@@ -206,7 +206,6 @@ class Model(lmfit.Model):
             self._estimator.train(**train_kwargs)
 
         except Exception as e:
-            raise e
             # If initialization or training fails, log the error and set estimator to None
 
             warnings.warn(
@@ -274,7 +273,6 @@ class Model(lmfit.Model):
                 # Initialize and train estimator
                 self._initialize_estimator()
             except Exception as e:
-                raise e
                 # Raise an exception instead of warning
                 raise RuntimeError(
                     f"Failed to extract parameter bounds or train estimator: {str(e)}. "
