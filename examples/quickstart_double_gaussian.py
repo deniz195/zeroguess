@@ -1,9 +1,8 @@
 import numpy as np
-
 from zeroguess.functions import DoubleGaussianFunction, add_gaussian_noise
 from zeroguess.integration import ZeroGuessModel
 
-# Create a Gaussian function
+# Create a double peakGaussian function
 double_gaussian = DoubleGaussianFunction()
 
 # Create some experimental data
@@ -11,10 +10,10 @@ true_params = double_gaussian.get_random_params()
 x_data = np.linspace(-10, 10, 100)
 y_data = add_gaussian_noise(double_gaussian(x_data, **true_params), sigma=0.1)
 
-# Enhanced lmfit Model with parameter estimatio
+# Enhanced lmfit Model with parameter estimation
 model = ZeroGuessModel(
     double_gaussian,
-    independent_vars_sampling={"x": np.linspace(-10, 10, 100)},
+    independent_vars_sampling={"x": x_data},
     estimator_settings={
         "make_canonical": double_gaussian.get_canonical_params,
         "n_samples": 1000,

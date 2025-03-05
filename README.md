@@ -28,42 +28,80 @@ pip install zeroguess
 ### Basic Usage
 
 ```python
-import zeroguess
 import numpy as np
+from zeroguess.functions import WaveletFunction, add_gaussian_noise
+from zeroguess.integration import ZeroGuessModel
+
+# Create a double peakGaussian function
+wavelet = WaveletFunction()
+
+# Create some experimental data
+true_params = wavelet.get_random_params()
+x_data = np.linspace(-10, 10, 100)
+y_data = add_gaussian_noise(wavelet(x_data, **true_params), sigma=0.1)
+```
+
+```python
+import zeroguess
 from scipy import optimize
-
-# Define function to fit
-def gaussian(x, amplitude, center, width):
-    return amplitude * np.exp(-(x - center)**2 / (2 * width**2))
-
-# Define sampling points for training
-x_sampling = np.linspace(-10, 10, 100)
 
 # Create and train parameter estimator
 estimator = zeroguess.create_estimator(
-    function=gaussian,
+    function=wavelet,
     param_ranges={
-        'amplitude': (0, 10),
-        'center': (-5, 5),
-        'width': (0.1, 2)
+        'frequency': (0, 10),
+        'phase': (-5, 5),
+        'position': (0.1, 2),
+        'width': (0, 10),
     },
     independent_vars_sampling={
-        'x': x_sampling
+        'x': x_data
     }
 )
 estimator.train()
 
-# Get parameter estimates for new data
-x_data = np.linspace(-10, 10, 100)
-y_data = ... # Your experimental data
+# Get parameter estimates for experimental data
 initial_params = estimator.predict(x_data, y_data)
 
 # Use in standard curve fitting
 optimal_params, _ = optimize.curve_fit(
-    gaussian, x_data, y_data,
+    wavelet, x_data, y_data,
     p0=initial_params
 )
 ```
+
+### lmfit Integration
+
+```python
+
+# Enhanced lmfit Model with parameter estimation
+model = ZeroGuessModel(
+    wavelet,
+    independent_vars_sampling={"x": x_data},
+    estimator_settings={
+        "make_canonical": wavelet.get_canonical_params,
+        # Configure training parameters
+        # "n_samples": 1000,
+        # "n_epochs": 200,
+        # "validation_split": 0.2,
+        # "add_noise": True,
+        # "noise_level": 0.1,
+        # 'verbose': True
+        "snapshot_path": "model_dg.pth", # saves and loads model automatically
+    },
+)
+
+model.set_param_hint("frequency", min=0, max=10)
+model.set_param_hint("phase", min=-5, max=5)
+model.set_param_hint("position", min=0.1, max=2)
+model.set_param_hint("width", min=0, max=10)
+
+# Standard lmfit workflow
+params = model.guess(y_data, x=x_data)
+
+result = model.fit(y_data, x=x_data, params=params)
+```
+
 
 ### SciPy Integration
 
@@ -73,40 +111,17 @@ import numpy as np
 
 # Enhanced curve_fit with automatic parameter estimation
 optimal_params, pcov = scipy_integration.curve_fit(
-    gaussian, x_data, y_data,
+    wavelet, x_data, y_data,
     param_ranges={
-        'amplitude': (0, 10),
-        'center': (-5, 5),
-        'width': (0.1, 2)
+        'frequency': (0, 10),
+        'phase': (-5, 5),
+        'position': (0.1, 2),
+        'width': (0, 10),
     },
     independent_vars_sampling={
         'x': np.linspace(-10, 10, 100)
     }
 )
-```
-
-### lmfit Integration
-
-```python
-from zeroguess.integration import ZeroGuessModel
-import lmfit
-import numpy as np
-
-# Enhanced lmfit Model with parameter estimation
-model = ZeroGuessModel(
-    gaussian,
-    param_ranges={
-        'amplitude': (0, 10),
-        'center': (-5, 5),
-        'width': (0.1, 2)
-    },
-    independent_vars_sampling={
-        'x': np.linspace(-10, 10, 100)
-    }
-)
-
-# Standard lmfit workflow
-result = model.fit(y_data, x=x_data)
 ```
 
 ## Features
