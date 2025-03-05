@@ -42,10 +42,16 @@ class NeuralNetworkEstimator(BaseEstimator):
         function: Callable,
         param_ranges: Dict[str, Tuple[float, float]],
         independent_vars_sampling: Dict[str, np.ndarray],
+        make_canonical: Callable = None,
         architecture: str = "best",
         architecture_params: Optional[Dict[str, Any]] = None,
         learning_rate: float = 0.001,
         weight_decay: float = 0.00001,
+        n_samples: int = 3000,
+        batch_size: int = 32,
+        n_epochs: int = 200,
+        validation_split: float = 0.2,
+        verbose: bool = True,
         device: Optional[str] = None,
         **kwargs,
     ):
@@ -74,10 +80,17 @@ class NeuralNetworkEstimator(BaseEstimator):
         if architecture_params is None:
             architecture_params = {}
 
+        self.make_canonical = make_canonical
         self.architecture_name = architecture
         self.architecture_params = architecture_params
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
+
+        self.n_samples = n_samples
+        self.batch_size = batch_size
+        self.n_epochs = n_epochs
+        self.validation_split = validation_split
+        self.verbose = verbose
 
         # Set up device selection - default to CPU
         if device is None:
@@ -130,11 +143,11 @@ class NeuralNetworkEstimator(BaseEstimator):
 
     def train(  # noqa: C901
         self,
-        n_samples: int = 3000,
-        batch_size: int = 32,
-        n_epochs: int = 200,
-        validation_split: float = 0.2,
-        verbose: bool = True,
+        n_samples: Optional[int] = None,
+        batch_size: Optional[int] = None,
+        n_epochs: Optional[int] = None,
+        validation_split: Optional[float] = None,
+        verbose: Optional[bool] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Train the neural network on synthetic data.
@@ -158,12 +171,20 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         assert "epochs" not in kwargs, "epochs is not a valid keyword argument, use n_epochs instead"
 
+        # Use provided values or defaults
+        n_samples = n_samples or self.n_samples
+        batch_size = batch_size or self.batch_size
+        n_epochs = n_epochs or self.n_epochs
+        validation_split = validation_split or self.validation_split
+        verbose = verbose or self.verbose
+
         # Create data generator if it doesn't exist
         if self.data_generator is None:
             self.data_generator = SyntheticDataGenerator(
                 function=self.function,
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
+                make_canonical=self.make_canonical,
             )
 
         # Initialize the history dictionary with empty lists for loss metrics

@@ -252,6 +252,9 @@ def run_lmfit_comparison_benchmark(  # noqa: C901
         fit_func,
         independent_vars_sampling={"x": x_data},
         # param_ranges=param_ranges,
+        estimator_settings={
+            'make_canonical': fit_func.get_canonical_params
+        }
     )
 
     # Set parameter bounds
@@ -586,9 +589,9 @@ def generate_lmfit_comparison_report(results_df, output_dir, function_name, tole
         </style>
     </head>
     <body>
-        <h1>ZeroGuess Benchmark: Direct Comparison with lmfit</h1>
+        <h1>ZeroGuess Benchmark: Direct Comparison with lmfit for {function_name}</h1>
 
-        <h2>Summary</h2>
+        <h2>Summary for {function_name}</h2>
         <div class="summary-container">
             <div class="summary-section">
                 <h3>Success Rates</h3>

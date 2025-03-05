@@ -3,7 +3,7 @@ Synthetic data generation for training parameter estimators.
 """
 
 import inspect
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Tuple, Optional
 
 import numpy as np
 
@@ -16,6 +16,7 @@ class SyntheticDataGenerator:
         function: Callable,
         param_ranges: Dict[str, Tuple[float, float]],
         independent_vars_sampling: Dict[str, np.ndarray],
+        make_canonical: Optional[Callable] = None,
     ):
         """Initialize the synthetic data generator.
 
@@ -30,6 +31,7 @@ class SyntheticDataGenerator:
         self.independent_vars_sampling = independent_vars_sampling
         self.param_names = list(param_ranges.keys())
         self.independent_var_names = list(independent_vars_sampling.keys())
+        self.make_canonical = make_canonical
 
         # Check the function signature to understand parameter order
         self._check_function_signature()
@@ -55,11 +57,12 @@ class SyntheticDataGenerator:
         if missing_params:
             raise ValueError(f"Parameters {missing_params} not found in function signature")
 
-    def generate_random_parameters(self, n_samples: int) -> np.ndarray:
+    def generate_random_parameters(self, n_samples: int, canonical: bool = True) -> np.ndarray:
         """Generate random parameter sets within the specified ranges.
 
         Args:
             n_samples: Number of parameter sets to generate
+            canonical: Whether to apply canonical transformation to parameters
 
         Returns:
             Array of shape (n_samples, n_parameters) containing random parameter values
@@ -69,6 +72,20 @@ class SyntheticDataGenerator:
         for i, param_name in enumerate(self.param_names):
             min_val, max_val = self.param_ranges[param_name]
             params[:, i] = np.random.uniform(min_val, max_val, size=n_samples)
+
+        # Apply canonical transformation if requested and available
+        if canonical and self.make_canonical is not None:
+            # Process each parameter set
+            for i in range(n_samples):
+                # Convert the i-th parameter set to a dictionary
+                param_dict = {name: params[i, j] for j, name in enumerate(self.param_names)}
+                
+                # Apply the canonical transformation
+                canonical_params = self.make_canonical(param_dict)
+                
+                # Update the parameter array with transformed values
+                for j, name in enumerate(self.param_names):
+                    params[i, j] = canonical_params[name]
 
         return params
 

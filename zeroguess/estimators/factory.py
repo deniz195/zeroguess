@@ -13,6 +13,7 @@ def create_estimator(
     function: Callable,
     param_ranges: Dict[str, Tuple[float, float]],
     independent_vars_sampling: Dict[str, np.ndarray],
+    make_canonical: Callable = None,
     estimator_type: str = "neural_network",
     architecture: str = "best",
     architecture_params: Dict[str, Any] = None,
@@ -52,6 +53,7 @@ def create_estimator(
             independent_vars_sampling=independent_vars_sampling,
             architecture=architecture,
             architecture_params=architecture_params,
+            make_canonical=make_canonical,
             **kwargs,
         )
     elif estimator_type == "nnae":
