@@ -25,7 +25,7 @@ except ImportError:
 
 # Import the real ZeroGuess lmfit integration
 try:
-    from zeroguess.integration import lmfit_integration
+    from zeroguess.integration import ZeroGuessModel
 
     HAS_ZEROGUESS = True
 except ImportError:
@@ -101,7 +101,7 @@ class TestLmfitIntegration:
         x_data, y_data = noisy_data
 
         # Create model with ZeroGuess integration
-        model = lmfit_integration.Model(
+        model = ZeroGuessModel(
             wavelet_function,
             independent_vars_sampling={
                 "x": x_sampling,
@@ -138,7 +138,7 @@ class TestLmfitIntegration:
         x_data, y_data = noisy_data
 
         # Create model with ZeroGuess integration
-        model = lmfit_integration.Model(
+        model = ZeroGuessModel(
             wavelet_function,
             independent_vars_sampling={
                 "x": x_sampling,
@@ -212,7 +212,7 @@ class TestLmfitIntegration:
         x_data, y_data = noisy_data
 
         # Create model with ZeroGuess integration
-        model = lmfit_integration.Model(
+        model = ZeroGuessModel(
             wavelet_function,
             independent_vars_sampling={
                 "x": x_sampling,
@@ -261,7 +261,7 @@ class TestLmfitIntegration:
     def test_model_creation_without_param_ranges(self, wavelet_function, x_sampling):
         """Test that model creation without param_ranges works correctly."""
         # Create model without param_ranges
-        model = lmfit_integration.Model(
+        model = ZeroGuessModel(
             wavelet_function,
             independent_vars_sampling={
                 "x": x_sampling,

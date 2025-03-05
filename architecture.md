@@ -297,7 +297,7 @@ optimal_params, pcov = scipy_integration.curve_fit(
 
 ```python
 # Enhanced lmfit with automatic initial parameter estimation
-from zeroguess.integration import lmfit_integration
+from zeroguess.integration import ZeroGuessModel
 import lmfit
 import numpy as np
 
@@ -305,7 +305,7 @@ import numpy as np
 x_sampling = np.linspace(-10, 10, 100)
 
 # Create an lmfit model with automatic parameter estimation
-model = lmfit_integration.Model(
+model = ZeroGuessModel(
     gaussian,
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for training
@@ -332,7 +332,7 @@ result = model.fit(y_data, x=x_data)
 
 ```python
 # Enhanced lmfit with automatic initial parameter estimation using lmfit's parameter bounds
-from zeroguess.integration import lmfit_integration
+from zeroguess.integration import ZeroGuessModel
 import lmfit
 import numpy as np
 
@@ -340,7 +340,7 @@ import numpy as np
 x_sampling = np.linspace(-10, 10, 100)
 
 # Create an lmfit model with automatic parameter estimation
-model = lmfit_integration.Model(
+model = ZeroGuessModel(
     gaussian,
     independent_vars_sampling={
         'x': x_sampling  # Sampling points for training

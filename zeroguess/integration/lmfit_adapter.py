@@ -24,7 +24,7 @@ class Model(lmfit.Model):
     Example:
         ```python
         import numpy as np
-        from zeroguess.integration import lmfit_integration
+        from zeroguess.integration import ZeroGuessModel
 
         def gaussian(x, amplitude, center, width):
             return amplitude * np.exp(-(x - center)**2 / (2 * width**2))
@@ -33,7 +33,7 @@ class Model(lmfit.Model):
         x_sampling = np.linspace(-10, 10, 100)
 
         # Create model with automatic parameter estimation
-        model = lmfit_integration.Model(
+        model = ZeroGuessModel(
             gaussian,
             independent_vars_sampling={
                 'x': x_sampling
@@ -58,7 +58,7 @@ class Model(lmfit.Model):
     Alternative with param_ranges specified directly:
         ```python
         # Create model with automatic parameter estimation using explicit param_ranges
-        model = lmfit_integration.Model(
+        model = ZeroGuessModel(
             gaussian,
             param_ranges={
                 'amplitude': (0, 10),
@@ -201,8 +201,7 @@ class Model(lmfit.Model):
                 independent_vars_sampling=self.independent_vars_sampling,
                 # # Load if snapshot_path is provided
                 # snapshot_path=self.estimator_settings.get("snapshot_path", None),
-
-                **self.estimator_settings,                
+                **self.estimator_settings,
             )
 
             # Train the estimator
@@ -278,7 +277,7 @@ class Model(lmfit.Model):
         if self._estimator is None:
             # Initialize and train estimator
             self._initialize_estimator()
-            
+
         # If estimator is available, use it to guess parameters
         if self._estimator is not None:
             try:

@@ -42,9 +42,9 @@ except ImportError:
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-# Only import lmfit_integration if lmfit is available
+# Only import ZeroGuessModel if lmfit is available
 if LMFIT_AVAILABLE:
-    from zeroguess.integration import lmfit_integration
+    from zeroguess.integration import ZeroGuessModel
 
 
 def gaussian(x, amplitude, center, width):
@@ -283,7 +283,7 @@ def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
 
     # Create enhanced lmfit Model with automatic parameter estimation
     print("Creating model with automatic parameter estimation...")
-    model = lmfit_integration.Model(
+    model = ZeroGuessModel(
         gaussian,
         # param_ranges={
         #     'amplitude': (0.1, 10.0),

@@ -88,12 +88,12 @@ optimal_params, pcov = scipy_integration.curve_fit(
 ### lmfit Integration
 
 ```python
-from zeroguess.integration import lmfit_integration
+from zeroguess.integration import ZeroGuessModel
 import lmfit
 import numpy as np
 
 # Enhanced lmfit Model with parameter estimation
-model = lmfit_integration.Model(
+model = ZeroGuessModel(
     gaussian,
     param_ranges={
         'amplitude': (0, 10),

@@ -23,7 +23,7 @@ import pandas as pd
 from matplotlib.gridspec import GridSpec
 
 from zeroguess.functions import DoubleGaussianFunction, DoubleSigmoidFunction, WaveletFunction, add_gaussian_noise
-from zeroguess.integration import lmfit_integration
+from zeroguess.integration import ZeroGuessModel
 
 # Create output directory
 BENCHMARK_RESULTS_DIR = Path(__file__).parent / "benchmark_results"
@@ -248,7 +248,7 @@ def run_lmfit_comparison_benchmark(  # noqa: C901
     # Create models with or without ZeroGuess integration
     model_lmfit = lmfit.Model(fit_func)
 
-    model_zg = lmfit_integration.Model(
+    model_zg = ZeroGuessModel(
         fit_func,
         independent_vars_sampling={"x": x_data},
         estimator_settings={

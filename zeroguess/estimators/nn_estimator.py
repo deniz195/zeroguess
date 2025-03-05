@@ -15,6 +15,7 @@ from zeroguess.data.generators import SyntheticDataGenerator
 from zeroguess.estimators.architectures import get_architecture, get_architecture_info, list_architectures
 from zeroguess.estimators.base import BaseEstimator
 
+
 class NeuralNetworkEstimator(BaseEstimator):
     """Neural network-based parameter estimator.
 
@@ -76,12 +77,7 @@ class NeuralNetworkEstimator(BaseEstimator):
                 improve performance for the small networks used in ZeroGuess.
             **kwargs: Additional keyword arguments
         """
-        super().__init__(function, 
-            param_ranges, 
-            independent_vars_sampling, 
-            snapshot_path=snapshot_path, 
-            **kwargs
-        )
+        super().__init__(function, param_ranges, independent_vars_sampling, snapshot_path=snapshot_path, **kwargs)
 
         # Handle architecture parameters
         if architecture_params is None:
@@ -485,7 +481,7 @@ class NeuralNetworkEstimator(BaseEstimator):
         snapshot_path = snapshot_path or self.snapshot_path
 
         print(f"Saving model to {snapshot_path}")
-        
+
         # Create parent directory if it doesn't exist
         os.makedirs(os.path.dirname(os.path.abspath(snapshot_path)), exist_ok=True)
 

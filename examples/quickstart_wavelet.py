@@ -1,7 +1,7 @@
 import numpy as np
 
 from zeroguess.functions import WaveletFunction, add_gaussian_noise
-from zeroguess.integration import lmfit_integration
+from zeroguess.integration import ZeroGuessModel
 
 # Create a Gaussian function
 wavelet = WaveletFunction()
@@ -12,7 +12,7 @@ x_data = np.linspace(-10, 10, 100)
 y_data = add_gaussian_noise(wavelet(x_data, **true_params), sigma=0.1)
 
 # Enhanced lmfit Model with parameter estimatio
-model = lmfit_integration.Model(
+model = ZeroGuessModel(
     wavelet,
     independent_vars_sampling={"x": np.linspace(-10, 10, 100)},
     estimator_settings={
