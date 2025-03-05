@@ -195,12 +195,16 @@ class TestSigmoidWorkflow:
             function=sigmoid_instance,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
-            hidden_layers=[16, 32, 16],
-            learning_rate=0.01,
+            make_canonical=sigmoid_instance.get_canonical_params,
+            n_samples=3000,
+            n_epochs=200,
+            batch_size=32,
+            add_noise=True,
+            noise_level=0.1,
         )
 
         # Train the estimator
-        estimator.train(n_samples=300, n_epochs=25, batch_size=32, add_noise=True, noise_level=0.2)
+        estimator.train(return_history=True)
         assert estimator.is_trained
 
         # Test different rate parameter scenarios
