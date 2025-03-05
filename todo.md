@@ -1,11 +1,11 @@
 # Todos Open
 
+## Tests
+- Make all tests pass in pipeline & locally
+
 ## Readability
 - Revamp Readme for quickstart
 - Add function name to benchmark results
-
-## Tests
-- Make all tests pass in pipeline & locally
 
 ## Plumbing
 - Add documentation
