@@ -23,6 +23,7 @@ model = lmfit_integration.Model(
         "add_noise": True,
         "noise_level": 0.1,
         # 'verbose': True
+        "snapshot_path": "model_dg.pth"
     },
 )
 

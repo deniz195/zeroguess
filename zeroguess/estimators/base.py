@@ -20,6 +20,7 @@ class BaseEstimator(ABC):
         function: Optional[Callable],
         param_ranges: Dict[str, Tuple[float, float]],
         independent_vars_sampling: Dict[str, np.ndarray],
+        snapshot_path: Optional[str] = None,
         **kwargs,
     ):
         """Initialize the parameter estimator.
@@ -36,6 +37,7 @@ class BaseEstimator(ABC):
         self.independent_vars_sampling = independent_vars_sampling
         self.param_names = list(param_ranges.keys())
         self.independent_var_names = list(independent_vars_sampling.keys())
+        self.snapshot_path = snapshot_path
         self.is_trained = False
 
         # Validate inputs
@@ -95,7 +97,24 @@ class BaseEstimator(ABC):
 
     @classmethod
     @abstractmethod
-    def load(cls, path: str) -> "BaseEstimator":
+    def create_or_load(cls, snapshot_path: str, device: Optional[str] = None, **kwargs) -> "BaseEstimator":
+        """Create a new estimator or load an existing one from disk.
+
+        Args:
+            snapshot_path: Path to load the model from
+            device: Device to use for computation (default: "cpu")
+                Options: "cuda", "mps", "cpu". CPU is used by default as GPUs often don't
+                improve performance for the small networks used in ZeroGuess.
+
+        Returns:
+            Loaded NeuralNetworkEstimator instance. If the model file does not exist,
+            a new estimator is created with the provided kwargs.
+
+        """
+
+    @classmethod
+    @abstractmethod
+    def load(cls, path: str, device: Optional[str] = None) -> "BaseEstimator":
         """Load a trained model from disk.
 
         Args:

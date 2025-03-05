@@ -2,7 +2,7 @@
 Factory for creating parameter estimator instances.
 """
 
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple, Optional
 
 import numpy as np
 
@@ -17,6 +17,7 @@ def create_estimator(
     estimator_type: str = "neural_network",
     architecture: str = "best",
     architecture_params: Dict[str, Any] = None,
+    snapshot_path: Optional[str] = None,
     **kwargs,
 ) -> BaseEstimator:
     """Create a parameter estimator instance.
@@ -47,7 +48,8 @@ def create_estimator(
         if architecture_params is None:
             architecture_params = {}
 
-        return NeuralNetworkEstimator(
+        return NeuralNetworkEstimator.create_or_load(
+            snapshot_path,
             function=function,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,

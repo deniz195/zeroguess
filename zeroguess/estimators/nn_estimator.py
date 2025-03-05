@@ -15,7 +15,6 @@ from zeroguess.data.generators import SyntheticDataGenerator
 from zeroguess.estimators.architectures import get_architecture, get_architecture_info, list_architectures
 from zeroguess.estimators.base import BaseEstimator
 
-
 class NeuralNetworkEstimator(BaseEstimator):
     """Neural network-based parameter estimator.
 
@@ -42,6 +41,7 @@ class NeuralNetworkEstimator(BaseEstimator):
         function: Callable,
         param_ranges: Dict[str, Tuple[float, float]],
         independent_vars_sampling: Dict[str, np.ndarray],
+        snapshot_path: Optional[str] = None,
         make_canonical: Callable = None,
         architecture: str = "best",
         architecture_params: Optional[Dict[str, Any]] = None,
@@ -76,7 +76,12 @@ class NeuralNetworkEstimator(BaseEstimator):
                 improve performance for the small networks used in ZeroGuess.
             **kwargs: Additional keyword arguments
         """
-        super().__init__(function, param_ranges, independent_vars_sampling, **kwargs)
+        super().__init__(function, 
+            param_ranges, 
+            independent_vars_sampling, 
+            snapshot_path=snapshot_path, 
+            **kwargs
+        )
 
         # Handle architecture parameters
         if architecture_params is None:
@@ -95,6 +100,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         self.verbose = verbose
         self.add_noise = add_noise
         self.noise_level = noise_level
+
+        self.completed_epochs = 0
 
         # Set up device selection - default to CPU
         if device is None:
@@ -251,6 +258,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
             # Create the neural network if it doesn't exist
             if self.network is None:
+                print("Creating new network.")
                 n_input_features = X.shape[1]
                 n_output_params = len(self.param_names)
 
@@ -259,6 +267,10 @@ class NeuralNetworkEstimator(BaseEstimator):
                     n_input_features=n_input_features, n_output_params=n_output_params
                 )
 
+                # Move the network to the appropriate device
+                self.network.to(self.device)
+            else:
+                print("Network already exists, skipping creation.")
                 # Move the network to the appropriate device
                 self.network.to(self.device)
 
@@ -281,9 +293,11 @@ class NeuralNetworkEstimator(BaseEstimator):
             )
 
             # Training loop
-            completed_epochs = 0
+            # completed_epochs = self.completed_epochs
+            start_epoch = self.completed_epochs
+            end_epoch = start_epoch + n_epochs
 
-            for epoch in range(n_epochs):
+            for epoch in range(start_epoch, end_epoch):
                 # Training phase
                 self.network.train()
                 train_loss = 0.0
@@ -331,14 +345,14 @@ class NeuralNetworkEstimator(BaseEstimator):
                 # Print progress
                 if verbose and (epoch + 1) % 10 == 0:
                     print(
-                        f"Epoch {epoch + 1}/{n_epochs} - "
+                        f"Epoch {epoch + 1}/{end_epoch} - "
                         f"train_loss: {train_loss:.6f} - "
                         f"val_loss: {val_loss:.6f}"
                     )
 
         except KeyboardInterrupt:
             if verbose:
-                print(f"\nTraining interrupted at epoch {completed_epochs}/{n_epochs}")
+                print(f"\nTraining interrupted at epoch {completed_epochs}/{end_epoch}")
 
                 # Only print metrics if we've completed at least one epoch
                 if completed_epochs > 0:
@@ -358,7 +372,13 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         # If no epochs were completed, indicate this in the history
         if "completed_epochs" not in history:
-            history["completed_epochs"] = n_epochs
+            history["completed_epochs"] = end_epoch
+
+        self.completed_epochs = history["completed_epochs"]
+
+        # Save the model
+        if self.snapshot_path is not None:
+            self.save(self.snapshot_path)
 
         return history
 
@@ -449,7 +469,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
         return param_dict
 
-    def save(self, path: str) -> None:
+    def save(self, snapshot_path: Optional[str] = None) -> None:
         """Save the trained model to disk.
 
         Args:
@@ -458,11 +478,16 @@ class NeuralNetworkEstimator(BaseEstimator):
         Raises:
             RuntimeError: If the estimator is not trained
         """
+
         if not self.is_trained or self.network is None:
             raise RuntimeError("Estimator must be trained before saving")
 
+        snapshot_path = snapshot_path or self.snapshot_path
+
+        print(f"Saving model to {snapshot_path}")
+        
         # Create parent directory if it doesn't exist
-        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.abspath(snapshot_path)), exist_ok=True)
 
         # Save the model state
         state = {
@@ -475,12 +500,58 @@ class NeuralNetworkEstimator(BaseEstimator):
             "network_state_dict": self.network.state_dict(),
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
+            "n_samples": self.n_samples,
+            "batch_size": self.batch_size,
+            "n_epochs": self.n_epochs,
+            "validation_split": self.validation_split,
+            "verbose": self.verbose,
+            "add_noise": self.add_noise,
+            "noise_level": self.noise_level,
+            "completed_epochs": self.completed_epochs,
         }
 
-        torch.save(state, path)
+        # make_canonical: Callable = None,
+
+        torch.save(state, snapshot_path)
 
     @classmethod
-    def load(cls, path: str, device: Optional[str] = None) -> "NeuralNetworkEstimator":
+    def create_or_load(
+        cls,
+        snapshot_path: str,
+        device: Optional[str] = None,
+        **kwargs,
+    ) -> "NeuralNetworkEstimator":
+        """Create a new estimator or load an existing one from disk.
+
+        Args:
+            snapshot_path: Path to load the model from
+            device: Device to use for computation (default: "cpu")
+                Options: "cuda", "mps", "cpu". CPU is used by default as GPUs often don't
+                improve performance for the small networks used in ZeroGuess.
+
+        Returns:
+            Loaded NeuralNetworkEstimator instance. If the model file does not exist,
+            a new estimator is created with the provided kwargs.
+
+        """
+        try:
+            print(f"Loading estimator of type {cls.__name__} from {snapshot_path}")
+
+            if snapshot_path is None:
+                raise ValueError("No path provided.")
+
+            estimator = cls.load(snapshot_path, device)
+            estimator.function = kwargs.get("function", None)
+            estimator.make_canonical = kwargs.get("make_canonical", None)
+
+            return estimator
+        except Exception as e:
+            print(f"Loading failed: {e}")
+            print("Creating new estimator.")
+            return cls(snapshot_path=snapshot_path, **kwargs)
+
+    @classmethod
+    def load(cls, snapshot_path: str, device: Optional[str] = None) -> "NeuralNetworkEstimator":
         """Load a trained model from disk.
 
         Args:
@@ -495,8 +566,8 @@ class NeuralNetworkEstimator(BaseEstimator):
         Raises:
             FileNotFoundError: If the model file does not exist
         """
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Model file not found: {path}")
+        if not os.path.exists(snapshot_path):
+            raise FileNotFoundError(f"Model file not found: {snapshot_path}")
 
         # Determine device to load model onto
         if device is None:
@@ -514,7 +585,7 @@ class NeuralNetworkEstimator(BaseEstimator):
                 device_obj = torch.device(device)
 
         # Load the model state
-        state = torch.load(path, map_location=device_obj, weights_only=False)
+        state = torch.load(snapshot_path, map_location=device_obj, weights_only=False)
 
         # Extract the independent_vars_sampling from the state, or create a dummy one
         # that will pass validation in the base class
@@ -530,17 +601,24 @@ class NeuralNetworkEstimator(BaseEstimator):
             function=None,  # Function is not necessary for prediction
             param_ranges=state["param_ranges"],
             independent_vars_sampling=independent_vars_sampling,
+            snapshot_path=snapshot_path,
             architecture=state["architecture_name"],
             architecture_params=state["architecture_params"],
             learning_rate=state["learning_rate"],
             weight_decay=state["weight_decay"],
+            n_samples=state["n_samples"],
+            batch_size=state["batch_size"],
+            n_epochs=state["n_epochs"],
+            validation_split=state["validation_split"],
+            verbose=state["verbose"],
+            add_noise=state["add_noise"],
             device=device,  # Pass through the device parameter
         )
 
         # Set additional attributes
         estimator.param_names = state["param_names"]
         estimator.independent_var_names = state["independent_var_names"]
-
+        estimator.completed_epochs = state["completed_epochs"]
         # Check the network input size from the state dictionary
         # Get the first layer's weight shape from the network state dict
         first_layer_key = [k for k in state["network_state_dict"].keys() if "weight" in k][0]

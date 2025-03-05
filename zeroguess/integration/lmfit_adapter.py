@@ -194,16 +194,22 @@ class Model(lmfit.Model):
             if self.independent_vars_sampling is None:
                 raise RuntimeError("Parameter estimation cannot proceed without independent variables.")
 
-            # Create estimator
+            # Create or load estimator
             self._estimator = zeroguess.create_estimator(
                 function=self.func,
                 param_ranges=self.param_ranges,
                 independent_vars_sampling=self.independent_vars_sampling,
-                **self.estimator_settings,
+                # # Load if snapshot_path is provided
+                # snapshot_path=self.estimator_settings.get("snapshot_path", None),
+
+                **self.estimator_settings,                
             )
 
             # Train the estimator
-            self._estimator.train(**train_kwargs)
+            if self._estimator.is_trained:
+                print("Estimator is already trained. Skipping training.")
+            else:
+                self._estimator.train(**train_kwargs)
 
         except Exception as e:
             # If initialization or training fails, log the error and set estimator to None
@@ -214,6 +220,7 @@ class Model(lmfit.Model):
                 stacklevel=2,
             )
             self._estimator = None
+            raise e
 
     def zeroguess_train(self, device=None, **train_kwargs):
         """Train the parameter estimator.
@@ -269,17 +276,9 @@ class Model(lmfit.Model):
 
         # Handle the case where estimator not initialized
         if self._estimator is None:
-            try:
-                # Initialize and train estimator
-                self._initialize_estimator()
-            except Exception as e:
-                # Raise an exception instead of warning
-                raise RuntimeError(
-                    f"Failed to extract parameter bounds or train estimator: {str(e)}. "
-                    f"Parameter estimation cannot proceed without valid bounds."
-                    f"Use model.set_param_hint('param_name', min=..., max=...) to set bounds on parameters."
-                )
-
+            # Initialize and train estimator
+            self._initialize_estimator()
+            
         # If estimator is available, use it to guess parameters
         if self._estimator is not None:
             try:
