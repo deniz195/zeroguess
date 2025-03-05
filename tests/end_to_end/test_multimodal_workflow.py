@@ -84,19 +84,16 @@ class TestMultimodalWorkflow:
             function=multimodal_instance,
             param_ranges=param_ranges,
             independent_vars_sampling=independent_vars_sampling,
-            hidden_layers=[32, 64, 64, 32],  # Larger network for complex function
-            learning_rate=0.003,  # Lower learning rate for stability
+            make_canonical=multimodal_instance.get_canonical_params,
+            n_samples=4000,  # More samples for complex function
+            n_epochs=200,  # More epochs for better convergence
+            batch_size=32,
+            add_noise=True,
+            noise_level=0.1,  # Match the noise level in sample data
         )
 
         # Step 4: Train the estimator with increased samples for the complex function
-        training_history = estimator.train(
-            n_samples=500,  # More samples for complex function
-            n_epochs=40,  # More epochs for better convergence
-            batch_size=32,
-            add_noise=True,
-            noise_level=0.2,  # Match the noise level in sample data
-            return_history=True,  # Return history for visualization
-        )
+        training_history = estimator.train(return_history=True)
         assert estimator.is_trained
 
         # Step 5: Predict parameters for experimental data
