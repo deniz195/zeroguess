@@ -1,4 +1,5 @@
 import numpy as np
+
 from zeroguess.functions import DoubleGaussianFunction, add_gaussian_noise
 from zeroguess.integration import ZeroGuessModel
 
