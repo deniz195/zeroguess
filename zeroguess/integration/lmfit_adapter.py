@@ -2,7 +2,6 @@
 Integration with lmfit's Model class.
 """
 
-import warnings
 from typing import Any, Callable, Dict, Optional, Tuple
 
 import numpy as np
@@ -213,13 +212,9 @@ class Model(lmfit.Model):
         except Exception as e:
             # If initialization or training fails, log the error and set estimator to None
 
-            warnings.warn(
-                f"Failed to initialize or train parameter estimator: {str(e)}. "
-                f"Parameter estimation will be disabled.",
-                stacklevel=2,
-            )
             self._estimator = None
-            raise e
+
+            raise RuntimeError(f"Failed to initialize or train parameter estimator: {str(e)}. ")
 
     def zeroguess_train(self, device=None, **train_kwargs):
         """Train the parameter estimator.

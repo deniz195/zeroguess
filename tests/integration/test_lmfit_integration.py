@@ -115,23 +115,9 @@ class TestLmfitIntegration:
         model.set_param_hint("width", min=0.1, max=5)
 
         # Get parameters from guess()
-        with warnings.catch_warnings(record=True) as w:
-            guessed_params = model.guess(y_data, x=x_data)
-
-            # There should be a warning about parameter estimation
-            assert any(
-                "Failed to initialize or train parameter estimator" in str(warning.message) for warning in w
-            ), "Expected warning about parameter estimation failure"
-
-        # Check that some parameters are invalid (-inf)
-        has_invalid_params = False
-        for _, param in guessed_params.items():
-            if not np.isfinite(param.value) or param.value == float("-inf"):
-                has_invalid_params = True
-                break
-
-        # There should be invalid parameters
-        assert has_invalid_params, "The guess() method should return invalid parameters for this test case"
+        # Should raise RuntimeError about parameter estimation
+        with pytest.raises(RuntimeError, match="Failed to initialize or train parameter estimator"):
+            model.guess(y_data, x=x_data)
 
     def test_guess_method_success(self, set_random_seeds, wavelet_function, x_sampling, noisy_data, true_params):
         """Test that the guess() method successfully estimates parameters."""
