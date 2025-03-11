@@ -211,7 +211,6 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     return x_sampling  # Return sampling points for reuse
 
 
-
 def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     """Example of using ZeroGuess with lmfit integration.
 
