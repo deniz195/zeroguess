@@ -6,16 +6,18 @@
 [![Python Versions](https://img.shields.io/pypi/pyversions/zeroguess.svg)](https://pypi.org/project/zeroguess/)
 [![Benchmark Results](https://img.shields.io/badge/benchmarks-view%20results-blue)](https://deniz195.github.io/zeroguess/)
 
-ZeroGuess is a Python library that simplifies the estimation of starting parameters for curve fitting by leveraging machine learning. It supports SciPy and lmfit, two widely used curve fitting libraries in the scientific Python ecosystem.
+ZeroGuess uses machine learning to improve curve fitting parameter estimation. It generates optimal starting parameters for fitting functions, reducing computation time and increasing fitting reliability.
 
 ## Problem Statement
 
-While curve fitting is a well-understood problem, the process of estimating starting parameters is not. It is a very tedious and error-prone process that often requires domain expertise, trial and error, or both. Poor initial parameter estimates can cause fitting algorithms to:
-- Converge to suboptimal local minima
-- Require more iterations to converge
-- Fail to converge entirely
+Curve fitting in scientific applications often encounters issues with initial parameter estimation:
+- Convergence to local rather than global minima
+- High computational cost for complex functions
+- Failed convergence with inadequate starting points
 
-ZeroGuess uses machine learning to learn from the fitting function itself, providing optimal starting parameters without manual tuning.
+Conventional approaches rely on domain expertise, manual adjustment, or computationally intensive global optimization methods.
+
+ZeroGuess addresses these limitations through machine learning models trained on synthetic data, providing effective parameter estimates that allow simpler fitting algorithms to achieve results comparable to advanced methods with significantly reduced computation time.
 
 ## Installation
 
@@ -113,7 +115,7 @@ optimal_params, _ = optimize.curve_fit(
 
 ### Canonical Representations
 
-Many fitting functions can produce identical outputs with different parameter combinations. For example, in a double Gaussian function, swapping the parameters of the two peaks produces the same curve:
+Many fitting functions produce identical outputs with different parameter combinations. For example, in a double Gaussian function, swapping the parameters of the two peaks produces the same curve:
 
 ```python
 # These two parameter sets produce identical curves
@@ -127,12 +129,12 @@ You can provide ZeroGuess a function for `make_canonical` to transform parameter
 
 ### Performance and Advanced Fitting Methods
 
-Good estimates for starting parameters are crucial for simple fitting methods like `least_squares`. Alternatively, advanced methods like `dual_annealing` can find global minima but at significantly higher computational cost.  
+Accurate starting parameters are essential for local optimization methods like `least_squares`. Global optimization methods like `dual_annealing` find better solutions but require substantially more computation.  
 [![Benchmark Results](https://img.shields.io/badge/benchmarks-view%20results-blue)](https://deniz195.github.io/zeroguess/latest/lmfit_comparison/double_gaussian/report.html )
 
-Benchmarks show ZeroGuess elevates the performance of `least_squares` fits to match `dual_annealing` (~70% success rate) while reducing computation time by 100× (from 1150ms to 12ms).
+Benchmarks indicate that ZeroGuess improves the performance of `least_squares` fits to comparable levels with `dual_annealing` (~70% success rate) while reducing computation time by a factor of 100 (from 1150ms to 12ms).
 
-This makes ZeroGuess particularly valuable for complex fitting functions with multiple parameters or when fitting large datasets where function evaluation is expensive.
+This makes ZeroGuess useful for complex fitting functions with multiple parameters and for large datasets where computation efficiency is important.
 
 ## Features
 
