@@ -107,6 +107,32 @@ optimal_params, _ = optimize.curve_fit(
 )
 ```
 
+## Background
+
+
+
+### Canonical Representations
+
+Many fitting functions can produce identical outputs with different parameter combinations. For example, in a double Gaussian function, swapping the parameters of the two peaks produces the same curve:
+
+```python
+# These two parameter sets produce identical curves
+params1 = {"amplitude1": 2, "center1": -2, "width1": 1, 
+           "amplitude2": 3, "center2": 2, "width2": 0.5}
+params2 = {"amplitude1": 3, "center2": 2, "width2": 0.5,
+           "amplitude2": 2, "center1": -2, "width1": 1}
+```
+
+You can provide ZeroGuess a function for `make_canonical` to transform parameters into a standardized form (e.g., ordering peaks from left to right), enabling the model to learn a consistent mapping and provide more reliable parameter estimates.
+
+### Performance and Advanced Fitting Methods
+
+Good estimates for starting parameters are crucial for simple fitting methods like `least_squares`. Alternatively, advanced methods like `dual_annealing` can find global minima but at significantly higher computational cost.  
+[![Benchmark Results](https://img.shields.io/badge/benchmarks-view%20results-blue)](https://deniz195.github.io/zeroguess/latest/lmfit_comparison/double_gaussian/report.html )
+
+Benchmarks show ZeroGuess elevates the performance of `least_squares` fits to match `dual_annealing` (~70% success rate) while reducing computation time by 100× (from 1150ms to 12ms).
+
+This makes ZeroGuess particularly valuable for complex fitting functions with multiple parameters or when fitting large datasets where function evaluation is expensive.
 
 ## Features
 
