@@ -68,7 +68,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["zeroguess", "zeroguess.data", "zeroguess.estimators", "zeroguess.functions", "zeroguess.utils"]
+packages = ["zeroguess", "zeroguess.data", "zeroguess.integration", "zeroguess.estimators", "zeroguess.estimators.architectures","zeroguess.functions", "zeroguess.utils"]
 
 [tool.flake8]
 max-line-length = 120

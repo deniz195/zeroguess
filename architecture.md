@@ -192,7 +192,7 @@ zeroguess/
 
 ## Key Interfaces
 
-### Primary User API
+### Primary User API using with Scipy
 
 ```python
 # Simple usage example
@@ -261,36 +261,6 @@ benchmark_results = zeroguess.benchmark_architectures(
 print(benchmark_results.summary())
 # Or visualize the results
 benchmark_results.plot()
-```
-
-### SciPy Integration
-
-```python
-# Enhanced scipy.optimize.curve_fit with automatic initial parameter estimation
-from zeroguess.integration import scipy_integration
-import numpy as np
-
-# Define independent variable sampling points for training
-x_sampling = np.linspace(-10, 10, 100)
-
-# Standard curve_fit signature with automatic initial parameter estimation
-optimal_params, pcov = scipy_integration.curve_fit(
-    gaussian, x_data, y_data,
-    param_ranges={  # Additional parameter for estimation
-        'amplitude': (0, 10),
-        'center': (-5, 5),
-        'width': (0.1, 2)
-    },
-    independent_vars_sampling={
-        'x': x_sampling  # Sampling points for training
-    },
-    architecture='cnn',  # Optional: Select CNN architecture
-    architecture_params={  # Optional: Architecture-specific parameters
-        'n_conv_layers': 2,
-        'filters': [16, 32],
-        'kernel_size': 3
-    }
-)
 ```
 
 ### lmfit Integration

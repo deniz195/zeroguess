@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import zeroguess
-from zeroguess.integration import scipy_integration
 from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison, plot_training_history
 
 # Check if lmfit is installed
@@ -212,76 +211,6 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     return x_sampling  # Return sampling points for reuse
 
 
-def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
-    """Example of using ZeroGuess with SciPy integration.
-
-    Args:
-        true_params: Dictionary of true parameter values to use
-        x_data: Independent variable values for fitting
-        y_data: Dependent variable values (noisy data) for fitting
-        x_sampling: Optional pre-defined sampling points for training
-    """
-    print("\n=========================================================")
-    print("Running example: SciPy Integration (Wavelet)")
-    print("=========================================================")
-
-    print("Using true parameters:")
-    for param, value in true_params.items():
-        print(f"  {param}: {value:.6f}")
-
-    # Use enhanced curve_fit function
-    print("Performing curve fitting with automatic parameter estimation...")
-
-    # Define bounds for curve fitting to help convergence
-    bounds = ([0.1, 0, -5, 0.1], [5, 2 * np.pi, 5, 5])
-
-    popt, _ = scipy_integration.curve_fit(
-        wavelet,
-        x_data,
-        y_data,
-        param_ranges={
-            "frequency": (0.1, 5.0),
-            "phase": (0, 2 * np.pi),
-            "position": (-3.0, 3.0),
-            "width": (0.1, 5.0),
-        },
-        independent_vars_sampling={
-            "x": x_sampling,
-        },
-        bounds=bounds,
-    )
-
-    # Convert popt to dictionary
-    fitted_params = {
-        "frequency": popt[0],
-        "phase": popt[1],
-        "position": popt[2],
-        "width": popt[3],
-    }
-    print("Fitted parameters:")
-    for param, value in fitted_params.items():
-        print(f"  {param}: {value:.6f}")
-
-    # Plot results
-    plot_fit_comparison(
-        wavelet,
-        x_data,
-        y_data,
-        true_params=true_params,
-        fitted_params=fitted_params,
-        title="Wavelet Fit with SciPy Integration",
-    )
-    plt.savefig("wavelet_fit_scipy.png")
-
-    plot_parameter_comparison(
-        true_params,
-        fitted_params,
-        title="Wavelet Parameter Comparison (SciPy Integration)",
-    )
-    plt.savefig("wavelet_parameter_comparison_scipy.png")
-
-    print("Saved plots to current directory")
-
 
 def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     """Example of using ZeroGuess with lmfit integration.
@@ -383,7 +312,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--method",
         type=str,
-        choices=["all", "basic", "scipy", "lmfit"],
+        choices=["all", "basic", "lmfit"],
         default="all",
         help="Specify which method(s) to run (default: all)",
     )
@@ -413,9 +342,6 @@ if __name__ == "__main__":
     # Run selected examples
     if args.method in ["all", "basic"]:
         x_sampling = example_basic_usage(true_params, x_data, y_data, x_sampling)
-
-    if args.method in ["all", "scipy"]:
-        example_scipy_integration(true_params, x_data, y_data, x_sampling)
 
     if args.method in ["all", "lmfit"]:
         # Will handle running example_lmfit_manual internally if needed

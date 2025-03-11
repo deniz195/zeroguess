@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import zeroguess
-from zeroguess.integration import scipy_integration
 from zeroguess.utils.visualization import plot_fit_comparison, plot_parameter_comparison, plot_training_history
 
 # Check if lmfit is installed
@@ -194,70 +193,6 @@ def example_basic_usage(true_params, x_data, y_data, x_sampling=None):
     return x_sampling  # Return sampling points for reuse
 
 
-def example_scipy_integration(true_params, x_data, y_data, x_sampling=None):
-    """Example of using ZeroGuess with SciPy integration.
-
-    Args:
-        true_params: Dictionary of true parameter values to use
-        x_data: Independent variable values for fitting
-        y_data: Dependent variable values (noisy data) for fitting
-        x_sampling: Optional pre-defined sampling points for training
-    """
-    print("\n=========================================================")
-    print("Running example: SciPy Integration (Gaussian)")
-    print("=========================================================")
-
-    print("Using true parameters:")
-    for param, value in true_params.items():
-        print(f"  {param}: {value:.6f}")
-
-    # Use enhanced curve_fit function
-    print("Performing curve fitting with automatic parameter estimation...")
-    popt, _ = scipy_integration.curve_fit(
-        gaussian,
-        x_data,
-        y_data,
-        param_ranges={
-            "amplitude": (0.1, 10.0),
-            "center": (-5.0, 5.0),
-            "width": (0.1, 5.0),
-        },
-        independent_vars_sampling={
-            "x": x_sampling,
-        },
-    )
-
-    # Convert popt to dictionary
-    fitted_params = {
-        "amplitude": popt[0],
-        "center": popt[1],
-        "width": popt[2],
-    }
-    print("Fitted parameters:")
-    for param, value in fitted_params.items():
-        print(f"  {param}: {value:.6f}")
-
-    # Plot results
-    plot_fit_comparison(
-        gaussian,
-        x_data,
-        y_data,
-        true_params=true_params,
-        fitted_params=fitted_params,
-        title="Gaussian Fit with SciPy Integration",
-    )
-    plt.savefig("gaussian_scipy_integration.png")
-
-    plot_parameter_comparison(
-        true_params,
-        fitted_params,
-        title="Gaussian Parameter Comparison (SciPy Integration)",
-    )
-    plt.savefig("gaussian_parameter_comparison_scipy.png")
-
-    print("Saved plots to current directory")
-
-
 def example_lmfit_integration(true_params, x_data, y_data, x_sampling=None):
     """Example of using ZeroGuess with lmfit integration.
 
@@ -361,7 +296,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--method",
         type=str,
-        choices=["all", "basic", "scipy", "lmfit"],
+        choices=["all", "basic", "lmfit"],
         default="all",
         help="Specify which method(s) to run (default: all)",
     )
@@ -391,9 +326,6 @@ if __name__ == "__main__":
     # Run selected examples
     if args.method in ["all", "basic"]:
         x_sampling = example_basic_usage(true_params, x_data, y_data, x_sampling)
-
-    if args.method in ["all", "scipy"]:
-        example_scipy_integration(true_params, x_data, y_data, x_sampling)
 
     if args.method in ["all", "lmfit"]:
         example_lmfit_integration(true_params, x_data, y_data, x_sampling)
