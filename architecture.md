@@ -745,6 +745,7 @@ Version numbers are stored in `zeroguess/__init__.py` as `__version__`.
 3. **Version Bump**:
    - Update version in `zeroguess/__init__.py`
    - Update version in `pyproject.toml`
+   - Run build test: `./scripts/build.py`
    - Commit the version bump: `git commit -am "Bump version to X.Y.Z"`
    - Create a tag: `git tag vX.Y.Z`
    - Push changes and tag: `git push && git push --tags`

@@ -46,7 +46,6 @@ y_data = add_gaussian_noise(wavelet(x_data, **true_params), sigma=0.1)
 from zeroguess.integration import ZeroGuessModel
 
 # Enhanced lmfit Model with parameter estimation
-# Enhanced lmfit Model with parameter estimation
 model = ZeroGuessModel(
     wavelet,
     independent_vars_sampling={"x": x_data},

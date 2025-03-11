@@ -254,7 +254,7 @@ class NeuralNetworkEstimator(BaseEstimator):
 
             # Create the neural network if it doesn't exist
             if self.network is None:
-                print("Creating new network.")
+                # print("Creating new network.")
                 n_input_features = X.shape[1]
                 n_output_params = len(self.param_names)
 
