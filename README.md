@@ -65,17 +65,17 @@ model = ZeroGuessModel(
     wavelet,
     independent_vars_sampling={"x": x_data},
     estimator_settings={
-    # Configure training parameters
-    # "n_samples": 1000,
-    # "n_epochs": 200,
-    # "validation_split": 0.2,
-    # "add_noise": True,
-    # "noise_level": 0.1,
-    # 'verbose': True
-    # Provide a function to make parameters canonical 
-    # "make_canonical": ...,
-    # Save and load model automatically
-        "snapshot_path": "model_test.pth", 
+        # Configure training parameters
+        # "n_samples": 1000,
+        # "n_epochs": 200,
+        # "validation_split": 0.2,
+        # "add_noise": True,
+        # "noise_level": 0.1,
+        # 'verbose': True
+        # Provide a function to make parameters canonical
+        # "make_canonical": ...,
+        # Save and load model automatically
+        "snapshot_path": "model_test.pth",
     },
 )
 
@@ -95,8 +95,8 @@ result = model.fit(y_data, x=x_data, params=params)
 ### Scipy usage
 
 ```python
-import zeroguess
 from scipy import optimize
+import zeroguess
 
 # Create and train parameter estimator
 estimator = zeroguess.create_estimator(
@@ -107,10 +107,8 @@ estimator = zeroguess.create_estimator(
         "position": (5.0, 15.0),
         "width": (0.1, 3.0),
     },
-    independent_vars_sampling={
-        'x': x_data
-    },
-    snapshot_path="model_dg_plain.pth", # saves and loads model automatically
+    independent_vars_sampling={"x": x_data},
+    snapshot_path="model_dg_plain.pth",  # saves and loads model automatically
 )
 
 if not estimator.is_trained:
@@ -120,10 +118,7 @@ if not estimator.is_trained:
 initial_params = estimator.predict(x_data, y_data)
 
 # Use in standard curve fitting
-optimal_params, pcov = optimize.curve_fit(
-    wavelet, x_data, y_data,
-    p0=list(initial_params.values())
-)
+optimal_params, pcov = optimize.curve_fit(wavelet, x_data, y_data, p0=list(initial_params.values()))
 ```
 
 ## Background
