@@ -123,7 +123,22 @@ optimal_params, pcov = optimize.curve_fit(wavelet, x_data, y_data, p0=list(initi
 
 ## Background
 
+### Why should this work?
+Providing good initial parameter estimates for an arbitrary fit function is an ambitious task. ZeroGuess is motivated by the experience of a person doing many fits over an extended period of time: At some point you look at your data and can roughly predict what the parameters should be.
 
+This intuition is implemented by ZeroGuess, where a neural network looks at many instances of synthetic data and then is trained to predict the parameters that generated this data. This approach is restricted to several limitations (see below).
+
+### Limitations
+
+**Conceptual Limitations:**
+- Users must define appropriate parameter ranges for their specific use case (though this is typically feasible as parameters in physical systems are usually bounded)
+- Parameter ambiguity can affect learning effectiveness (see "Canonical Representations" section)
+
+**Technical Limitations:**
+- Only one-dimensional independent variables are currently supported
+- Requires consistent sampling of the independent variable across datasets
+
+These technical limitations can be addressed in future versions. If you need these features, please raise an issue on GitHub.
 
 ### Canonical Representations
 
@@ -148,19 +163,6 @@ Benchmarks indicate that ZeroGuess improves the performance of `least_squares` f
 
 This makes ZeroGuess useful for complex fitting functions with multiple parameters and for large datasets where computation efficiency is important.
 
-### Limitations
-
-ZeroGuess has several current limitations to consider:
-
-**Technical Limitations:**
-- Only one-dimensional independent variables are currently supported
-- Requires consistent sampling of the independent variable across datasets
-
-These technical limitations can be addressed in future versions. If you need these features, please raise an issue on GitHub.
-
-**Fundamental Limitations:**
-- Users must define appropriate parameter ranges for their specific use case (though this is typically feasible as parameters in physical systems are usually bounded)
-- Parameter ambiguity can affect learning effectiveness (see "Canonical Representations" section)
 
 ## Features
 
