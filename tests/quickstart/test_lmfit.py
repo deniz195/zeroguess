@@ -10,7 +10,6 @@ def test_zeroguess_lmfit_quickstart(tmp_path):
     """Test ZeroGuess integration with lmfit using the quickstart workflow."""
 
     import numpy as np
-    import lmfit
 
     # Define a simple wavelet function directly
     def wavelet(x, frequency, phase, position, width):
@@ -41,7 +40,17 @@ def test_zeroguess_lmfit_quickstart(tmp_path):
         wavelet,
         independent_vars_sampling={"x": x_data},
         estimator_settings={
-            "snapshot_path": "model_test.pth",  # Save model in temp directory
+        # Configure training parameters
+        # "n_samples": 1000,
+        # "n_epochs": 200,
+        # "validation_split": 0.2,
+        # "add_noise": True,
+        # "noise_level": 0.1,
+        # 'verbose': True
+        # Provide a function to make parameters canonical 
+        # "make_canonical": ...,
+        # Save and load model automatically
+         "snapshot_path": "model_test.pth", 
         },
     )
 

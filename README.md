@@ -31,15 +31,28 @@ pip install zeroguess
 
 ```python
 import numpy as np
-from zeroguess.functions import WaveletFunction, add_gaussian_noise
 
-# Create a double peakGaussian function
-wavelet = WaveletFunction()
+# Define a simple wavelet function directly
+def wavelet(x, frequency, phase, position, width):
+    z = (x - position) / width
+    return np.exp(-z**2) * np.cos(2 * np.pi * frequency * z + phase)
 
-# Create some experimental data
-true_params = wavelet.get_random_params()
-x_data = np.linspace(-10, 10, 100)
-y_data = add_gaussian_noise(wavelet(x_data, **true_params), sigma=0.1)
+# Create some synthetic experimental data with known parameters
+true_params = {
+    "frequency": 0.5,
+    "phase": 1.0,
+    "position": 7.0,
+    "width": 1.5
+}
+
+# Generate x, y data points
+x_data = np.linspace(0, 20, 200)
+y_clean = wavelet(x_data, **true_params)
+
+# Add noise
+np.random.seed(42)  # For reproducibility
+noise_level = 0.05
+y_data = y_clean + np.random.normal(0, noise_level * (np.max(y_clean) - np.min(y_clean)), size=y_clean.shape)
 ```
 
 ### lmfit Integration
@@ -52,26 +65,30 @@ model = ZeroGuessModel(
     wavelet,
     independent_vars_sampling={"x": x_data},
     estimator_settings={
-        "make_canonical": wavelet.get_canonical_params,
-        # Configure training parameters
-        # "n_samples": 1000,
-        # "n_epochs": 200,
-        # "validation_split": 0.2,
-        # "add_noise": True,
-        # "noise_level": 0.1,
-        # 'verbose': True
-        "snapshot_path": "model_dg.pth", # saves and loads model automatically
+    # Configure training parameters
+    # "n_samples": 1000,
+    # "n_epochs": 200,
+    # "validation_split": 0.2,
+    # "add_noise": True,
+    # "noise_level": 0.1,
+    # 'verbose': True
+    # Provide a function to make parameters canonical 
+    # "make_canonical": ...,
+    # Save and load model automatically
+        "snapshot_path": "model_test.pth", 
     },
 )
 
+# Set parameter hints
 model.set_param_hint("frequency", min=0.05, max=1.0)
 model.set_param_hint("phase", min=0.0, max=2.0 * np.pi)
 model.set_param_hint("position", min=5.0, max=15.0)
 model.set_param_hint("width", min=0.1, max=3.0)
 
-# Standard lmfit workflow
+# Guess parameters with ZeroGuess estimator
 params = model.guess(y_data, x=x_data)
 
+# Run the fit
 result = model.fit(y_data, x=x_data, params=params)
 ```
 
@@ -103,7 +120,7 @@ if not estimator.is_trained:
 initial_params = estimator.predict(x_data, y_data)
 
 # Use in standard curve fitting
-optimal_params, _ = optimize.curve_fit(
+optimal_params, pcov = optimize.curve_fit(
     wavelet, x_data, y_data,
     p0=list(initial_params.values())
 )

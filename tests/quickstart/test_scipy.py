@@ -91,7 +91,7 @@ def test_zeroguess_scipy_quickstart(tmp_path):
     assert phase_diff < 1.0
     
     # Verify the model file was created
-    assert os.path.exists(estimator.estimator_settings["snapshot_path"])
+    assert os.path.exists(estimator.snapshot_path)
     
     # Create plot output path in the temporary directory
     plot_path = os.path.join(tmp_path, "scipy_fit_comparison.png")
