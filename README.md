@@ -131,12 +131,12 @@ This intuition is implemented by ZeroGuess, where a neural network looks at many
 ### Limitations
 
 **Conceptual Limitations:**
-- Users must define appropriate parameter ranges for their specific use case (though this is typically feasible as parameters in physical systems are usually bounded)
+- Users must define appropriate parameter ranges for their specific use case. This is typically feasible as parameters in physical systems are usually bounded
 - Parameter ambiguity can affect learning effectiveness (see "Canonical Representations" section)
 
 **Technical Limitations:**
 - Only one-dimensional independent variables are currently supported
-- Requires consistent sampling of the independent variable across datasets
+- Requires currently a consistent sampling of the independent variable across datasets
 
 These technical limitations can be addressed in future versions. If you need these features, please raise an issue on GitHub.
 
