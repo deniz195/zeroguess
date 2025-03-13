@@ -3,8 +3,18 @@ name: ZeroGuess Tests
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'zeroguess/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'zeroguess/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
   schedule:
     # Run nightly tests at 2 AM UTC
     - cron: '0 2 * * *'

@@ -3,16 +3,15 @@
 ## Feature 
 - Auto save and load scipy 
 
-## Readability
-- Revamp Readme for quickstart
-
 ## Tests
-- Run tests only on code changes
+- Run tests only on code changes **ongoing**
 
 ## Plumbing
 - Add documentation
 
 # Done
+- Add description of benchmarks **done**
+- Revamp Readme for quickstart **done**
 - Auto save and load lmfit **done**
 - Add function name to benchmark results **done**
 - Make all tests pass in pipeline & locally **done**
