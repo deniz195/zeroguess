@@ -393,7 +393,9 @@ def run_lmfit_comparison_benchmark(  # noqa: C901
     return results_df
 
 
-def generate_lmfit_comparison_report(results_df, output_dir, function_name, noise_level=0.05, tolerance=DEFAULT_TOLERANCE):  # noqa: C901
+def generate_lmfit_comparison_report(
+    results_df, output_dir, function_name, noise_level=0.05, tolerance=DEFAULT_TOLERANCE
+):  # noqa: C901
     """Generate a summary report for the lmfit comparison benchmark.
 
     Args:
@@ -439,7 +441,7 @@ def generate_lmfit_comparison_report(results_df, output_dir, function_name, nois
     #     ax1.text(i - 0.15, 100*(v + 0.02), f"{v:.0%}", color="black", fontweight="bold")
 
     for i, v in enumerate(method_summary["param_success"]):
-        ax1.text(i + 0.10, 100*(v + 0.02), f"{v:.0%}", color="black", fontweight="bold")
+        ax1.text(i + 0.10, 100 * (v + 0.02), f"{v:.0%}", color="black", fontweight="bold")
 
     # Plot average parameter errors
     ax2 = plt.subplot(122)
@@ -473,25 +475,25 @@ def generate_lmfit_comparison_report(results_df, output_dir, function_name, nois
             .summary-container {{ display: flex; flex-wrap: wrap; }}
             .summary-section {{ flex: 1; min-width: 300px; margin-right: 20px; }}
             img {{ max-width: 100%; height: auto; margin-top: 20px; }}
-            .benchmark-info {{ 
-                background-color: #f8f8f8; 
-                padding: 10px; 
-                border-radius: 5px; 
-                margin-bottom: 15px; 
+            .benchmark-info {{
+                background-color: #f8f8f8;
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 15px;
                 line-height: 1.3;
                 font-size: 0.85em;
             }}
-            .benchmark-info h2 {{ 
-                font-size: 1.2em; 
+            .benchmark-info h2 {{
+                font-size: 1.2em;
                 margin-top: 5px;
                 margin-bottom: 8px;
             }}
-            .benchmark-info h3 {{ 
-                font-size: 1.05em; 
+            .benchmark-info h3 {{
+                font-size: 1.05em;
                 margin-top: 8px;
                 margin-bottom: 5px;
             }}
-            .benchmark-info p, .benchmark-info li {{ 
+            .benchmark-info p, .benchmark-info li {{
                 margin: 3px 0;
             }}
             .benchmark-info ol, .benchmark-info ul {{
@@ -502,36 +504,55 @@ def generate_lmfit_comparison_report(results_df, output_dir, function_name, nois
     </head>
     <body>
         <h1>ZeroGuess Benchmark (lmfit for {function_name} function)</h1>
-        
         <div class="benchmark-info">
             <h2>How This Benchmark Works</h2>
-            <p>This benchmark evaluates different parameter estimation and curve fitting approaches using synthetic data with known ground truth values.</p>
-            
+            <p>This benchmark evaluates different parameter estimation and curve fitting approaches
+               using synthetic data with known ground truth values.
+            </p>
+
             <h3>Methodology:</h3>
             <ol>
-                <li><strong>Test Data Generation:</strong> {results_df['param_set'].nunique()} different parameter sets are randomly generated for the {function_name} function. For each parameter set, synthetic data is created with {noise_level*100:.0f}% noise added.</li>
-                <li><strong>Methods Compared:</strong>  
+                <li><strong>
+                   Test Data Generation:</strong> {results_df['param_set'].nunique()}
+                   different parameter sets are randomly generated for the {function_name} function.
+                   For each parameter set, synthetic data is created with {noise_level*100:.0f}% noise added.
+                </li>
+                <li><strong>Methods Compared:</strong>
                     <ul>
-                        <li><strong>Simple + lmfit:</strong> Uses central values from parameter ranges as starting points</li>
-                        <li><strong>ZeroGuess + lmfit:</strong> Uses ZeroGuess's neural network to estimate starting parameters</li>
-                        <li><strong>True + lmfit:</strong> Uses the true parameters as starting points (best case scenario)</li>
+                        <li><strong>Simple + lmfit:</strong>
+                            Uses central values from parameter ranges as starting points
+                        </li>
+                        <li><strong>ZeroGuess + lmfit:</strong>
+                            Uses ZeroGuess's neural network to estimate starting parameters
+                        </li>
+                        <li><strong>True + lmfit:</strong>
+                            Uses the true parameters as starting points (best case scenario)
+                        </li>
                     </ul>
                     Each method is tested with different optimization algorithms (least_squares, dual_annealing)
                 </li>
                 <li><strong>Metrics:</strong>
                     <ul>
-                        <li><strong>Fit Success:</strong> Whether the fitting algorithm converged</li>
-                        <li><strong>Parameter Success:</strong> Whether all recovered parameters are within {tolerance*100:.0f}% of true values</li>
-                        <li><strong>Computation Time:</strong> Time for parameter estimation and fitting</li>
-                        <li><strong>Function Evaluations:</strong> Number of function calls required</li>
+                        <li><strong>Fit Success:</strong>
+                            Whether the fitting algorithm converged
+                        </li>
+                        <li><strong>Parameter Success:</strong>
+                            Whether all recovered parameters are within {tolerance*100:.0f}% of true values
+                        </li>
+                        <li><strong>Computation Time:</strong>
+                            Time for parameter estimation and fitting
+                        </li>
+                        <li><strong>Function Evaluations:</strong>
+                            Number of function calls required
+                        </li>
                     </ul>
                 </li>
             </ol>
-            
+
         </div>
 
         <h2>Summary for {function_name} function</h2>
-        
+
         <h3>Success and Performance Metrics</h3>
         <table>
             <tr>
@@ -607,15 +628,15 @@ def generate_lmfit_comparison_report(results_df, output_dir, function_name, nois
         # Add navigation links
         html_content += """
         <div style="width: 100%; margin-bottom: 10px;">
-            Links to all fits: 
+            Links to all fits:
         """
-        
+
         # Generate numbered links to all sample files for this method
         max_samples = min(results_df["param_set"].nunique(), 100)  # Limit to 100 links
         for i in range(1, max_samples + 1):
             img_path = f"{method_file_prefix}_set_{i}.png"
             html_content += f'<a href="{img_path}" target="_blank">[{i}]</a> '
-        
+
         html_content += """
         </div>
         """
