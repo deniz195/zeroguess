@@ -34,16 +34,11 @@ import numpy as np
 
 # Define a simple wavelet function directly
 def wavelet(x, frequency, phase, position, width):
-    z = (x - position) / width
-    return np.exp(-z**2) * np.cos(2 * np.pi * frequency * z + phase)
+    envelope = np.exp(-((x - position) ** 2) / (2 * width**2))
+    return envelope * np.sin(2 * np.pi * frequency * (x - position) + phase)
 
 # Create some synthetic experimental data with known parameters
-true_params = {
-    "frequency": 0.5,
-    "phase": 1.0,
-    "position": 7.0,
-    "width": 1.5
-}
+true_params = {"frequency": 0.5, "phase": 1.0, "position": 7.0, "width": 1.5}
 
 # Generate x, y data points
 x_data = np.linspace(0, 20, 200)
@@ -75,7 +70,7 @@ model = ZeroGuessModel(
         # Provide a function to make parameters canonical
         # "make_canonical": ...,
         # Save and load model automatically
-        "snapshot_path": "model_test.pth",
+        "snapshot_path": "estimator_lmfit.pth",
     },
 )
 
@@ -108,7 +103,7 @@ estimator = zeroguess.create_estimator(
         "width": (0.1, 3.0),
     },
     independent_vars_sampling={"x": x_data},
-    snapshot_path="model_dg_plain.pth",  # saves and loads model automatically
+    snapshot_path="estimator_scipy.pth",  # saves and loads model automatically
 )
 
 if not estimator.is_trained:
