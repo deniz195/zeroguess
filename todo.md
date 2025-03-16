@@ -3,13 +3,24 @@
 ## Feature 
 - Auto save and load scipy 
 
-## Tests
-- Run tests only on code changes **ongoing**
+## Readme
+- Clarify use-case for high volume fitting
 
 ## Plumbing
 - Add documentation
 
+## Check interesting problems:
+- https://stackoverflow.com/questions/78911732/python-curve-fitting-gone-wrong
+- https://stackoverflow.com/questions/79348443/differential-evolution-fails-when-worker-argument-is-added
+- https://groups.google.com/g/lmfit-py/c/nayXOCD-W8k
+- https://groups.google.com/g/lmfit-py/c/o1y-hP8xnqU
+- https://stackoverflow.com/questions/79356624/estimating-non-monotonic-bi-exponential-curve-fit
+
+## Respond to
+- https://groups.google.com/g/lmfit-py/c/LgzRq3Y2VOY
+
 # Done
+- Run tests only on code changes **ongoing**
 - Add description of benchmarks **done**
 - Revamp Readme for quickstart **done**
 - Auto save and load lmfit **done**
